@@ -1,0 +1,16 @@
+{
+  "name": "vms-e2e-tests",
+  "version": "1.0.0",
+  "description": "E2E tests for VMS Frontend",
+  "scripts": {
+    "test": "playwright test",
+    "test:ui": "playwright test --ui",
+    "test:debug": "playwright test --debug",
+    "test:headed": "playwright test --headed",
+    "report": "playwright show-report"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.41.0",
+    "@types/node": "^20.11.0"
+  }
+}

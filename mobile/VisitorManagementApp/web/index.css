@@ -1,0 +1,15 @@
+/* Mobile web - base styles (AppWeb uses inline styles) */
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  background-color: #f1f5f9;
+}
+
+#root {
+  min-height: 100vh;
+}

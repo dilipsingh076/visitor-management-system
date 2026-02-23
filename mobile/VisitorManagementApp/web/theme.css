@@ -1,0 +1,17 @@
+/**
+ * Mobile web theme - matches RN app (Indigo/Violet, distinct from main web)
+ */
+@theme inline {
+  --color-primary: #6366F1;
+  --color-primary-hover: #4F46E5;
+  --color-primary-light: #E0E7FF;
+  --color-background: #FAFAF9;
+  --color-foreground: #1C1917;
+  --color-muted: #78716C;
+  --color-muted-bg: #F5F5F4;
+  --color-border: #E7E5E4;
+  --color-card: #ffffff;
+  --color-success: #0D9488;
+  --color-warning: #EA580C;
+  --color-error: #DC2626;
+}
