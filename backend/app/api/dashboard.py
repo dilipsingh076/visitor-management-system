@@ -16,13 +16,25 @@ from app.api.visitors import _visit_to_response
 router = APIRouter()
 
 
+def _society_id_uuid(current_user: dict):
+    sid = current_user.get("society_id")
+    if not sid:
+        return None
+    try:
+        from uuid import UUID
+        return UUID(sid)
+    except (ValueError, TypeError):
+        return None
+
+
 @router.get("/stats", response_model=DashboardStatsResponse)
 async def get_stats(
     db: AsyncSession = Depends(get_db),
     current_user: dict = Depends(get_current_user),
 ):
-    """Dashboard statistics. Authenticated users only."""
-    stats = await get_dashboard_stats(db)
+    """Dashboard statistics. Scoped by user's society when present."""
+    society_id = _society_id_uuid(current_user)
+    stats = await get_dashboard_stats(db, society_id=society_id)
     return DashboardStatsResponse(**stats)
 
 
@@ -51,10 +63,11 @@ async def get_muster(
     format: str | None = None,
 ):
     """
-    Emergency muster: list of people currently inside (checked-in).
+    Emergency muster: list of people currently inside (checked-in). Scoped by society.
     Guard or admin only. Use ?format=csv to download CSV.
     """
-    visits = await get_checked_in_visitors(db)
+    society_id = _society_id_uuid(current_user)
+    visits = await get_checked_in_visitors(db, society_id=society_id)
     await log_admin_action(
         db, current_user_id, current_user,
         "muster_export", request.url.path, request.method,

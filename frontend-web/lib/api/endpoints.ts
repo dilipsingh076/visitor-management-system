@@ -17,6 +17,7 @@ export const API = {
     walkin: "/visitors/walkin",
     get: (id: string) => `/visitors/${id}`,
     approve: (id: string) => `/visitors/${id}/approve`,
+    reject: (id: string) => `/visitors/${id}/reject`,
   },
   checkin: {
     otp: "/checkin/otp",

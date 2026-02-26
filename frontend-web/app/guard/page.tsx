@@ -127,9 +127,10 @@ export default function GuardPage() {
   };
 
   const handleExportMuster = async () => {
-    const base = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8001";
+    const base = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api/v1";
     const token = typeof window !== "undefined" ? localStorage.getItem("access_token") : null;
-    const res = await fetch(`${base}/api/v1/dashboard/muster?format=csv`, {
+    const res = await fetch(`${base}/dashboard/muster?format=csv`, {
+      credentials: "include",
       headers: token ? { Authorization: `Bearer ${token}` } : {},
     });
     if (!res.ok) return;

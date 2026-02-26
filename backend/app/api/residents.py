@@ -19,22 +19,30 @@ async def list_residents(
 ):
     """
     List residents (hosts) for guard to select when registering walk-in.
-    Guard or admin only. Use q= to search by name or flat number.
+    Guard or admin only. Scoped by current user's society.
     """
     await ensure_demo_users(db)
 
     stmt = (
         select(User)
-        .where(User.role == "resident", User.is_active == True)
+        .where(User.role.in_(["resident", "admin"]), User.is_active == True)
         .order_by(User.full_name)
         .limit(limit)
     )
+    society_id = current_user.get("society_id")
+    if society_id:
+        try:
+            from uuid import UUID
+            stmt = stmt.where(User.society_id == UUID(society_id))
+        except (ValueError, TypeError):
+            pass
     if q and q.strip():
         search = f"%{q.strip()}%"
         stmt = stmt.where(
             or_(
                 User.full_name.ilike(search),
                 User.email.ilike(search),
+                User.flat_number.ilike(search),
             )
         )
     result = await db.execute(stmt)
@@ -46,7 +54,7 @@ async def list_residents(
             "full_name": u.full_name,
             "email": u.email,
             "phone": u.phone or "",
-            "flat_no": (u.extra_data or {}).get("flat_no", ""),
+            "flat_no": getattr(u, "flat_number", None) or (u.extra_data or {}).get("flat_no", ""),
         }
         for u in users
     ]

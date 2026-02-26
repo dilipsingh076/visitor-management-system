@@ -23,6 +23,35 @@ def test(name: str, method: str, path: str, **kwargs):
 def main():
     print("Testing VMS APIs...\n")
 
+    # 0. Register Society (no auth; use unique email each run or 400 if exists)
+    import uuid
+    unique = uuid.uuid4().hex[:8]
+    r0, ok0 = test(
+        "POST /auth/register-society",
+        "POST",
+        "/auth/register-society",
+        headers={"Content-Type": "application/json"},
+        json={
+            "society_name": f"Test Society {unique}",
+            "address": "123 Test St",
+            "city": "Mumbai",
+            "state": "Maharashtra",
+            "pincode": "400001",
+            "country": "India",
+            "contact_email": f"contact-{unique}@example.com",
+            "contact_phone": "9876543210",
+            "registration_number": "REG123",
+            "society_type": "cooperative_housing",
+            "registration_year": "2024",
+            "email": f"admin-{unique}@example.com",
+            "password": "TestPass123!",
+            "full_name": "Test Admin",
+            "phone": "9876543210",
+        },
+    )
+    if not ok0 and r0.text:
+        print(f"  (Use unique email/society name if 400) {r0.text[:300]}")
+
     # 1. Health
     test("GET /health", "GET", "/health")
 

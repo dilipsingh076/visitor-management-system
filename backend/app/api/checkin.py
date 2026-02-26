@@ -33,6 +33,9 @@ async def checkin_otp(
     visit = await get_visit_by_otp(db, data.otp)
     if not visit:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Invalid or expired OTP")
+    await db.refresh(visit, ["host"])
+    if current_user.get("society_id") and visit.host and str(visit.host.society_id) != current_user.get("society_id"):
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Visit does not belong to your society")
 
     if not data.consent_given:
         raise HTTPException(
@@ -71,6 +74,9 @@ async def checkin_qr(
     visit = await get_visit_by_qr(db, data.qr_code)
     if not visit:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Invalid or expired QR code")
+    await db.refresh(visit, ["host"])
+    if current_user.get("society_id") and visit.host and str(visit.host.society_id) != current_user.get("society_id"):
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Visit does not belong to your society")
 
     if not data.consent_given:
         raise HTTPException(

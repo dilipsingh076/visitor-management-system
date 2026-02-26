@@ -21,6 +21,7 @@ interface Visitor {
   flat_number?: string;
   host_name?: string;
   status: string;
+  actual_arrival?: string;
   check_in_time?: string;
   otp?: string;
   is_walkin?: boolean;
@@ -51,13 +52,13 @@ export function GuardDashboard({ user }: GuardDashboardProps) {
     try {
       const [statsRes, expectedRes, checkedInRes] = await Promise.all([
         apiClient.get<Stats>(API.dashboard.stats),
-        apiClient.get<{ visits: Visitor[] }>(`${API.visitors.base}?status=approved&limit=20`),
-        apiClient.get<{ visits: Visitor[] }>(`${API.visitors.base}?status=checked_in&limit=20`),
+        apiClient.get<Visitor[]>(`${API.visitors.list}?status=approved&limit=20`),
+        apiClient.get<Visitor[]>(`${API.visitors.list}?status=checked_in&limit=20`),
       ]);
 
       if (statsRes.data) setStats(statsRes.data);
-      if (expectedRes.data) setExpectedVisitors(expectedRes.data.visits || []);
-      if (checkedInRes.data) setCheckedInVisitors(checkedInRes.data.visits || []);
+      if (expectedRes.data && Array.isArray(expectedRes.data)) setExpectedVisitors(expectedRes.data);
+      if (checkedInRes.data && Array.isArray(checkedInRes.data)) setCheckedInVisitors(checkedInRes.data);
     } catch (error) {
       console.error("Failed to fetch dashboard data:", error);
     } finally {
@@ -71,22 +72,15 @@ export function GuardDashboard({ user }: GuardDashboardProps) {
     return () => clearInterval(interval);
   }, [fetchData]);
 
-  const handleQuickCheckIn = async (visitId: string) => {
-    setCheckingIn(visitId);
-    try {
-      await apiClient.post(`${API.checkin.base}/${visitId}`, {});
-      await fetchData();
-    } catch (error) {
-      console.error("Failed to check in:", error);
-    } finally {
-      setCheckingIn(null);
-    }
+  const handleQuickCheckIn = async (_visitId: string) => {
+    // Check-in is done via OTP/QR at the guard desk; redirect to check-in page
+    window.location.href = "/checkin?focus=otp";
   };
 
   const handleCheckOut = async (visitId: string) => {
     setCheckingIn(visitId);
     try {
-      await apiClient.post(`${API.checkin.checkout}/${visitId}`, {});
+      await apiClient.post(API.checkin.checkout, { visit_id: visitId });
       await fetchData();
     } catch (error) {
       console.error("Failed to check out:", error);
@@ -96,10 +90,14 @@ export function GuardDashboard({ user }: GuardDashboardProps) {
   };
 
   const handleMusterExport = async () => {
+    const base = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api/v1";
+    const token = typeof window !== "undefined" ? localStorage.getItem("access_token") : null;
     try {
-      const response = await fetch(`${API.dashboard.muster}`, {
+      const response = await fetch(`${base}${API.dashboard.muster}?format=csv`, {
         credentials: "include",
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
       });
+      if (!response.ok) return;
       const blob = await response.blob();
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement("a");
@@ -118,7 +116,7 @@ export function GuardDashboard({ user }: GuardDashboardProps) {
     (v) =>
       v.visitor_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       v.visitor_phone?.includes(searchQuery) ||
-      v.flat_number?.toLowerCase().includes(searchQuery.toLowerCase())
+      v.host_name?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   if (loading) {
@@ -261,7 +259,7 @@ export function GuardDashboard({ user }: GuardDashboardProps) {
                       <div>
                         <p className="font-medium text-foreground">{visitor.visitor_name}</p>
                         <p className="text-sm text-muted-foreground">
-                          {visitor.flat_number && `Flat ${visitor.flat_number} · `}
+                          {(visitor.flat_number && `Flat ${visitor.flat_number} · `) || (visitor.host_name && `${visitor.host_name} · `)}
                           {visitor.purpose || "Visit"}
                         </p>
                         {visitor.otp && (
@@ -315,8 +313,8 @@ export function GuardDashboard({ user }: GuardDashboardProps) {
                       <div>
                         <p className="font-medium text-foreground">{visitor.visitor_name}</p>
                         <p className="text-sm text-muted-foreground">
-                          {visitor.flat_number && `Flat ${visitor.flat_number} · `}
-                          {visitor.check_in_time && `In: ${new Date(visitor.check_in_time).toLocaleTimeString()}`}
+                          {(visitor.flat_number && `Flat ${visitor.flat_number} · `) || (visitor.host_name && `${visitor.host_name} · `)}
+                          {(visitor.actual_arrival || visitor.check_in_time) && `In: ${new Date(visitor.actual_arrival || visitor.check_in_time!).toLocaleTimeString()}`}
                         </p>
                       </div>
                     </div>

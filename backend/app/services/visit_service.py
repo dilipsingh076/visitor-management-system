@@ -11,6 +11,7 @@ from sqlalchemy.orm import selectinload
 
 from app.constants.visit import OTP_EXPIRE_MINUTES, OTP_LENGTH, QR_PREFIX, ARRIVAL_WINDOW_MINUTES
 from app.models.visitor import Visit, VisitStatus, Visitor, ConsentLog
+from app.models.user import User
 from app.models.notification import Notification
 
 
@@ -235,28 +236,32 @@ async def checkout_visit(db: AsyncSession, visit: Visit) -> Visit:
     return visit
 
 
-async def get_dashboard_stats(db: AsyncSession) -> dict:
-    """Get dashboard statistics."""
+async def get_dashboard_stats(db: AsyncSession, society_id: Optional[UUID] = None) -> dict:
+    """Get dashboard statistics. Optionally filter by host's society_id."""
     today = datetime.utcnow().date()
 
     # Visitors today (unique)
-    visitors_today = await db.execute(
-        select(func.count(func.distinct(Visit.visitor_id))).where(
-            func.date(Visit.created_at) == today
-        )
-    )
+    vt_q = select(func.count(func.distinct(Visit.visitor_id))).select_from(Visit)
+    if society_id:
+        vt_q = vt_q.join(User, Visit.host_id == User.id).where(User.society_id == society_id)
+    vt_q = vt_q.where(func.date(Visit.created_at) == today)
+    visitors_today = await db.execute(vt_q)
     vt = visitors_today.scalar() or 0
 
     # Pending
-    pending = await db.execute(
-        select(func.count(Visit.id)).where(Visit.status == VisitStatus.PENDING)
-    )
+    p_q = select(func.count(Visit.id)).select_from(Visit)
+    if society_id:
+        p_q = p_q.join(User, Visit.host_id == User.id).where(User.society_id == society_id)
+    p_q = p_q.where(Visit.status == VisitStatus.PENDING)
+    pending = await db.execute(p_q)
     p = pending.scalar() or 0
 
     # Checked in
-    checked_in = await db.execute(
-        select(func.count(Visit.id)).where(Visit.status == VisitStatus.CHECKED_IN)
-    )
+    ci_q = select(func.count(Visit.id)).select_from(Visit)
+    if society_id:
+        ci_q = ci_q.join(User, Visit.host_id == User.id).where(User.society_id == society_id)
+    ci_q = ci_q.where(Visit.status == VisitStatus.CHECKED_IN)
+    checked_in = await db.execute(ci_q)
     ci = checked_in.scalar() or 0
 
     return {"visitors_today": vt, "pending_approvals": p, "checked_in": ci}
@@ -268,8 +273,9 @@ async def list_visits(
     offset: int = 0,
     status: Optional[str] = None,
     host_id: Optional[UUID] = None,
+    society_id: Optional[UUID] = None,
 ) -> list[Visit]:
-    """List visits with optional status and host_id filter. Eager-loads visitor and host."""
+    """List visits with optional status, host_id, and society_id filter. Eager-loads visitor and host."""
     q = (
         select(Visit)
         .options(selectinload(Visit.visitor), selectinload(Visit.host))
@@ -277,18 +283,20 @@ async def list_visits(
         .limit(limit)
         .offset(offset)
     )
+    if society_id:
+        q = q.join(User, Visit.host_id == User.id).where(User.society_id == society_id)
     if status:
         try:
             status_enum = VisitStatus(status)
             q = q.where(Visit.status == status_enum)
         except ValueError:
-            pass  # Ignore invalid status
+            pass
     if host_id:
         q = q.where(Visit.host_id == host_id)
     result = await db.execute(q)
     return list(result.scalars().unique().all())
 
 
-async def get_checked_in_visitors(db: AsyncSession) -> list[Visit]:
-    """Get all currently checked-in visits (for muster/emergency export)."""
-    return await list_visits(db, limit=500, status="checked_in")
+async def get_checked_in_visitors(db: AsyncSession, society_id: Optional[UUID] = None) -> list[Visit]:
+    """Get all currently checked-in visits (for muster/emergency export). Optionally filter by society."""
+    return await list_visits(db, limit=500, status="checked_in", society_id=society_id)

@@ -40,19 +40,28 @@ export function AdminDashboard({ user }: AdminDashboardProps) {
   const fetchData = async () => {
     setLoading(true);
     try {
-      const statsRes = await apiClient.get<Stats>(API.dashboard.stats);
-      if (statsRes.data) setStats(statsRes.data);
-
-      // Mock recent activity - you can add this endpoint later
-      setRecentActivity([
-        { id: "1", visitor_name: "Amit Kumar", action: "checked_in", flat_number: "405", timestamp: new Date().toISOString(), performed_by: "Guard 1" },
-        { id: "2", visitor_name: "Priya Singh", action: "invited", flat_number: "302", timestamp: new Date(Date.now() - 3600000).toISOString(), performed_by: "Resident" },
-        { id: "3", visitor_name: "Rahul Sharma", action: "checked_out", flat_number: "101", timestamp: new Date(Date.now() - 7200000).toISOString(), performed_by: "Guard 2" },
-        { id: "4", visitor_name: "Unknown Walk-in", action: "registered", flat_number: "501", timestamp: new Date(Date.now() - 10800000).toISOString(), performed_by: "Guard 1" },
-        { id: "5", visitor_name: "Delivery - Amazon", action: "approved", flat_number: "203", timestamp: new Date(Date.now() - 14400000).toISOString(), performed_by: "Resident" },
+      const [statsRes, visitsRes] = await Promise.all([
+        apiClient.get<Stats>(API.dashboard.stats),
+        apiClient.get<Array<{ id: string; visitor_name: string; status: string; host_name: string; created_at: string }>>(`${API.visitors.list}?limit=20`),
       ]);
+      if (statsRes.data) setStats(statsRes.data);
+      if (visitsRes.data && Array.isArray(visitsRes.data)) {
+        setRecentActivity(
+          visitsRes.data.map((v) => ({
+            id: v.id,
+            visitor_name: v.visitor_name,
+            action: v.status,
+            flat_number: undefined,
+            timestamp: v.created_at,
+            performed_by: v.host_name || "—",
+          }))
+        );
+      } else {
+        setRecentActivity([]);
+      }
     } catch (error) {
       console.error("Failed to fetch dashboard data:", error);
+      setRecentActivity([]);
     } finally {
       setLoading(false);
     }
@@ -225,7 +234,10 @@ export function AdminDashboard({ user }: AdminDashboardProps) {
             </h2>
           </div>
           <div className="divide-y divide-border max-h-96 overflow-y-auto">
-            {recentActivity.map((activity) => (
+            {recentActivity.length === 0 ? (
+              <div className="p-6 text-center text-muted-foreground text-sm">No recent activity. Visits will appear here.</div>
+            ) : (
+            recentActivity.map((activity) => (
               <div key={activity.id} className="p-4 hover:bg-muted-bg/50 transition flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <Avatar name={activity.visitor_name} size="sm" />
@@ -244,7 +256,8 @@ export function AdminDashboard({ user }: AdminDashboardProps) {
                   </span>
                 </div>
               </div>
-            ))}
+            ))
+            )}
           </div>
           <div className="p-3 border-t border-border bg-muted-bg/50">
             <Link href="/visitors" className="text-sm text-primary hover:underline">
@@ -253,36 +266,23 @@ export function AdminDashboard({ user }: AdminDashboardProps) {
           </div>
         </div>
 
-        {/* Quick Stats */}
+        {/* Stats summary */}
         <div className="bg-card rounded-xl shadow-sm border border-border overflow-hidden">
           <div className="p-4 border-b border-border">
-            <h2 className="text-lg font-semibold text-foreground">Today&apos;s Summary</h2>
+            <h2 className="text-lg font-semibold text-foreground">Summary</h2>
           </div>
           <div className="p-4 space-y-4">
             <div className="flex items-center justify-between">
-              <span className="text-muted-foreground text-sm">Pre-approved Visitors</span>
-              <span className="font-semibold text-foreground">{Math.floor((stats?.visitors_today ?? 0) * 0.6)}</span>
+              <span className="text-muted-foreground text-sm">Visitors today</span>
+              <span className="font-semibold text-foreground">{stats?.visitors_today ?? 0}</span>
             </div>
             <div className="flex items-center justify-between">
-              <span className="text-muted-foreground text-sm">Walk-in Registrations</span>
-              <span className="font-semibold text-warning">{Math.floor((stats?.visitors_today ?? 0) * 0.3)}</span>
+              <span className="text-muted-foreground text-sm">Pending approval</span>
+              <span className="font-semibold text-warning">{stats?.pending_approvals ?? 0}</span>
             </div>
             <div className="flex items-center justify-between">
-              <span className="text-muted-foreground text-sm">Rejected Entries</span>
-              <span className="font-semibold text-error">{Math.floor((stats?.visitors_today ?? 0) * 0.05)}</span>
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="text-muted-foreground text-sm">Blacklist Alerts</span>
-              <span className="font-semibold text-error">0</span>
-            </div>
-            <hr className="border-border" />
-            <div className="flex items-center justify-between">
-              <span className="text-muted-foreground text-sm">Avg. Visit Duration</span>
-              <span className="font-semibold text-foreground">45 min</span>
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="text-muted-foreground text-sm">Peak Hour</span>
-              <span className="font-semibold text-foreground">10:00 - 11:00 AM</span>
+              <span className="text-muted-foreground text-sm">Checked in now</span>
+              <span className="font-semibold text-success">{stats?.checked_in ?? 0}</span>
             </div>
           </div>
         </div>

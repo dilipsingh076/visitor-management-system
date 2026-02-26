@@ -156,7 +156,12 @@ async def list_visits_api(
             pass
     elif not is_guard_or_admin(current_user):
         hid = current_user_id
-    visits = await list_visits(db, limit=limit, offset=offset, status=status, host_id=hid)
+    society_id = current_user.get("society_id")
+    try:
+        sid = UUID(society_id) if society_id else None
+    except (ValueError, TypeError):
+        sid = None
+    visits = await list_visits(db, limit=limit, offset=offset, status=status, host_id=hid, society_id=sid)
     return [_visit_to_response(v) for v in visits]
 
 
@@ -177,6 +182,8 @@ async def approve_visit_api(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Not authorized to approve this visit. Only the host may approve.",
         )
+    if current_user.get("society_id") and visit.host and str(visit.host.society_id) != current_user.get("society_id"):
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Visit does not belong to your society")
     try:
         visit = await approve_visit(db, visit)
         await db.refresh(visit, ["visitor"])
@@ -206,4 +213,6 @@ async def get_visit(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Not authorized to view this visit.",
         )
+    if is_guard_or_admin(current_user) and current_user.get("society_id") and visit.host and str(visit.host.society_id) != current_user.get("society_id"):
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Visit does not belong to your society")
     return _visit_to_response(visit)

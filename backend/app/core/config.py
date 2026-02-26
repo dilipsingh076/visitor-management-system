@@ -1,17 +1,19 @@
 """
 Application configuration using Pydantic Settings.
+Load backend/.env for DATABASE_URL (use Supabase postgresql+asyncpg://...).
 """
 from pathlib import Path
 from pydantic_settings import BaseSettings
 from typing import List
 
-# Resolve DB path relative to project root (backend/) for consistency
+# Resolve paths relative to backend/
 _BASE_DIR = Path(__file__).resolve().parent.parent
 _DEFAULT_DB = _BASE_DIR / "vms.db"
+_ENV_FILE = _BASE_DIR / ".env"
 
 
 class Settings(BaseSettings):
-    """Application settings."""
+    """Application settings. DATABASE_URL from .env uses Supabase by default."""
 
     # App
     APP_NAME: str = "Visitor Management System"
@@ -24,7 +26,7 @@ class Settings(BaseSettings):
 
     CORS_ORIGINS: List[str] = ["*"]  # Allow all origins
 
-    # Database (SQLite by default - absolute path for consistent CWD behavior)
+    # Database: set in .env to Supabase (postgresql+asyncpg://postgres:PASSWORD@db.XXX.supabase.co:5432/postgres)
     DATABASE_URL: str = f"sqlite+aiosqlite:///{_DEFAULT_DB.as_posix()}"
     DB_ECHO: bool = False
     DB_POOL_SIZE: int = 5
@@ -71,7 +73,8 @@ class Settings(BaseSettings):
     RATE_LIMIT_PER_MINUTE: int = 60
 
     class Config:
-        env_file = ".env"
+        env_file = str(_ENV_FILE) if _ENV_FILE.exists() else ".env"
+        env_file_encoding = "utf-8"
         case_sensitive = True
 
 

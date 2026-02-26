@@ -1,18 +1,79 @@
 """
-Security utilities for JWT validation with Keycloak.
+Security utilities: password hashing, JWT (local + Keycloak).
 """
-from typing import Dict, Optional
+import hashlib
+from datetime import datetime, timedelta
+from typing import Dict, Optional, Any
 from jose import jwt, JWTError
 from jose.constants import ALGORITHMS
 import httpx
 import structlog
+import bcrypt
 
 from app.core.config import settings
 
 logger = structlog.get_logger()
 
-# Cache for Keycloak public key
-_keycloak_public_key: Optional[str] = None
+# Local JWT issuer so we can distinguish from Keycloak
+LOCAL_JWT_ISSUER = "vms"
+
+
+def _digest_for_bcrypt(plain: str) -> bytes:
+    """Full password → SHA-256 digest (32 bytes). Bcrypt then hashes that; no truncation."""
+    raw = (plain or "").encode("utf-8")
+    return hashlib.sha256(raw).digest()
+
+
+def hash_password(plain: str) -> str:
+    digest = _digest_for_bcrypt(plain)
+    salt = bcrypt.gensalt()
+    return bcrypt.hashpw(digest, salt).decode("ascii")
+
+
+def verify_password(plain: str, hashed: str) -> bool:
+    digest = _digest_for_bcrypt(plain)
+    try:
+        if bcrypt.checkpw(digest, hashed.encode("ascii")):
+            return True
+        # Backward compat: old hashes were bcrypt(plain); try that once
+        raw = (plain or "").encode("utf-8")
+        if len(raw) <= 72:
+            return bcrypt.checkpw(raw, hashed.encode("ascii"))
+    except Exception:
+        pass
+    return False
+
+
+def create_access_token(
+    user_id: str,
+    email: str,
+    roles: list[str],
+    *,
+    society_id: Optional[str] = None,
+    building_id: Optional[str] = None,
+    full_name: Optional[str] = None,
+) -> str:
+    """Create a JWT for local auth (login/signup/register-society)."""
+    expire = datetime.utcnow() + timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
+    payload = {
+        "sub": str(user_id),
+        "user_id": str(user_id),
+        "email": email,
+        "preferred_username": full_name or email.split("@")[0],
+        "realm_access": {"roles": roles},
+        "iss": LOCAL_JWT_ISSUER,
+        "exp": expire,
+        "iat": datetime.utcnow(),
+    }
+    if society_id:
+        payload["society_id"] = str(society_id)
+    if building_id:
+        payload["building_id"] = str(building_id)
+    return jwt.encode(
+        payload,
+        settings.SECRET_KEY,
+        algorithm="HS256",
+    )
 
 
 async def get_keycloak_public_key() -> str:
@@ -48,26 +109,35 @@ async def get_keycloak_public_key() -> str:
         raise
 
 
-async def verify_token(token: str) -> Dict:
+async def verify_token(token: str) -> Dict[str, Any]:
     """
-    Verify JWT token from Keycloak.
+    Verify JWT: if our local issuer (vms), decode with SECRET_KEY; else Keycloak.
     """
     try:
-        # Decode without verification first to get header
         unverified = jwt.get_unverified_header(token)
-        
-        # For production, use JWKS endpoint properly
-        # For now, decode with options to skip signature verification in dev
-        # TODO: Implement proper JWKS verification
-        
+        # Try local JWT first (HS256)
+        try:
+            payload = jwt.decode(
+                token,
+                settings.SECRET_KEY,
+                algorithms=["HS256"],
+                options={"verify_aud": False},
+            )
+            if payload.get("iss") == LOCAL_JWT_ISSUER:
+                # Normalize for dependencies: sub, user_id, realm_access.roles, society_id
+                if "user_id" not in payload and "sub" in payload:
+                    payload["user_id"] = payload["sub"]
+                return payload
+        except JWTError:
+            pass
+        # Keycloak / external JWT (existing behavior)
         payload = jwt.decode(
             token,
             key="",
-            options={"verify_signature": False},  # TODO: Enable when Keycloak is running
+            options={"verify_signature": False},
             audience=settings.JWT_AUDIENCE,
             algorithms=[settings.JWT_ALGORITHM],
         )
-        
         return payload
     except JWTError as e:
         logger.error("JWT verification failed", error=str(e))

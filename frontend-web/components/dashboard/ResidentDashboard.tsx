@@ -54,30 +54,70 @@ export function ResidentDashboard({ user }: ResidentDashboardProps) {
   const fetchData = async () => {
     setLoading(true);
     try {
-      const [statsRes, myReqRes] = await Promise.all([
+      const [statsRes, myReqRes, visitsRes] = await Promise.all([
         apiClient.get<Stats>(API.dashboard.stats),
         apiClient.get<MyRequests>(API.dashboard.myRequests),
+        apiClient.get<Array<{ visitor_id: string; visitor_name: string; visitor_phone: string; purpose?: string; created_at: string }>>(`${API.visitors.list}?host_id=me&limit=100`),
       ]);
 
       if (statsRes.data) setStats(statsRes.data);
       if (myReqRes.data) setPendingApprovals(myReqRes.data);
 
-      // Fetch frequent visitors (mock for now - you can add this endpoint later)
-      setFrequentVisitors([
-        { id: "1", name: "Ramesh (Maid)", phone: "9876543210", purpose: "Domestic Help", visit_count: 24, last_visit: "Today" },
-        { id: "2", name: "Suresh (Driver)", phone: "9876543211", purpose: "Driver", visit_count: 18, last_visit: "Yesterday" },
-      ]);
+      // Derive frequent visitors from visit history (group by visitor_id, count, last_visit)
+      if (visitsRes.data && Array.isArray(visitsRes.data)) {
+        const byVisitor = new Map<string, { visitor_id: string; name: string; phone: string; purposes: string[]; dates: string[] }>();
+        for (const v of visitsRes.data) {
+          const key = v.visitor_id;
+          const existing = byVisitor.get(key);
+          const purpose = v.purpose || "Visit";
+          if (!existing) {
+            byVisitor.set(key, { visitor_id: key, name: v.visitor_name, phone: v.visitor_phone || "", purposes: [purpose], dates: [v.created_at] });
+          } else {
+            existing.dates.push(v.created_at);
+            if (!existing.purposes.includes(purpose)) existing.purposes.push(purpose);
+          }
+        }
+        const frequent: FrequentVisitor[] = Array.from(byVisitor.entries())
+          .map(([_, data]) => ({
+            id: data.visitor_id,
+            name: data.name,
+            phone: data.phone,
+            purpose: data.purposes[0] || "Visit",
+            visit_count: data.dates.length,
+            last_visit: formatLastVisit(data.dates.sort().reverse()[0]),
+          }))
+          .sort((a, b) => b.visit_count - a.visit_count)
+          .slice(0, 8);
+        setFrequentVisitors(frequent);
+      } else {
+        setFrequentVisitors([]);
+      }
     } catch (error) {
       console.error("Failed to fetch dashboard data:", error);
+      setFrequentVisitors([]);
     } finally {
       setLoading(false);
     }
   };
 
+  function formatLastVisit(iso?: string): string {
+    if (!iso) return "—";
+    const d = new Date(iso);
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const visitDay = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+    const diffDays = Math.floor((today.getTime() - visitDay.getTime()) / (24 * 60 * 60 * 1000));
+    if (diffDays === 0) return "Today";
+    if (diffDays === 1) return "Yesterday";
+    if (diffDays < 7) return `${diffDays} days ago`;
+    if (diffDays < 14) return "Last week";
+    return d.toLocaleDateString();
+  }
+
   const handleApprove = async (visitId: string) => {
     setApproving(visitId);
     try {
-      await apiClient.post(`${API.visitors.base}/${visitId}/approve`, {});
+      await apiClient.patch(API.visitors.approve(visitId), {});
       setPendingApprovals((prev) =>
         prev
           ? { count: prev.count - 1, visits: prev.visits.filter((v) => v.id !== visitId) }
@@ -93,7 +133,7 @@ export function ResidentDashboard({ user }: ResidentDashboardProps) {
   const handleReject = async (visitId: string) => {
     setApproving(visitId);
     try {
-      await apiClient.post(`${API.visitors.base}/${visitId}/reject`, {});
+      await apiClient.patch(API.visitors.reject(visitId), {});
       setPendingApprovals((prev) =>
         prev
           ? { count: prev.count - 1, visits: prev.visits.filter((v) => v.id !== visitId) }
@@ -306,9 +346,9 @@ export function ResidentDashboard({ user }: ResidentDashboardProps) {
                   <span className="text-xs text-muted-foreground hidden sm:block">
                     {visitor.visit_count} visits · {visitor.last_visit}
                   </span>
-                  <Button size="sm" variant="secondary">
-                    Quick Invite
-                  </Button>
+                  <Link href={`/visitors/invite?name=${encodeURIComponent(visitor.name)}&phone=${encodeURIComponent(visitor.phone)}`}>
+                    <Button size="sm" variant="secondary">Quick Invite</Button>
+                  </Link>
                 </div>
               </div>
             ))}

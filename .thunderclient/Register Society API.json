@@ -1,0 +1,19 @@
+{
+  "clientName": "Thunder Client",
+  "collectionName": "VMS API",
+  "dateExported": "2025-02-25",
+  "requests": [
+    {
+      "name": "Register Society",
+      "method": "POST",
+      "url": "http://localhost:8000/api/v1/auth/register-society",
+      "headers": [
+        { "name": "Content-Type", "value": "application/json" }
+      ],
+      "body": {
+        "type": "json",
+        "raw": "{\n  \"society_name\": \"My Housing Society\",\n  \"address\": \"123 Main Road\",\n  \"city\": \"Mumbai\",\n  \"state\": \"Maharashtra\",\n  \"pincode\": \"400001\",\n  \"country\": \"India\",\n  \"contact_email\": \"society@example.com\",\n  \"contact_phone\": \"9876543210\",\n  \"registration_number\": \"REG123\",\n  \"society_type\": \"cooperative_housing\",\n  \"registration_year\": \"2024\",\n  \"email\": \"admin@example.com\",\n  \"password\": \"SecurePass123!\",\n  \"full_name\": \"Society Admin\",\n  \"phone\": \"9876543210\"\n}"
+      }
+    }
+  ]
+}

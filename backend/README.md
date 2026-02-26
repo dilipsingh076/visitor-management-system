@@ -21,10 +21,7 @@ cp .env.example .env
 # Edit .env with your settings
 ```
 
-4. Run database migrations (when database is set up):
-```bash
-# TODO: Add Alembic migrations
-```
+4. **Database:** On first run, tables are created automatically. If you have an existing `vms.db` from before society support was added, delete it (or back it up) and restart so new columns (`society_id`, `buildings`, etc.) are created. In demo mode, a default society and users are created on startup.
 
 5. Start the server:
 ```bash

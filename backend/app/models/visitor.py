@@ -1,7 +1,7 @@
 """
 Visitor and Visit models.
 """
-from sqlalchemy import Column, String, Boolean, DateTime, ForeignKey, Text, Enum as SQLEnum, JSON
+from sqlalchemy import Column, String, Boolean, DateTime, ForeignKey, Text, JSON, TypeDecorator
 from sqlalchemy.orm import relationship
 from datetime import datetime
 import uuid
@@ -18,6 +18,26 @@ class VisitStatus(str, enum.Enum):
     CHECKED_IN = "checked_in"
     CHECKED_OUT = "checked_out"
     CANCELLED = "cancelled"
+
+
+class VisitStatusType(TypeDecorator):
+    """Store VisitStatus as VARCHAR so PostgreSQL/Supabase avoid native ENUM type mismatch."""
+    impl = String(20)
+    cache_ok = True
+
+    def process_bind_param(self, value, dialect):
+        if value is None:
+            return None
+        if isinstance(value, VisitStatus):
+            return value.value
+        return str(value)
+
+    def process_result_value(self, value, dialect):
+        if value is None:
+            return None
+        if isinstance(value, VisitStatus):
+            return value
+        return VisitStatus(value) if value else None
 
 
 class Visitor(Base):
@@ -55,7 +75,7 @@ class Visit(Base):
     id = Column(GUID(), primary_key=True, default=uuid.uuid4)
     visitor_id = Column(GUID(), ForeignKey("visitors.id"), nullable=False, index=True)
     host_id = Column(GUID(), ForeignKey("users.id"), nullable=False, index=True)
-    status = Column(SQLEnum(VisitStatus), default=VisitStatus.PENDING, nullable=False, index=True)
+    status = Column(VisitStatusType(), default=VisitStatus.PENDING, nullable=False, index=True)
     
     # Visit details
     purpose = Column(String(255), nullable=True)

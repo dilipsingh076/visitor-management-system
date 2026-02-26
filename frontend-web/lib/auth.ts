@@ -159,6 +159,9 @@ export async function registerSociety(data: {
   country?: string;
   contact_email: string;
   contact_phone?: string;
+  registration_number?: string;
+  society_type?: string;
+  registration_year?: string;
   buildings?: { name: string; code?: string }[];
   email: string;
   password: string;
@@ -175,7 +178,9 @@ export async function registerSociety(data: {
 
     if (!response.ok) {
       const err = await response.json().catch(() => ({}));
-      return { user: null, error: err.detail || "Registration failed" };
+      const detail = err.detail;
+      const message = typeof detail === "string" ? detail : Array.isArray(detail) ? (detail[0]?.msg || "Registration failed") : "Registration failed";
+      return { user: null, error: message };
     }
 
     const result = await response.json();

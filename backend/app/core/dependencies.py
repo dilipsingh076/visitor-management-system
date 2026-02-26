@@ -11,7 +11,7 @@ import structlog
 from app.core.config import settings
 from app.core.database import get_db_session
 from app.core.security import verify_token
-from app.db.seed import DEMO_USER_ID
+from app.db.seed import DEMO_USER_ID, DEMO_SOCIETY_ID
 
 logger = structlog.get_logger()
 security = HTTPBearer(auto_error=False)
@@ -32,7 +32,12 @@ async def get_current_user_optional(
     from app.core.config import settings
 
     if settings.AUTH_DEMO_MODE:
-        return {"sub": "demo-user", "email": "demo@vms.local", "preferred_username": "demo"}
+        return {
+            "sub": "demo-user",
+            "email": "demo@vms.local",
+            "preferred_username": "demo",
+            "society_id": str(DEMO_SOCIETY_ID),
+        }
 
     if not credentials:
         return None
@@ -57,6 +62,7 @@ async def get_current_user(
             "preferred_username": "demo",
             "user_id": str(DEMO_USER_ID),
             "realm_access": {"roles": ["resident", "guard", "admin"]},
+            "society_id": str(DEMO_SOCIETY_ID),
         }
 
     if not credentials:
