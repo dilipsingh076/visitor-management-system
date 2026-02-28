@@ -7,6 +7,7 @@ export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: "primary" | "secondary" | "ghost" | "danger";
   size?: "sm" | "md" | "lg";
   fullWidth?: boolean;
+  loading?: boolean;
 }
 
 export function Button({
@@ -14,7 +15,9 @@ export function Button({
   variant = "primary",
   size = "md",
   fullWidth,
+  loading = false,
   className = "",
+  disabled,
   ...props
 }: ButtonProps) {
   const base = "rounded-lg font-medium transition disabled:opacity-60 disabled:cursor-not-allowed";
@@ -32,9 +35,10 @@ export function Button({
   return (
     <button
       className={`${base} ${variants[variant]} ${sizes[size]} ${fullWidth ? "w-full" : ""} ${className}`.trim()}
+      disabled={disabled ?? loading}
       {...props}
     >
-      {children}
+      {loading ? "…" : children}
     </button>
   );
 }

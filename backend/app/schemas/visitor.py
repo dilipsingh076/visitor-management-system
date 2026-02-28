@@ -1,7 +1,7 @@
 """
 Pydantic schemas for visitor and visit operations.
 """
-from pydantic import BaseModel, EmailStr, Field
+from pydantic import BaseModel, EmailStr, Field, model_validator
 from typing import Optional
 from datetime import datetime
 from uuid import UUID
@@ -42,11 +42,21 @@ class VisitCreate(BaseModel):
 
 
 class WalkInCreate(BaseModel):
-    """Schema for guard manual/walk-in registration."""
+    """Schema for guard manual/walk-in registration. Resident identified by host_id OR by building + flat (tower/flat)."""
     visitor_phone: str = Field(..., min_length=10, max_length=20)
     visitor_name: str = Field(..., min_length=1, max_length=255)
     purpose: Optional[str] = None
-    host_id: UUID  # Required: resident whom visitor wants to meet - they will be notified to approve
+    host_id: Optional[UUID] = None  # Resident to notify (optional if building_id + flat_number provided)
+    building_id: Optional[UUID] = None  # Tower/building – use with flat_number to find resident
+    flat_number: Optional[str] = None  # Flat no – use with building_id to find resident
+
+    @model_validator(mode="after")
+    def require_host_or_building_flat(self):
+        if self.host_id is not None:
+            return self
+        if self.building_id is not None and self.flat_number and str(self.flat_number).strip():
+            return self
+        raise ValueError("Provide either host_id or both building_id and flat_number (tower + flat)")
 
 
 class VisitResponse(BaseModel):

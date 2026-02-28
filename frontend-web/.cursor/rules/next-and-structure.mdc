@@ -1,0 +1,42 @@
+---
+description: Next.js App Router and feature-folder structure for this project
+alwaysApply: true
+---
+
+# Next.js App Router & Project Structure
+
+## App directory (`app/`)
+
+- **Routes only**: Each segment is a route. Use `page.tsx`, `layout.tsx`, `loading.tsx`, `error.tsx`, and `not-found.tsx` per Next.js conventions.
+- **Thin pages**: `page.tsx` only imports and renders. Do not put page logic or large JSX in `page.tsx`. Delegate to a colocated component under a **private folder**.
+- **Route-level colocation (private folders)**: Under each route segment, use a folder prefixed with underscore so it is not a route (e.g. `_components/`). Put the actual page content there: e.g. `app/dashboard/_components/DashboardPageContent.tsx`, `app/guard/_components/GuardPageContent.tsx`, `app/admin/users/_components/UserManagementPageContent.tsx`. The `page.tsx` file imports from `./_components/...` and returns that component. This keeps routing files in `app/` and implementation details colocated under the route.
+- **Server vs client**: Prefer Server Components for `page.tsx` (no "use client"). Put "use client" only in the component inside `_components/` when the page needs hooks, context, or browser APIs. No inline `useEffect` fetching; use TanStack Query in feature hooks called from the client component.
+- **Loading & error**: Add `loading.tsx` and `error.tsx` at route segments that fetch data or have async UI (e.g. dashboard, guard, visitors, checkin, admin, platform, blacklist, login).
+
+## Feature folders (`features/<name>/`)
+
+- **One folder per feature** (e.g. `auth`, `guard`, `visitors`, `dashboard`, `checkin`, `platform`, `admin`, `residents`).
+- **Inside the feature folder**:
+  - `types.ts` (or `types/index.ts`) — feature-specific types; re-export API types from `@/lib/api` when needed.
+  - `hooks/` — all data and mutations for this feature (e.g. `useGuardData.ts`, `useVisitorsList.ts`). Use TanStack Query for server state.
+  - `components/` — feature-specific components (optional).
+  - `context/` — feature-specific context (e.g. `AuthProvider`).
+  - `index.ts` — re-export the public API (hooks, components, types). Other code imports from `@/features/<name>`.
+- **No feature logic in root `hooks/`**: Root `hooks/` is for common hooks only (e.g. `useDebounce`). Feature hooks live in `features/<name>/hooks/`.
+- **No duplicate types**: Shared API shapes live in `types/index.ts` or `lib/types`; feature-specific types stay in the feature’s `types.ts`.
+
+## Data & state
+
+- **Auth**: React Context via `AuthProvider` and `useAuth` / `useAuthContext` from `@/features/auth`.
+- **Server state**: TanStack Query in feature hooks. Query keys in `hooks/keys.ts` per feature. Mutations invalidate relevant query keys.
+- **Re-exports**: `components/guard/index.ts` and `components/dashboard/index.ts` may re-export from `@/features/guard` and `@/features/dashboard` so existing imports keep working.
+
+## Import rules
+
+- Prefer feature entry: `import { useAuth } from "@/features/auth"`, `import { useGuardPending, GuardSection } from "@/features/guard"`.
+- Shared types: `import type { Visit } from "@/types"`.
+- Common hooks: `import { useDebounce } from "@/hooks"` or `import { useAuth } from "@/hooks/useAuth"` (re-export from auth).
+
+## Optional: route groups
+
+- Use route groups to organize without changing URLs: `app/(marketing)/page.tsx`, `app/(auth)/login/page.tsx`, `app/(app)/dashboard/page.tsx`. Layouts can be added per group (e.g. `(app)/layout.tsx` for authenticated shell).

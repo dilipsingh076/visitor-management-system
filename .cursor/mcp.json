@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "vms-visualize": {
+      "command": "node",
+      "args": ["C:/Users/LENOVO/Desktop/Visitor management systme/mcp-visualize/dist/index.js"]
+    }
+  }
+}

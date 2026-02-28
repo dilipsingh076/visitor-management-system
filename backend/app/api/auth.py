@@ -103,6 +103,7 @@ async def register_society(body: RegisterSocietyRequest, db: AsyncSession = Depe
             password=body.password,
             full_name=body.full_name,
             phone=body.phone,
+            flat_number=body.flat_number,
         )
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))

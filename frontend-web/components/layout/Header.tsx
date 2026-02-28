@@ -1,35 +1,15 @@
 "use client";
 
-import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { isAuthenticated, removeToken, getDemoUser, getPrimaryRole, ROLE_LABELS, canAccessGuardPage, canAccessCheckin, canAccessWalkin, canAccessPlatform } from "@/lib/auth";
+import { removeToken, getPrimaryRole, ROLE_LABELS, canAccessGuardPage, canAccessCheckin, canAccessWalkin, canAccessPlatform } from "@/lib/auth";
+import { useAuthContext } from "@/features/auth";
 import { Button, LinkButton } from "@/components/ui";
-import { apiClient } from "@/lib/api";
-import { API } from "@/lib/api/endpoints";
-import type { User } from "@/lib/auth";
 
 export default function Header() {
   const pathname = usePathname();
-  const [authenticated, setAuthenticated] = useState(false);
-  const [user, setUser] = useState<User | null>(null);
-
-  useEffect(() => {
-    const ok = isAuthenticated();
-    setAuthenticated(ok);
-    if (ok) {
-      const demo = getDemoUser();
-      if (demo) {
-        setUser(demo);
-      } else {
-        apiClient.get<User>(API.auth.me).then((res) => {
-          if (res.data) setUser(res.data);
-        });
-      }
-    } else {
-      setUser(null);
-    }
-  }, [pathname]);
+  const { user, isAuthenticated } = useAuthContext();
+  const authenticated = isAuthenticated;
 
   const handleLogout = () => {
     removeToken();

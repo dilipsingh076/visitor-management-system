@@ -113,8 +113,27 @@ def _migrate_users_columns_sync(connection):
             logger.info("Added column to users", column=col_name)
 
 
+# Blacklist: add society_id for per-society blacklist (India: each society has its own blacklist)
+BLACKLIST_EXTRA_COLUMNS = [("society_id", "VARCHAR(36)")]  # SQLite
+BLACKLIST_EXTRA_PG = [("society_id", "UUID")]
+
+
+def _migrate_blacklist_columns_sync(connection):
+    """Add society_id to blacklist table (SQLite). Idempotent."""
+    try:
+        result = connection.execute(text("PRAGMA table_info(blacklist)"))
+        rows = result.fetchall()
+    except Exception:
+        return
+    existing = {str(row[1]).lower() for row in rows}
+    for col_name, col_type in BLACKLIST_EXTRA_COLUMNS:
+        if col_name.lower() not in existing:
+            connection.execute(text(f"ALTER TABLE blacklist ADD COLUMN {col_name} {col_type}"))
+            logger.info("Added column to blacklist", column=col_name)
+
+
 def _migrate_postgres_columns_sync(connection):
-    """Add missing columns to societies and users (PostgreSQL/Supabase). Idempotent."""
+    """Add missing columns to societies, users, and blacklist (PostgreSQL/Supabase). Idempotent."""
     for col_name, col_type in SOCIETIES_EXTRA_PG:
         try:
             connection.execute(text(
@@ -139,6 +158,14 @@ def _migrate_postgres_columns_sync(connection):
         logger.info("Migrated visits.status to VARCHAR (pg)")
     except Exception as e:
         logger.debug("visits.status migration skipped (may already be varchar)", error=str(e))
+    for col_name, col_type in BLACKLIST_EXTRA_PG:
+        try:
+            connection.execute(text(
+                f"ALTER TABLE blacklist ADD COLUMN IF NOT EXISTS {col_name} {col_type}"
+            ))
+            logger.info("Added column to blacklist (pg)", column=col_name)
+        except Exception as e:
+            logger.debug("blacklist column may exist", column=col_name, error=str(e))
 
 
 async def init_db():
@@ -153,6 +180,7 @@ async def init_db():
         if _is_sqlite:
             await conn.run_sync(_migrate_societies_columns_sync)
             await conn.run_sync(_migrate_users_columns_sync)
+            await conn.run_sync(_migrate_blacklist_columns_sync)
         else:
             await conn.run_sync(_migrate_postgres_columns_sync)
 

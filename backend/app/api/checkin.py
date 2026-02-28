@@ -100,6 +100,47 @@ async def checkin_qr(
     )
 
 
+@router.post("/by-visit")
+async def checkin_by_visit(
+    request: Request,
+    data: CheckOutRequest,
+    db: AsyncSession = Depends(get_db),
+    current_user: dict = Depends(get_current_guard_or_admin),
+    current_user_id: UUID = Depends(get_current_user_id),
+):
+    """
+    Check-in by visit ID (no OTP). For walk-ins: after resident approves, guard uses this to allow entry.
+    Guard or admin only.
+    """
+    visit = await get_visit_by_id(db, data.visit_id)
+    if not visit:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Visit not found")
+    await db.refresh(visit, ["host", "visitor"])
+    if current_user.get("society_id") and visit.host and str(visit.host.society_id) != current_user.get("society_id"):
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Visit does not belong to your society")
+    status_val = visit.status.value if hasattr(visit.status, "value") else str(visit.status)
+    if status_val != "approved":
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Visit must be approved by resident before check-in. Current status: " + status_val,
+        )
+    try:
+        visit = await checkin_visit(db, visit)
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+    await log_admin_action(
+        db, current_user_id, current_user,
+        "checkin_by_visit", request.url.path, request.method,
+        {"visit_id": str(visit.id)},
+    )
+    return CheckInResponse(
+        visit_id=visit.id,
+        status="checked_in",
+        checkin_time=visit.actual_arrival or datetime.utcnow(),
+        message="Check-in successful (no OTP required)",
+    )
+
+
 @router.post("/checkout")
 async def checkout(
     request: Request,

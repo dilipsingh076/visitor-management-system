@@ -1,8 +1,11 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  // Avoid double useEffect in dev (dashboard stats called twice in Network tab)
-  reactStrictMode: false,
+  reactStrictMode: true,
+  images: {
+    formats: ["image/avif", "image/webp"],
+    unoptimized: process.env.NODE_ENV === "development",
+  },
 };
 
 export default nextConfig;

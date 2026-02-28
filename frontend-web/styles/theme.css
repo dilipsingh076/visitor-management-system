@@ -39,4 +39,10 @@
   /* Shadows */
   --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.06);
   --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.08);
+  --shadow-lg: 0 10px 40px rgba(0, 0, 0, 0.08);
+
+  /* Spacing (for consistency) */
+  --section-padding-y: 4rem;
+  --section-padding-x: 1.5rem;
+  --content-max-width: 72rem;
 }

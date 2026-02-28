@@ -1,47 +1,47 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
-import { apiClient } from "@/lib/api";
-import { listBuildings, type BuildingListItem } from "@/lib/api";
-import { isAuthenticated, getDemoUser, canInviteVisitor } from "@/lib/auth";
+import { Suspense, useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
+import { canInviteVisitor } from "@/lib/auth";
+import { useAuth } from "@/features/auth";
 import Link from "next/link";
 import { Input, Button } from "@/components/ui";
-import { API } from "@/lib/api/endpoints";
-import type { User } from "@/lib/auth";
+import {
+  useBuildings,
+  useInviteVisitor,
+  type InviteVisitorResult,
+} from "@/features/visitors";
 
-export default function InvitePage() {
-  const router = useRouter();
-  const [user, setUser] = useState<User | null>(null);
+function InviteContent() {
+  const searchParams = useSearchParams();
+  const { user, loading: authLoading } = useAuth({
+    requireAuth: true,
+    requireRole: canInviteVisitor,
+    redirectTo: "/dashboard?message=Resident+or+admin+only",
+  });
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [purpose, setPurpose] = useState("");
   const [expectedArrival, setExpectedArrival] = useState("");
-  const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [result, setResult] = useState<{ otp: string; qr_code: string } | null>(null);
-  const [buildings, setBuildings] = useState<BuildingListItem[]>([]);
+  const [result, setResult] = useState<InviteVisitorResult | null>(null);
   const [buildingId, setBuildingId] = useState("");
 
-  useEffect(() => {
-    if (!isAuthenticated()) {
-      router.push("/login");
-      return;
-    }
-    const demo = getDemoUser();
-    if (demo) setUser(demo);
-    else apiClient.get<User>(API.auth.me).then((r) => r.data && setUser(r.data));
-  }, [router]);
+  const buildingsQ = useBuildings(user?.society_id);
+  const buildings = buildingsQ.data ?? [];
+  const inviteMutation = useInviteVisitor();
+  const loading = inviteMutation.isPending;
 
   useEffect(() => {
-    if (user && !canInviteVisitor(user)) router.replace("/dashboard?message=Resident+or+admin+only");
-  }, [user, router]);
+    // Prefill from quick-invite (frequent visitors)
+    const qpName = searchParams.get("name") ?? "";
+    const qpPhone = searchParams.get("phone") ?? "";
+    const qpPurpose = searchParams.get("purpose") ?? "";
 
-  useEffect(() => {
-    const uid = user as User & { society_id?: string };
-    if (uid?.society_id) listBuildings(uid.society_id).then(setBuildings);
-    else setBuildings([]);
-  }, [user]);
+    setName((prev) => (prev ? prev : qpName));
+    setPhone((prev) => (prev ? prev : qpPhone.replace(/\D/g, "").slice(0, 10)));
+    setPurpose((prev) => (prev ? prev : qpPurpose));
+  }, [searchParams]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -50,25 +50,25 @@ export default function InvitePage() {
       setError("Name and phone are required");
       return;
     }
-    setLoading(true);
-    const payload: Record<string, unknown> = {
-      visitor_name: name.trim(),
-      visitor_phone: phone.replace(/\D/g, "").slice(0, 10),
-      purpose: purpose.trim() || undefined,
-    };
-    if (expectedArrival) payload.expected_arrival = new Date(expectedArrival).toISOString();
-    if (buildingId) payload.building_id = buildingId;
-    const res = await apiClient.post<{ otp: string; qr_code: string }>(API.visitors.invite, payload);
-    setLoading(false);
-    if (res.error) {
-      setError(res.error);
-      return;
+
+    try {
+      const data = await inviteMutation.mutateAsync({
+        visitor_name: name,
+        visitor_phone: phone,
+        purpose,
+        expected_arrival: expectedArrival
+          ? new Date(expectedArrival).toISOString()
+          : undefined,
+        building_id: buildingId || undefined,
+      });
+      setResult(data);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to create invite");
     }
-    if (res.data) setResult(res.data);
   };
 
-  if (!isAuthenticated()) return null;
-  if (user && !canInviteVisitor(user)) {
+  if (authLoading || !user) return null;
+  if (!canInviteVisitor(user)) {
     return (
       <div className="max-w-lg mx-auto px-4 py-10 text-center text-muted">
         <p>Inviting visitors is for Resident or Admin only.</p>
@@ -132,5 +132,19 @@ export default function InvitePage() {
         </form>
       )}
     </div>
+  );
+}
+
+export default function InvitePage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="max-w-lg mx-auto px-4 py-10 text-muted-foreground">
+          Loading…
+        </div>
+      }
+    >
+      <InviteContent />
+    </Suspense>
   );
 }

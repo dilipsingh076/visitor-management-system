@@ -1,7 +1,9 @@
 """Visitor & Visit management endpoints. RBAC: resident/admin for invite/approve; guard/admin for walk-in."""
 from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, status, Query, Request
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 
 from app.core.dependencies import (
     get_db,
@@ -19,6 +21,9 @@ from app.services.visit_service import (
     create_invitation,
     create_walkin_visit,
     get_visit_by_id,
+    get_resident_by_building_and_flat,
+    ensure_user_in_society,
+    ensure_building_in_society,
     list_visits,
     approve_visit,
 )
@@ -102,25 +107,69 @@ async def walkin_visitor(
     current_user_id: UUID = Depends(get_current_user_id),
 ):
     """
-    Guard or admin registers walk-in visitor.
-    Guard selects resident whom visitor wants to meet.
-    Visit created as PENDING - resident must approve from dashboard.
+    Guard registers walk-in visitor. Resident is identified by host_id OR by building_id + flat_number (tower + flat).
+    Notification is sent to that resident's device (in-app; push when implemented). No OTP for visitor.
     """
     await ensure_demo_user(db)
     try:
+        society_id = current_user.get("society_id")
+        if not society_id:
+            raise ValueError("You must be assigned to a society to register walk-ins")
+        try:
+            sid = UUID(society_id)
+        except (ValueError, TypeError):
+            raise ValueError("Invalid society")
+
+        host_id: UUID
+        building_name: str | None = None
+        flat_number: str | None = None
+
+        if data.host_id is not None:
+            await ensure_user_in_society(db, data.host_id, sid)
+            host_id = data.host_id
+        else:
+            if not data.building_id or not data.flat_number:
+                raise ValueError("Provide either host_id or both building_id and flat_number")
+            await ensure_building_in_society(db, data.building_id, sid)
+            resident = await get_resident_by_building_and_flat(
+                db, sid, data.building_id, data.flat_number
+            )
+            if not resident:
+                raise ValueError(
+                    "No resident found for this tower and flat. Check building and flat number."
+                )
+            host_id = resident.id
+            flat_number = (data.flat_number or "").strip()
+            if resident.building:
+                building_name = resident.building.name
+            else:
+                building_name = None
+
+        if data.host_id is not None and (building_name is None and flat_number is None):
+            from app.models.user import User
+            res = await db.execute(
+                select(User).options(selectinload(User.building)).where(User.id == host_id)
+            )
+            host_user = res.scalar_one_or_none()
+            if host_user:
+                building_name = host_user.building.name if host_user.building else None
+                flat_number = (host_user.flat_number or "").strip() or None
+
         visit = await create_walkin_visit(
             db=db,
-            host_id=data.host_id,
+            host_id=host_id,
             visitor_phone=data.visitor_phone,
             visitor_name=data.visitor_name,
             purpose=data.purpose,
             guard_id=current_user_id,
+            building_name=building_name,
+            flat_number=flat_number,
         )
         await db.refresh(visit, ["visitor", "host"])
         await log_admin_action(
             db, current_user_id, current_user,
             "walkin_visitor", request.url.path, request.method,
-            {"visit_id": str(visit.id), "host_id": str(data.host_id)},
+            {"visit_id": str(visit.id), "host_id": str(host_id)},
         )
         return _visit_to_response(visit)
     except ValueError as e:

@@ -167,6 +167,7 @@ export async function registerSociety(data: {
   password: string;
   full_name: string;
   phone?: string;
+  flat_number?: string;
 }): Promise<{ user: User | null; society?: { id: string; slug: string; name: string }; error?: string }> {
   try {
     const response = await fetch(`${API_BASE_URL}/auth/register-society`, {

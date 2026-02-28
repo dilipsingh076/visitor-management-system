@@ -1,3 +1,2 @@
-export { ResidentDashboard } from "./ResidentDashboard";
-export { GuardDashboard } from "./GuardDashboard";
-export { AdminDashboard } from "./AdminDashboard";
+/** Re-export from dashboard feature (single source of truth). */
+export { ResidentDashboard, GuardDashboard, AdminDashboard } from "@/features/dashboard";

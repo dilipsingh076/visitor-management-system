@@ -1,12 +1,42 @@
-"""Blacklist service - add/remove visitors from blacklist."""
+"""Blacklist service - add/remove visitors from blacklist (per society)."""
 from typing import Optional
 from uuid import UUID
 
-from sqlalchemy import select
+from sqlalchemy import select, and_
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.visitor import Visitor, Blacklist
 from app.services.visit_service import get_or_create_visitor
+
+
+async def is_visitor_blacklisted_for_society(
+    db: AsyncSession,
+    visitor_id: UUID,
+    society_id: UUID,
+) -> bool:
+    """True if visitor is blacklisted for this society. Per-society blacklist."""
+    result = await db.execute(
+        select(Blacklist).where(
+            and_(
+                Blacklist.visitor_id == visitor_id,
+                Blacklist.society_id == society_id,
+                Blacklist.is_active == True,
+            )
+        ).limit(1)
+    )
+    if result.scalar_one_or_none():
+        return True
+    # Legacy: no society_id on Blacklist row meant global blacklist
+    result = await db.execute(
+        select(Blacklist).where(
+            and_(
+                Blacklist.visitor_id == visitor_id,
+                Blacklist.society_id.is_(None),
+                Blacklist.is_active == True,
+            )
+        ).limit(1)
+    )
+    return result.scalar_one_or_none() is not None
 
 
 async def add_to_blacklist(
@@ -14,25 +44,29 @@ async def add_to_blacklist(
     visitor_id: UUID,
     reason: str,
     blacklisted_by: UUID,
+    society_id: UUID,
 ) -> Visitor:
-    """Add visitor to blacklist. Sets is_blacklisted=True and creates Blacklist record."""
-    result = await db.execute(
-        select(Visitor).where(Visitor.id == visitor_id)
-    )
+    """Add visitor to this society's blacklist. Creates Blacklist record with society_id."""
+    result = await db.execute(select(Visitor).where(Visitor.id == visitor_id))
     visitor = result.scalar_one_or_none()
     if not visitor:
         raise ValueError("Visitor not found")
-    if visitor.is_blacklisted:
-        raise ValueError("Visitor is already blacklisted")
 
-    visitor.is_blacklisted = True
+    # Already blacklisted in this society?
+    if await is_visitor_blacklisted_for_society(db, visitor_id, society_id):
+        raise ValueError("Visitor is already blacklisted in this society")
+
     bl = Blacklist(
         visitor_id=visitor_id,
+        society_id=society_id,
         reason=reason,
         blacklisted_by=blacklisted_by,
         is_active=True,
     )
     db.add(bl)
+    await db.flush()
+    # Keep Visitor.is_blacklisted for backward compat / "ever blacklisted anywhere" display
+    visitor.is_blacklisted = True
     await db.flush()
     return visitor
 
@@ -40,24 +74,37 @@ async def add_to_blacklist(
 async def remove_from_blacklist(
     db: AsyncSession,
     visitor_id: UUID,
+    society_id: UUID,
 ) -> Visitor:
-    """Remove visitor from blacklist. Sets is_blacklisted=False and Blacklist.is_active=False."""
-    result = await db.execute(
-        select(Visitor).where(Visitor.id == visitor_id)
-    )
+    """Remove visitor from this society's blacklist. Deactivates Blacklist row(s) for this society."""
+    result = await db.execute(select(Visitor).where(Visitor.id == visitor_id))
     visitor = result.scalar_one_or_none()
     if not visitor:
         raise ValueError("Visitor not found")
-    if not visitor.is_blacklisted:
-        raise ValueError("Visitor is not blacklisted")
 
-    visitor.is_blacklisted = False
     bl_result = await db.execute(
-        select(Blacklist).where(Blacklist.visitor_id == visitor_id, Blacklist.is_active == True)
+        select(Blacklist).where(
+            Blacklist.visitor_id == visitor_id,
+            Blacklist.society_id == society_id,
+            Blacklist.is_active == True,
+        )
     )
-    for bl in bl_result.scalars().all():
+    rows = bl_result.scalars().all()
+    if not rows:
+        raise ValueError("Visitor is not blacklisted in this society")
+    for bl in rows:
         bl.is_active = False
     await db.flush()
+    # If no other society has this visitor blacklisted, clear the global flag
+    other = await db.execute(
+        select(Blacklist).where(
+            Blacklist.visitor_id == visitor_id,
+            Blacklist.is_active == True,
+        ).limit(1)
+    )
+    if other.scalar_one_or_none() is None:
+        visitor.is_blacklisted = False
+        await db.flush()
     return visitor
 
 
@@ -67,28 +114,33 @@ async def add_to_blacklist_by_phone(
     full_name: str,
     reason: str,
     blacklisted_by: UUID,
+    society_id: UUID,
 ) -> Visitor:
-    """Add visitor to blacklist by phone. Creates visitor if not exists."""
+    """Add visitor to this society's blacklist by phone. Creates visitor if not exists."""
     visitor = await get_or_create_visitor(db, phone=phone, full_name=full_name)
-    return await add_to_blacklist(db, visitor.id, reason, blacklisted_by)
+    return await add_to_blacklist(db, visitor.id, reason, blacklisted_by, society_id)
 
 
-async def list_blacklisted(db: AsyncSession) -> list[tuple[Visitor, Optional[str]]]:
-    """List all blacklisted visitors with their blacklist reason. Returns (visitor, reason)."""
+async def list_blacklisted(
+    db: AsyncSession,
+    society_id: UUID,
+) -> list[tuple[Visitor, Optional[str]]]:
+    """List blacklisted visitors for this society. Returns (visitor, reason)."""
     result = await db.execute(
-        select(Visitor)
-        .where(Visitor.is_blacklisted == True)
-        .order_by(Visitor.updated_at.desc())
-    )
-    visitors = list(result.scalars().all())
-    out = []
-    for v in visitors:
-        bl_res = await db.execute(
-            select(Blacklist).where(
-                Blacklist.visitor_id == v.id,
-                Blacklist.is_active == True
-            ).order_by(Blacklist.created_at.desc()).limit(1)
+        select(Blacklist, Visitor)
+        .join(Visitor, Blacklist.visitor_id == Visitor.id)
+        .where(
+            and_(
+                Blacklist.society_id == society_id,
+                Blacklist.is_active == True,
+            )
         )
-        bl = bl_res.scalar_one_or_none()
-        out.append((v, bl.reason if bl else None))
+        .order_by(Blacklist.created_at.desc())
+    )
+    out = []
+    seen = set()
+    for bl, visitor in result.all():
+        if visitor.id not in seen:
+            seen.add(visitor.id)
+            out.append((visitor, bl.reason))
     return out

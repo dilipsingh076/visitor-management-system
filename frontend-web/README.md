@@ -36,7 +36,10 @@ frontend-web/
 ├── lib/                    # Utilities
 │   ├── api.ts             # API client
 │   └── auth.ts            # Auth utilities
-└── public/                 # Static assets
+├── public/                 # Static assets
+│   └── images/             # Hero, banner, about (run scripts/download-images.js to populate)
+├── scripts/
+│   └── download-images.js  # Fetches royalty-free placeholders into public/images
 ```
 
 ## Features

@@ -65,6 +65,7 @@ async def register_society(
     password: str,
     full_name: str,
     phone: Optional[str] = None,
+    flat_number: Optional[str] = None,
 ) -> tuple[User, Society, str]:
     """
     Create society, optional buildings, and first admin user. Returns (user, society, token).
@@ -126,6 +127,7 @@ async def register_society(
         email=(email or "").strip().lower(),
         full_name=(full_name or "").strip(),
         phone=_opt_str(phone),
+        flat_number=_opt_str(flat_number),
         role="admin",
         is_active=True,
         password_hash=hash_password(password),

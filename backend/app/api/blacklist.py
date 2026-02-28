@@ -1,9 +1,9 @@
-"""Blacklist management API - guard/admin only."""
+"""Blacklist management API - guard/admin only. Blacklist is per society."""
 from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, status
 
 from app.core.dependencies import get_db, get_current_guard, get_current_user_id
-from app.db.seed import ensure_demo_user, DEMO_USER_ID
+from app.db.seed import ensure_demo_user
 from app.schemas.blacklist import BlacklistAddRequest, BlacklistByPhoneRequest
 from app.services.blacklist_service import (
     add_to_blacklist,
@@ -13,6 +13,20 @@ from app.services.blacklist_service import (
 )
 
 router = APIRouter()
+
+
+def _society_id_required(current_user: dict) -> UUID:
+    """Require current user to belong to a society (for blacklist scope)."""
+    sid = current_user.get("society_id")
+    if not sid:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Blacklist is scoped to a society. You must belong to a society.",
+        )
+    try:
+        return UUID(sid)
+    except ValueError:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Invalid society_id")
 
 
 def _to_entry(v, reason: str | None) -> dict:
@@ -31,9 +45,10 @@ async def list_blacklist_api(
     db=Depends(get_db),
     current_user=Depends(get_current_guard),
 ):
-    """List all blacklisted visitors. Guard/admin only."""
+    """List blacklisted visitors for your society. Guard/admin only."""
     await ensure_demo_user(db)
-    entries = await list_blacklisted(db)
+    society_id = _society_id_required(current_user)
+    entries = await list_blacklisted(db, society_id=society_id)
     return [_to_entry(v, reason) for v, reason in entries]
 
 
@@ -44,14 +59,16 @@ async def add_blacklist(
     current_user=Depends(get_current_guard),
     user_id=Depends(get_current_user_id),
 ):
-    """Add visitor to blacklist by visitor_id. Guard/admin only."""
+    """Add visitor to your society's blacklist by visitor_id. Guard/admin only."""
     await ensure_demo_user(db)
+    society_id = _society_id_required(current_user)
     try:
         visitor = await add_to_blacklist(
             db=db,
             visitor_id=data.visitor_id,
             reason=data.reason,
             blacklisted_by=user_id,
+            society_id=society_id,
         )
         await db.commit()
         return {"message": "Visitor blacklisted", "visitor_id": str(visitor.id)}
@@ -66,8 +83,9 @@ async def add_blacklist_by_phone(
     current_user=Depends(get_current_guard),
     user_id=Depends(get_current_user_id),
 ):
-    """Add visitor to blacklist by phone (creates visitor if not exists). Guard/admin only."""
+    """Add visitor to your society's blacklist by phone (creates visitor if not exists). Guard/admin only."""
     await ensure_demo_user(db)
+    society_id = _society_id_required(current_user)
     try:
         visitor = await add_to_blacklist_by_phone(
             db=db,
@@ -75,6 +93,7 @@ async def add_blacklist_by_phone(
             full_name=data.visitor_name,
             reason=data.reason,
             blacklisted_by=user_id,
+            society_id=society_id,
         )
         await db.commit()
         return {"message": "Visitor blacklisted", "visitor_id": str(visitor.id)}
@@ -88,10 +107,11 @@ async def remove_blacklist(
     db=Depends(get_db),
     current_user=Depends(get_current_guard),
 ):
-    """Remove visitor from blacklist. Guard/admin only."""
+    """Remove visitor from your society's blacklist. Guard/admin only."""
     await ensure_demo_user(db)
+    society_id = _society_id_required(current_user)
     try:
-        visitor = await remove_from_blacklist(db=db, visitor_id=visitor_id)
+        visitor = await remove_from_blacklist(db=db, visitor_id=visitor_id, society_id=society_id)
         await db.commit()
         return {"message": "Visitor removed from blacklist", "visitor_id": str(visitor.id)}
     except ValueError as e:

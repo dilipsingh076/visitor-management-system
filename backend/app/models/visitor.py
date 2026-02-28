@@ -131,11 +131,13 @@ class ConsentLog(Base):
 
 class Blacklist(Base):
     """
-    Blacklisted visitors.
+    Blacklisted visitors per society. A visitor can be blacklisted in one society
+    and still allowed in another (India: each society has its own blacklist).
     """
     __tablename__ = "blacklist"
 
     id = Column(GUID(), primary_key=True, default=uuid.uuid4)
+    society_id = Column(GUID(), ForeignKey("societies.id", ondelete="CASCADE"), nullable=True, index=True)  # Nullable for legacy rows; new rows must set
     visitor_id = Column(GUID(), ForeignKey("visitors.id"), nullable=False, index=True)
     reason = Column(Text, nullable=False)
     blacklisted_by = Column(GUID(), ForeignKey("users.id"), nullable=False)

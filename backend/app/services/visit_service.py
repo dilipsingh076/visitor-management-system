@@ -1,4 +1,5 @@
 """Visit & Visitor business logic."""
+import json
 import secrets
 import uuid
 from datetime import datetime, timedelta
@@ -13,6 +14,60 @@ from app.constants.visit import OTP_EXPIRE_MINUTES, OTP_LENGTH, QR_PREFIX, ARRIV
 from app.models.visitor import Visit, VisitStatus, Visitor, ConsentLog
 from app.models.user import User
 from app.models.notification import Notification
+from app.models.society import Building
+from app.services.blacklist_service import is_visitor_blacklisted_for_society
+
+
+async def ensure_user_in_society(
+    db: AsyncSession, user_id: UUID, society_id: UUID
+) -> User:
+    """Raise ValueError if user is not in the given society (strict society scoping)."""
+    result = await db.execute(
+        select(User).where(User.id == user_id, User.society_id == society_id)
+    )
+    user = result.scalar_one_or_none()
+    if not user:
+        raise ValueError("Resident not found or does not belong to your society")
+    return user
+
+
+async def ensure_building_in_society(
+    db: AsyncSession, building_id: UUID, society_id: UUID
+) -> None:
+    """Raise ValueError if building is not in the given society (strict society scoping)."""
+    result = await db.execute(
+        select(Building).where(
+            Building.id == building_id,
+            Building.society_id == society_id,
+        )
+    )
+    if not result.scalar_one_or_none():
+        raise ValueError("Building (tower) not found or does not belong to your society")
+
+
+async def get_resident_by_building_and_flat(
+    db: AsyncSession,
+    society_id: UUID,
+    building_id: UUID,
+    flat_number: str,
+) -> Optional[User]:
+    """Find resident (host) by tower/building and flat number within a society. Returns first match."""
+    flat_clean = (flat_number or "").strip()
+    if not flat_clean:
+        return None
+    result = await db.execute(
+        select(User)
+        .options(selectinload(User.building))
+        .where(
+            User.society_id == society_id,
+            User.building_id == building_id,
+            User.flat_number.ilike(flat_clean),
+            User.role.in_(["resident", "admin"]),
+            User.is_active == True,
+        )
+        .limit(1)
+    )
+    return result.scalar_one_or_none()
 
 
 def _generate_otp() -> str:
@@ -58,8 +113,9 @@ async def create_invitation(
     """Create visit invitation with QR and OTP."""
     visitor = await get_or_create_visitor(db, visitor_phone, visitor_name, visitor_email)
 
-    if visitor.is_blacklisted:
-        raise ValueError("Visitor is blacklisted")
+    host = await db.get(User, host_id)
+    if host and host.society_id and await is_visitor_blacklisted_for_society(db, visitor.id, host.society_id):
+        raise ValueError("Visitor is blacklisted in this society")
 
     expires_at = datetime.utcnow() + timedelta(minutes=OTP_EXPIRE_MINUTES)
     visit = Visit(
@@ -84,28 +140,55 @@ async def create_walkin_visit(
     visitor_name: str,
     purpose: Optional[str] = None,
     guard_id: Optional[UUID] = None,
+    building_name: Optional[str] = None,
+    flat_number: Optional[str] = None,
 ) -> Visit:
     """
-    Walk-in / manual entry by guard.
+    Walk-in / manual entry by guard. No OTP for visitor.
     Creates visit as PENDING - resident (host) must approve via dashboard/app.
-    Guard selects whom visitor wants to meet → resident gets notified → resident approves → guard allows entry.
+    Guard selects resident by tower+flat or host_id → notification goes to that resident's device →
+    resident approves → guard marks check-in (by visit_id, no OTP).
     """
     visitor = await get_or_create_visitor(db, visitor_phone, visitor_name)
 
-    if visitor.is_blacklisted:
-        raise ValueError("Visitor is blacklisted")
+    host = await db.get(User, host_id)
+    if host and host.society_id and await is_visitor_blacklisted_for_society(db, visitor.id, host.society_id):
+        raise ValueError("Visitor is blacklisted in this society")
 
     visit = Visit(
         visitor_id=visitor.id,
         host_id=host_id,
         status=VisitStatus.PENDING,  # Wait for resident approval
         purpose=purpose or "Walk-in",
-        qr_code=_generate_qr(),
-        otp=_generate_otp(),
-        otp_expires_at=datetime.utcnow() + timedelta(minutes=OTP_EXPIRE_MINUTES),
+        qr_code=None,  # No QR/OTP for walk-in; guard will check-in by visit_id after approval
+        otp=None,
+        otp_expires_at=None,
         extra_data={"walkin": True, "guard_id": str(guard_id) if guard_id else None},
     )
     db.add(visit)
+    await db.flush()
+    await db.refresh(visit, ["visitor", "host"])
+
+    # Notify resident (by tower/flat) so they get alert on device to approve/reject
+    notif_body = f"{visitor.full_name} is at the gate."
+    if building_name or flat_number:
+        parts = [p for p in [building_name, flat_number] if p]
+        if parts:
+            notif_body += f" Flat: {' - '.join(parts)}."
+    notif_body += " Approve or reject from the app."
+    notif = Notification(
+        user_id=host_id,
+        type="walkin_pending",
+        title="Visitor at gate",
+        body=notif_body,
+        read=False,
+        extra_data=json.dumps({
+            "visit_id": str(visit.id),
+            "visitor_name": visitor.full_name,
+            "visitor_phone": visitor.phone,
+        }),
+    )
+    db.add(notif)
     await db.flush()
     return visit
 
@@ -180,8 +263,10 @@ async def checkin_visit(
     Re-checks blacklist. Validates arrival window. Records DPDP consent log. Notifies host.
     """
     # Re-check blacklist at check-in (visitor may have been blacklisted after invite)
-    await db.refresh(visit, ["visitor"])
-    if visit.visitor.is_blacklisted:
+    await db.refresh(visit, ["visitor", "host"])
+    if visit.host and visit.host.society_id and await is_visitor_blacklisted_for_society(
+        db, visit.visitor_id, visit.host.society_id
+    ):
         raise ValueError("Visitor is blacklisted - access denied")
 
     _validate_arrival_window(visit)
@@ -220,11 +305,23 @@ async def checkin_visit(
 
 
 async def approve_visit(db: AsyncSession, visit: Visit) -> Visit:
-    """Approve a pending visit (host/guard)."""
+    """
+    Approve a pending visit (resident or admin).
+    For walk-ins: resident approval = permission to enter, so we auto check-in (no guard action).
+    """
     if visit.status != VisitStatus.PENDING:
         raise ValueError(f"Cannot approve visit with status {visit.status.value}")
     visit.status = VisitStatus.APPROVED
     await db.flush()
+
+    # Walk-in: resident approved = allow entry; auto check-in so guard does not need a separate action
+    extra = visit.extra_data or {}
+    if extra.get("walkin") is True:
+        await db.refresh(visit, ["visitor", "host"])
+        try:
+            visit = await checkin_visit(db, visit)
+        except ValueError:
+            pass  # e.g. blacklisted; leave as approved only
     return visit
 
 

@@ -53,10 +53,11 @@ class RegisterSocietyRequest(BaseModel):
     password: str = Field(..., min_length=6)
     full_name: str = Field(..., min_length=1)
     phone: str | None = None
+    flat_number: str | None = None  # First admin's flat (e.g. "1201")
 
     @field_validator(
         "society_slug", "address", "city", "state", "pincode", "country",
-        "contact_phone", "registration_number", "society_type", "registration_year", "phone",
+        "contact_phone", "registration_number", "society_type", "registration_year", "phone", "flat_number",
         mode="before",
     )
     @classmethod

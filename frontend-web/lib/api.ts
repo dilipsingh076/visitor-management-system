@@ -135,6 +135,35 @@ class ApiClient {
 
 export const apiClient = new ApiClient(API_BASE_URL);
 
+/**
+ * Download a blob from an API path (e.g. /dashboard/muster?format=csv).
+ * Uses same origin credentials and Bearer token. Returns true if successful.
+ */
+export async function downloadBlob(
+  path: string,
+  filename: string
+): Promise<boolean> {
+  try {
+    const token =
+      typeof window !== "undefined" ? localStorage.getItem("access_token") : null;
+    const res = await fetch(`${API_BASE_URL}${path}`, {
+      credentials: "include",
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+    });
+    if (!res.ok) return false;
+    const blob = await res.blob();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    a.click();
+    URL.revokeObjectURL(url);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 // ---------- Societies (public: by-slug for signup; auth: list/create for super_admin) ----------
 
 export interface SocietyBySlug {

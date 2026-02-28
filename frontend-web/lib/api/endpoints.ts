@@ -22,6 +22,7 @@ export const API = {
   checkin: {
     otp: "/checkin/otp",
     qr: "/checkin/qr",
+    byVisit: "/checkin/by-visit",
     checkout: "/checkin/checkout",
   },
   blacklist: {

@@ -67,12 +67,12 @@ export interface CheckInResponse {
 }
 
 export interface BlacklistEntry {
-  id: string;
+  id?: string;
   visitor_id: string;
   visitor_name: string;
   visitor_phone: string;
   reason: string;
-  created_at: string;
+  created_at?: string;
 }
 
 export interface BlacklistAddRequest {
@@ -102,6 +102,8 @@ export interface Resident {
   email: string;
   phone?: string;
   flat_no?: string;
+  building_id?: string | null;
+  building_name?: string | null;
 }
 
 export interface DashboardStats {

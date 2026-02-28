@@ -177,6 +177,7 @@ export default function LoginPage() {
         password,
         full_name: fullName.trim(),
         phone: phone.trim() || undefined,
+        flat_number: flatNumber.trim() || undefined,
       });
       if (result.error) {
         setError(result.error);
@@ -223,43 +224,53 @@ export default function LoginPage() {
     return true;
   };
 
+  const inputClass =
+    "w-full px-4 py-3 rounded-xl border border-slate-300 bg-white text-slate-900 placeholder:text-slate-400 focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500 outline-none transition text-sm";
+  const labelClass = "block text-sm font-medium text-slate-700 mb-1.5";
+
   return (
-    <div className="min-h-screen flex flex-col md:flex-row">
-      {/* Left: branding (visible on md+) */}
-      <div className="hidden md:flex md:w-[42%] lg:w-[44%] bg-gradient-to-br from-primary via-primary to-primary-hover p-10 flex-col justify-center relative overflow-hidden">
-        <div className="absolute inset-0 opacity-10" style={{ backgroundImage: "radial-gradient(circle at 1px 1px, white 1px, transparent 0)", backgroundSize: "32px 32px" }} />
-        <div className="relative z-10 max-w-sm">
-          <WelcomeIllustration className="w-28 h-28 text-white/95 mb-6" />
+    <div className="h-screen flex flex-col md:flex-row overflow-x-hidden bg-slate-100">
+      {/* Left: branding — fixed on desktop */}
+      <div className="hidden md:flex md:w-[44%] lg:w-[42%] flex-shrink-0 bg-gradient-to-b from-emerald-600 to-emerald-700 p-12 flex-col justify-center shadow-xl">
+        <div className="max-w-sm">
+          <div className="w-16 h-16 rounded-2xl bg-white/15 backdrop-blur flex items-center justify-center mb-8">
+            <WelcomeIllustration className="w-9 h-9 text-white" />
+          </div>
           <h2 className="text-2xl lg:text-3xl font-bold text-white tracking-tight">
             Visitor Management for Societies
           </h2>
-          <p className="text-primary-light/90 mt-3 text-sm leading-relaxed">
-            Contactless check-in, pre-approvals, and DPDP-compliant visitor tracking for housing societies and apartments.
+          <p className="text-emerald-100 mt-4 text-sm leading-relaxed">
+            Contactless check-in, pre-approvals, and DPDP-compliant tracking for housing societies and apartments.
           </p>
-          <ul className="mt-8 space-y-3 text-sm text-white/90">
-            <li className="flex items-center gap-2"><span className="w-5 h-5 rounded-full bg-white/20 flex items-center justify-center text-xs">✓</span> QR & OTP check-in</li>
-            <li className="flex items-center gap-2"><span className="w-5 h-5 rounded-full bg-white/20 flex items-center justify-center text-xs">✓</span> Resident approvals & muster</li>
-            <li className="flex items-center gap-2"><span className="w-5 h-5 rounded-full bg-white/20 flex items-center justify-center text-xs">✓</span> India & DPDP ready</li>
+          <ul className="mt-10 space-y-4 text-sm text-white/95">
+            <li className="flex items-center gap-3">
+              <span className="w-8 h-8 rounded-lg bg-white/20 flex items-center justify-center text-sm font-medium shrink-0">1</span>
+              QR & OTP check-in
+            </li>
+            <li className="flex items-center gap-3">
+              <span className="w-8 h-8 rounded-lg bg-white/20 flex items-center justify-center text-sm font-medium shrink-0">2</span>
+              Resident approvals & muster
+            </li>
+            <li className="flex items-center gap-3">
+              <span className="w-8 h-8 rounded-lg bg-white/20 flex items-center justify-center text-sm font-medium shrink-0">3</span>
+              India & DPDP ready
+            </li>
           </ul>
         </div>
       </div>
 
-      {/* Right: form */}
-      <div className="flex-1 flex items-center justify-center px-4 py-8 md:py-12 bg-background">
-        <div className={`w-full ${isRegisterSociety ? "max-w-lg" : "max-w-md"}`}>
-          <div className="bg-card rounded-2xl shadow-xl border border-border overflow-hidden">
-            {/* Hero strip (mobile + compact on desktop when no left panel context) */}
-            <div className="md:hidden bg-gradient-to-br from-primary to-primary-hover px-6 py-6 text-center">
-              <WelcomeIllustration className="w-16 h-16 text-white/90 mx-auto mb-2" />
-              <h1 className="text-xl font-bold text-white">
-                {isRegisterSociety ? "Register Society" : isSignup ? "Join Society" : "Welcome Back"}
-              </h1>
-            </div>
-            <div className="hidden md:block bg-gradient-to-r from-primary/5 to-transparent px-6 py-5 border-b border-border">
-              <h1 className="text-lg font-semibold text-foreground">
+      {/* Right: single scroll region */}
+      <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden flex flex-col items-center justify-start md:justify-center py-8 px-4 sm:px-6 bg-slate-100">
+        <div className={`w-full flex-shrink-0 ${isRegisterSociety ? "max-w-lg" : "max-w-md"}`}>
+          <div className="bg-white rounded-2xl shadow-xl border border-slate-200/80 overflow-hidden">
+            <div className="px-6 sm:px-8 pt-6 pb-4 border-b border-slate-200 bg-white">
+              <div className="md:hidden w-12 h-12 rounded-xl bg-emerald-500 flex items-center justify-center mb-4">
+                <WelcomeIllustration className="w-7 h-7 text-white" />
+              </div>
+              <h1 className="text-xl font-bold text-slate-900">
                 {isRegisterSociety ? "Register your society" : isSignup ? "Join your society" : "Sign in"}
               </h1>
-              <p className="text-sm text-muted mt-0.5">
+              <p className="text-slate-500 mt-1 text-sm">
                 {isRegisterSociety
                   ? "Step-by-step setup. You’ll be the first admin."
                   : isSignup
@@ -269,14 +280,14 @@ export default function LoginPage() {
             </div>
 
             {/* Tabs */}
-            <div className="flex border-b border-border bg-muted-bg/50">
+            <div className="flex border-b border-slate-200 bg-slate-50/70">
               <button
                 type="button"
                 onClick={() => setTab("login")}
-                className={`flex-1 py-3.5 text-sm font-medium transition rounded-t-lg ${
+                className={`flex-1 py-3.5 text-sm font-medium transition outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2 ${
                   tabMode === "login"
-                    ? "text-primary bg-card border-b-2 border-primary shadow-sm -mb-px"
-                    : "text-muted hover:text-foreground hover:bg-muted-bg"
+                    ? "text-emerald-600 border-b-2 border-emerald-600 -mb-px"
+                    : "text-slate-500 hover:text-slate-700"
                 }`}
               >
                 Sign In
@@ -284,10 +295,10 @@ export default function LoginPage() {
               <button
                 type="button"
                 onClick={() => setTab("signup")}
-                className={`flex-1 py-3.5 text-sm font-medium transition rounded-t-lg ${
+                className={`flex-1 py-3.5 text-sm font-medium transition outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2 ${
                   tabMode === "signup"
-                    ? "text-primary bg-card border-b-2 border-primary shadow-sm -mb-px"
-                    : "text-muted hover:text-foreground hover:bg-muted-bg"
+                    ? "text-emerald-600 border-b-2 border-emerald-600 -mb-px"
+                    : "text-slate-500 hover:text-slate-700"
                 }`}
               >
                 Sign Up
@@ -295,27 +306,27 @@ export default function LoginPage() {
               <button
                 type="button"
                 onClick={() => setTab("registerSociety")}
-                className={`flex-1 py-3.5 text-sm font-medium transition rounded-t-lg ${
+                className={`flex-1 py-3.5 text-sm font-medium transition outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2 ${
                   tabMode === "registerSociety"
-                    ? "text-primary bg-card border-b-2 border-primary shadow-sm -mb-px"
-                    : "text-muted hover:text-foreground hover:bg-muted-bg"
+                    ? "text-emerald-600 border-b-2 border-emerald-600 -mb-px"
+                    : "text-slate-500 hover:text-slate-700"
                 }`}
               >
                 Register Society
               </button>
             </div>
 
-          <form onSubmit={handleSubmit} className={`p-6 ${isRegisterSociety ? "space-y-5" : "space-y-4"}`}>
+          <form onSubmit={handleSubmit} className={`p-6 sm:px-8 ${isRegisterSociety ? "space-y-5" : "space-y-4"}`}>
             {error && (
-              <div className="text-error text-sm bg-error-light px-3 py-2 rounded-lg">
+              <div className="text-red-700 text-sm bg-red-50 border border-red-200 px-4 py-3 rounded-xl">
                 {error}
               </div>
             )}
 
             {isSignup && (
-              <section className="space-y-4 rounded-xl bg-muted/20 dark:bg-muted/10 p-4">
+              <section className="space-y-4 rounded-xl border border-slate-200 bg-slate-50/70 p-5">
                 <div>
-                  <label htmlFor="societyCode" className="block text-sm font-medium text-muted mb-1">
+                  <label htmlFor="societyCode" className={labelClass}>
                     Society code *
                   </label>
                   <input
@@ -324,20 +335,20 @@ export default function LoginPage() {
                     value={societyCode}
                     onChange={(e) => setSocietyCode(e.target.value)}
                     placeholder="e.g. green-valley or demo-society"
-                    className="w-full px-4 py-2.5 rounded-lg border border-border focus:ring-2 focus:ring-primary focus:border-primary outline-none transition"
+                    className={inputClass}
                     required
                   />
-                  <p className="mt-1 text-xs text-muted">
+                  <p className="mt-1 text-xs text-slate-500">
                     Get the society code from your building manager. Only Guard and Resident can join here; to create a society and become Admin, use Register Society.
                   </p>
                   {societyNotFound && (
-                    <p className="mt-1.5 text-xs text-amber-600 dark:text-amber-400">
+                    <p className="mt-1.5 text-xs text-amber-700">
                       Society not found. Check the code or use Register Society to create a new one.
                     </p>
                   )}
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-muted mb-2">
+                  <label className={labelClass}>
                     I am a *
                   </label>
                   <div className="flex flex-wrap gap-2">
@@ -348,20 +359,20 @@ export default function LoginPage() {
                         onClick={() => setSelectedRole(r)}
                         className={`flex-1 min-w-0 py-2.5 px-3 rounded-lg text-sm font-medium border transition ${
                           selectedRole === r
-                            ? "bg-primary text-white border-primary"
-                            : "bg-muted-bg text-muted border-border hover:border-primary/50"
+                            ? "bg-emerald-600 text-white border-emerald-600"
+                            : "bg-slate-100 text-slate-600 border-slate-300 hover:border-emerald-400 hover:bg-slate-50"
                         }`}
                       >
                         {ROLE_LABELS[r]}
                       </button>
                     ))}
                   </div>
-                  <p className="mt-1.5 text-xs text-muted">
+                  <p className="mt-1.5 text-xs text-slate-500">
                     Admin can only be created when you Register a new society (see Register Society tab).
                   </p>
                 </div>
                 <div>
-                  <label htmlFor="fullName" className="block text-sm font-medium text-muted mb-1">
+                  <label htmlFor="fullName" className={labelClass}>
                     Full name *
                   </label>
                   <input
@@ -370,20 +381,20 @@ export default function LoginPage() {
                     value={fullName}
                     onChange={(e) => setFullName(e.target.value)}
                     placeholder="John Doe"
-                    className="w-full px-4 py-2.5 rounded-lg border border-border focus:ring-2 focus:ring-primary focus:border-primary outline-none transition"
+                    className={inputClass}
                     required
                   />
                 </div>
                 {buildings.length > 0 && (
                   <div>
-                    <label htmlFor="building" className="block text-sm font-medium text-muted mb-1">
+                    <label htmlFor="building" className={labelClass}>
                       Building / wing (optional)
                     </label>
                     <select
                       id="building"
                       value={selectedBuildingId}
                       onChange={(e) => setSelectedBuildingId(e.target.value)}
-                      className="w-full px-4 py-2.5 rounded-lg border border-border focus:ring-2 focus:ring-primary focus:border-primary outline-none transition bg-background"
+                      className={inputClass}
                     >
                       <option value="">— Select (optional) —</option>
                       {buildings.map((b) => (
@@ -400,18 +411,18 @@ export default function LoginPage() {
             {isRegisterSociety && (
               <>
                 {/* Step progress */}
-                <div className="px-6 pt-4">
-                  <div className="flex items-center justify-between text-xs text-muted mb-2">
+                <div className="px-6 sm:px-8 pt-4 pb-2">
+                  <div className="flex items-center justify-between text-xs font-medium text-slate-500 mb-2">
                     <span>Step {registerStep} of {REGISTER_STEPS}</span>
                     <span>{Math.round((registerStep / REGISTER_STEPS) * 100)}%</span>
                   </div>
-                  <div className="h-1.5 bg-muted-bg rounded-full overflow-hidden">
+                  <div className="h-2 bg-slate-200 rounded-full overflow-hidden">
                     <div
-                      className="h-full bg-primary rounded-full transition-all duration-300"
+                      className="h-full bg-emerald-500 rounded-full transition-all duration-300"
                       style={{ width: `${(registerStep / REGISTER_STEPS) * 100}%` }}
                     />
                   </div>
-                  <p className="text-sm font-medium text-foreground mt-2">
+                  <p className="text-sm font-semibold text-slate-800 mt-2.5">
                     {registerStep === 1 && "Society basics"}
                     {registerStep === 2 && "Address & contact"}
                     {registerStep === 3 && "Official documents"}
@@ -424,27 +435,27 @@ export default function LoginPage() {
                 {registerStep === 1 && (
                   <div className="p-6 space-y-4">
                     <div>
-                      <label htmlFor="societyName" className="block text-sm font-medium text-muted mb-1">Society name *</label>
+                      <label htmlFor="societyName" className={labelClass}>Society name *</label>
                       <input
                         id="societyName"
                         type="text"
                         value={societyName}
                         onChange={(e) => setSocietyName(e.target.value)}
                         placeholder="e.g. Green Valley Apartments"
-                        className="w-full px-4 py-2.5 rounded-lg border border-border focus:ring-2 focus:ring-primary focus:border-primary outline-none transition"
+                        className={inputClass}
                       />
                     </div>
                     <div>
-                      <label htmlFor="societySlug" className="block text-sm font-medium text-muted mb-1">Society code (optional)</label>
+                      <label htmlFor="societySlug" className={labelClass}>Society code (optional)</label>
                       <input
                         id="societySlug"
                         type="text"
                         value={societySlug}
                         onChange={(e) => setSocietySlug(e.target.value)}
                         placeholder="Leave blank to derive from name"
-                        className="w-full px-4 py-2.5 rounded-lg border border-border focus:ring-2 focus:ring-primary outline-none transition"
+                        className={inputClass}
                       />
-                      <p className="mt-1 text-xs text-muted">Residents and guards use this code to join.</p>
+                      <p className="mt-1 text-xs text-slate-500">Residents and guards use this code to join.</p>
                     </div>
                   </div>
                 )}
@@ -453,43 +464,43 @@ export default function LoginPage() {
                 {registerStep === 2 && (
                   <div className="p-6 space-y-4">
                     <div>
-                      <label htmlFor="societyAddress" className="block text-sm font-medium text-muted mb-1">Address</label>
+                      <label htmlFor="societyAddress" className={labelClass}>Address</label>
                       <input
                         id="societyAddress"
                         type="text"
                         value={societyAddress}
                         onChange={(e) => setSocietyAddress(e.target.value)}
                         placeholder="Street, area, landmark"
-                        className="w-full px-4 py-2.5 rounded-lg border border-border focus:ring-2 focus:ring-primary outline-none transition"
+                        className={inputClass}
                       />
                     </div>
                     <div className="grid grid-cols-2 gap-3">
                       <div>
-                        <label htmlFor="societyCity" className="block text-sm font-medium text-muted mb-1">City</label>
-                        <input id="societyCity" type="text" value={societyCity} onChange={(e) => setSocietyCity(e.target.value)} placeholder="City" className="w-full px-4 py-2.5 rounded-lg border border-border focus:ring-2 focus:ring-primary outline-none transition" />
+                        <label htmlFor="societyCity" className={labelClass}>City</label>
+                        <input id="societyCity" type="text" value={societyCity} onChange={(e) => setSocietyCity(e.target.value)} placeholder="City" className={inputClass} />
                       </div>
                       <div>
-                        <label htmlFor="societyState" className="block text-sm font-medium text-muted mb-1">State</label>
-                        <input id="societyState" type="text" value={societyState} onChange={(e) => setSocietyState(e.target.value)} placeholder="State" className="w-full px-4 py-2.5 rounded-lg border border-border focus:ring-2 focus:ring-primary outline-none transition" />
+                        <label htmlFor="societyState" className={labelClass}>State</label>
+                        <input id="societyState" type="text" value={societyState} onChange={(e) => setSocietyState(e.target.value)} placeholder="State" className={inputClass} />
                       </div>
                     </div>
                     <div className="grid grid-cols-2 gap-3">
                       <div>
-                        <label htmlFor="societyPincode" className="block text-sm font-medium text-muted mb-1">Pincode</label>
-                        <input id="societyPincode" type="text" value={societyPincode} onChange={(e) => setSocietyPincode(e.target.value)} placeholder="400001" className="w-full px-4 py-2.5 rounded-lg border border-border focus:ring-2 focus:ring-primary outline-none transition" />
+                        <label htmlFor="societyPincode" className={labelClass}>Pincode</label>
+                        <input id="societyPincode" type="text" value={societyPincode} onChange={(e) => setSocietyPincode(e.target.value)} placeholder="400001" className={inputClass} />
                       </div>
                       <div>
-                        <label htmlFor="societyCountry" className="block text-sm font-medium text-muted mb-1">Country</label>
-                        <input id="societyCountry" type="text" value={societyCountry} onChange={(e) => setSocietyCountry(e.target.value)} placeholder="India" className="w-full px-4 py-2.5 rounded-lg border border-border focus:ring-2 focus:ring-primary outline-none transition" />
+                        <label htmlFor="societyCountry" className={labelClass}>Country</label>
+                        <input id="societyCountry" type="text" value={societyCountry} onChange={(e) => setSocietyCountry(e.target.value)} placeholder="India" className={inputClass} />
                       </div>
                     </div>
                     <div>
-                      <label htmlFor="contactEmail" className="block text-sm font-medium text-muted mb-1">Contact email *</label>
-                      <input id="contactEmail" type="email" value={contactEmail} onChange={(e) => setContactEmail(e.target.value)} placeholder="society@example.com" className="w-full px-4 py-2.5 rounded-lg border border-border focus:ring-2 focus:ring-primary outline-none transition" required={registerStep >= 2} />
+                      <label htmlFor="contactEmail" className={labelClass}>Contact email *</label>
+                      <input id="contactEmail" type="email" value={contactEmail} onChange={(e) => setContactEmail(e.target.value)} placeholder="society@example.com" className={inputClass} required={registerStep >= 2} />
                     </div>
                     <div>
-                      <label htmlFor="contactPhone" className="block text-sm font-medium text-muted mb-1">Contact phone</label>
-                      <input id="contactPhone" type="tel" value={contactPhone} onChange={(e) => setContactPhone(e.target.value)} placeholder="9876543210" className="w-full px-4 py-2.5 rounded-lg border border-border focus:ring-2 focus:ring-primary outline-none transition" />
+                      <label htmlFor="contactPhone" className={labelClass}>Contact phone</label>
+                      <input id="contactPhone" type="tel" value={contactPhone} onChange={(e) => setContactPhone(e.target.value)} placeholder="9876543210" className={inputClass} />
                     </div>
                   </div>
                 )}
@@ -497,22 +508,22 @@ export default function LoginPage() {
                 {/* Step 3: Official documents */}
                 {registerStep === 3 && (
                   <div className="p-6 space-y-4">
-                    <p className="text-sm text-muted">Optional but recommended. Helps verify your society.</p>
+                    <p className="text-sm text-slate-500">Optional but recommended. Helps verify your society.</p>
                     <div>
-                      <label htmlFor="registrationNumber" className="block text-sm font-medium text-muted mb-1">Registration number</label>
-                      <input id="registrationNumber" type="text" value={registrationNumber} onChange={(e) => setRegistrationNumber(e.target.value)} placeholder="e.g. MH/HSG/2024/12345" className="w-full px-4 py-2.5 rounded-lg border border-border focus:ring-2 focus:ring-primary outline-none transition" />
+                      <label htmlFor="registrationNumber" className={labelClass}>Registration number</label>
+                      <input id="registrationNumber" type="text" value={registrationNumber} onChange={(e) => setRegistrationNumber(e.target.value)} placeholder="e.g. MH/HSG/2024/12345" className={inputClass} />
                     </div>
                     <div>
-                      <label htmlFor="societyType" className="block text-sm font-medium text-muted mb-1">Type of society</label>
-                      <select id="societyType" value={societyType} onChange={(e) => setSocietyType(e.target.value)} className="w-full px-4 py-2.5 rounded-lg border border-border focus:ring-2 focus:ring-primary outline-none transition bg-background">
+                      <label htmlFor="societyType" className={labelClass}>Type of society</label>
+                      <select id="societyType" value={societyType} onChange={(e) => setSocietyType(e.target.value)} className={inputClass}>
                         {SOCIETY_TYPE_OPTIONS.map((opt) => (
                           <option key={opt.value || "e"} value={opt.value}>{opt.label}</option>
                         ))}
                       </select>
                     </div>
                     <div>
-                      <label htmlFor="registrationYear" className="block text-sm font-medium text-muted mb-1">Year of registration</label>
-                      <input id="registrationYear" type="text" value={registrationYear} onChange={(e) => setRegistrationYear(e.target.value)} placeholder="e.g. 2018" className="w-full px-4 py-2.5 rounded-lg border border-border focus:ring-2 focus:ring-primary outline-none transition" />
+                      <label htmlFor="registrationYear" className={labelClass}>Year of registration</label>
+                      <input id="registrationYear" type="text" value={registrationYear} onChange={(e) => setRegistrationYear(e.target.value)} placeholder="e.g. 2018" className={inputClass} />
                     </div>
                   </div>
                 )}
@@ -520,28 +531,28 @@ export default function LoginPage() {
                 {/* Step 4: Buildings (optional) */}
                 {registerStep === 4 && (
                   <div className="p-6 space-y-4">
-                    <p className="text-sm text-muted">Add towers or wings now, or skip and add later from the dashboard.</p>
+                    <p className="text-sm text-slate-500">Add towers or wings now, or skip and add later from the dashboard.</p>
                     {registerBuildings.map((b, idx) => (
                       <div key={idx} className="flex gap-2 items-end">
                         <div className="flex-1">
-                          <input type="text" value={b.name} onChange={(e) => setRegisterBuildings((prev) => prev.map((p, i) => (i === idx ? { ...p, name: e.target.value } : p)))} placeholder="e.g. Tower A" className="w-full px-4 py-2.5 rounded-lg border border-border focus:ring-2 focus:ring-primary outline-none text-sm" />
+                          <input type="text" value={b.name} onChange={(e) => setRegisterBuildings((prev) => prev.map((p, i) => (i === idx ? { ...p, name: e.target.value } : p)))} placeholder="e.g. Tower A" className={inputClass} />
                         </div>
                         <div className="w-20">
-                          <input type="text" value={b.code} onChange={(e) => setRegisterBuildings((prev) => prev.map((p, i) => (i === idx ? { ...p, code: e.target.value } : p)))} placeholder="Code" className="w-full px-3 py-2.5 rounded-lg border border-border outline-none text-sm" />
+                          <input type="text" value={b.code} onChange={(e) => setRegisterBuildings((prev) => prev.map((p, i) => (i === idx ? { ...p, code: e.target.value } : p)))} placeholder="Code" className={inputClass} />
                         </div>
-                        <button type="button" onClick={() => setRegisterBuildings((prev) => prev.filter((_, i) => i !== idx))} className="p-2.5 rounded-lg border border-border text-muted hover:bg-muted-bg shrink-0" aria-label="Remove">✕</button>
+                        <button type="button" onClick={() => setRegisterBuildings((prev) => prev.filter((_, i) => i !== idx))} className="p-2.5 rounded-xl border border-slate-300 text-slate-500 hover:bg-slate-50 shrink-0 transition" aria-label="Remove">✕</button>
                       </div>
                     ))}
-                    <button type="button" onClick={() => setRegisterBuildings((prev) => [...prev, { name: "", code: "" }])} className="text-sm text-primary font-medium">+ Add building</button>
+                    <button type="button" onClick={() => setRegisterBuildings((prev) => [...prev, { name: "", code: "" }])} className="text-sm text-emerald-600 font-medium hover:text-emerald-700 transition">+ Add building</button>
                   </div>
                 )}
 
                 {/* Step 5: Your admin account */}
                 {registerStep === 5 && (
                   <div className="p-6 space-y-4">
-                    <p className="text-sm text-muted">You will be the first admin. Add more users from the dashboard later.</p>
+                    <p className="text-sm text-slate-500">You will be the first admin. Add more users from the dashboard later.</p>
                 <div>
-                  <label htmlFor="regFullName" className="block text-sm font-medium text-muted mb-1">
+                  <label htmlFor="regFullName" className={labelClass}>
                     Your full name *
                   </label>
                   <input
@@ -550,12 +561,12 @@ export default function LoginPage() {
                     value={fullName}
                     onChange={(e) => setFullName(e.target.value)}
                     placeholder="John Doe"
-                    className="w-full px-4 py-2.5 rounded-lg border border-border focus:ring-2 focus:ring-primary focus:border-primary outline-none transition"
+                    className={inputClass}
                     required={isRegisterSociety}
                   />
                 </div>
                 <div>
-                  <label htmlFor="regEmail" className="block text-sm font-medium text-muted mb-1">
+                  <label htmlFor="regEmail" className={labelClass}>
                     Your email (admin login) *
                   </label>
                   <input
@@ -564,12 +575,12 @@ export default function LoginPage() {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="your@email.com"
-                    className="w-full px-4 py-2.5 rounded-lg border border-border focus:ring-2 focus:ring-primary focus:border-primary outline-none transition"
+                    className={inputClass}
                     required={isRegisterSociety}
                   />
                 </div>
                 <div>
-                  <label htmlFor="regPassword" className="block text-sm font-medium text-muted mb-1">
+                  <label htmlFor="regPassword" className={labelClass}>
                     Password *
                   </label>
                   <input
@@ -578,26 +589,30 @@ export default function LoginPage() {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="••••••••"
-                    className="w-full px-4 py-2.5 rounded-lg border border-border focus:ring-2 focus:ring-primary focus:border-primary outline-none transition"
+                    className={inputClass}
                     required={isRegisterSociety}
                   />
-                  <p className="text-xs text-muted mt-1">Minimum 6 characters</p>
+                  <p className="text-xs text-slate-500 mt-1">Minimum 6 characters</p>
                 </div>
                 <div>
-                  <label htmlFor="regPhone" className="block text-sm font-medium text-muted mb-1">Your phone</label>
-                  <input id="regPhone" type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="1234567890" className="w-full px-4 py-2.5 rounded-lg border border-border focus:ring-2 focus:ring-primary outline-none transition" />
+                  <label htmlFor="regPhone" className={labelClass}>Your phone</label>
+                  <input id="regPhone" type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="1234567890" className={inputClass} />
+                </div>
+                <div>
+                  <label htmlFor="regFlatNumber" className={labelClass}>Your flat / unit</label>
+                  <input id="regFlatNumber" type="text" value={flatNumber} onChange={(e) => setFlatNumber(e.target.value)} placeholder="e.g. 1201 or A-101" className={inputClass} />
                 </div>
                   </div>
                 )}
 
                 {/* Wizard footer for Register Society */}
                 {isRegisterSociety && (
-                  <div className="px-6 pb-6 flex gap-3">
+                  <div className="px-6 sm:px-8 pb-6 flex gap-3">
                     {registerStep > 1 ? (
                       <button
                         type="button"
                         onClick={() => setRegisterStep((s) => s - 1)}
-                        className="py-2.5 px-4 rounded-lg border border-border text-foreground font-medium hover:bg-muted-bg transition"
+                        className="py-2.5 px-4 rounded-lg border border-slate-300 text-slate-700 font-medium hover:bg-slate-50 transition"
                       >
                         Back
                       </button>
@@ -608,7 +623,7 @@ export default function LoginPage() {
                         type="button"
                         onClick={() => { if (canProceedRegisterStep()) setRegisterStep((s) => s + 1); }}
                         disabled={!canProceedRegisterStep()}
-                        className="py-2.5 px-5 rounded-lg bg-primary text-white font-medium hover:bg-primary-hover disabled:opacity-50 transition"
+                        className="py-2.5 px-5 rounded-lg bg-emerald-600 text-white font-medium hover:bg-emerald-700 disabled:opacity-50 transition"
                       >
                         Next
                       </button>
@@ -621,7 +636,7 @@ export default function LoginPage() {
             {!isRegisterSociety && (
               <>
                 <div>
-                  <label htmlFor="email" className="block text-sm font-medium text-muted mb-1">
+                  <label htmlFor="email" className={labelClass}>
                     Email *
                   </label>
                   <input
@@ -630,13 +645,13 @@ export default function LoginPage() {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="your@email.com"
-                    className="w-full px-4 py-2.5 rounded-lg border border-border focus:ring-2 focus:ring-primary focus:border-primary outline-none transition"
+                    className={inputClass}
                     required
                   />
                 </div>
 
                 <div>
-                  <label htmlFor="password" className="block text-sm font-medium text-muted mb-1">
+                  <label htmlFor="password" className={labelClass}>
                     Password *
                   </label>
                   <input
@@ -645,18 +660,18 @@ export default function LoginPage() {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="••••••••"
-                    className="w-full px-4 py-2.5 rounded-lg border border-border focus:ring-2 focus:ring-primary focus:border-primary outline-none transition"
+                    className={inputClass}
                     required
                   />
                   {isSignup && (
-                    <p className="text-xs text-muted mt-1">Minimum 6 characters</p>
+                    <p className="text-xs text-slate-500 mt-1">Minimum 6 characters</p>
                   )}
                 </div>
 
                 {isSignup && (
                   <>
                     <div>
-                      <label htmlFor="confirmPassword" className="block text-sm font-medium text-muted mb-1">
+                      <label htmlFor="confirmPassword" className={labelClass}>
                         Confirm Password *
                       </label>
                       <input
@@ -665,14 +680,14 @@ export default function LoginPage() {
                         value={confirmPassword}
                         onChange={(e) => setConfirmPassword(e.target.value)}
                         placeholder="••••••••"
-                        className="w-full px-4 py-2.5 rounded-lg border border-border focus:ring-2 focus:ring-primary focus:border-primary outline-none transition"
+                        className={inputClass}
                         required
                       />
                     </div>
 
                     <div className="grid grid-cols-2 gap-3">
                       <div>
-                        <label htmlFor="phone" className="block text-sm font-medium text-muted mb-1">
+                        <label htmlFor="phone" className={labelClass}>
                           Phone
                         </label>
                         <input
@@ -681,11 +696,11 @@ export default function LoginPage() {
                           value={phone}
                           onChange={(e) => setPhone(e.target.value)}
                           placeholder="1234567890"
-                          className="w-full px-4 py-2.5 rounded-lg border border-border focus:ring-2 focus:ring-primary focus:border-primary outline-none transition"
+                          className={inputClass}
                         />
                       </div>
                       <div>
-                        <label htmlFor="flatNumber" className="block text-sm font-medium text-muted mb-1">
+                        <label htmlFor="flatNumber" className={labelClass}>
                           Flat/Unit
                         </label>
                         <input
@@ -694,7 +709,7 @@ export default function LoginPage() {
                           value={flatNumber}
                           onChange={(e) => setFlatNumber(e.target.value)}
                           placeholder="A-101"
-                          className="w-full px-4 py-2.5 rounded-lg border border-border focus:ring-2 focus:ring-primary focus:border-primary outline-none transition"
+                          className={inputClass}
                         />
                       </div>
                     </div>
@@ -704,11 +719,11 @@ export default function LoginPage() {
             )}
 
             {(!isRegisterSociety || registerStep === REGISTER_STEPS) && (
-              <div className="px-6 pb-2">
+              <div className="px-6 sm:px-8 pb-2">
                 <button
                   type="submit"
                   disabled={loading}
-                  className="w-full py-3 px-4 bg-primary hover:bg-primary-hover disabled:opacity-60 text-white font-semibold rounded-lg transition shadow-lg"
+                  className="w-full py-3.5 px-4 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-60 text-white font-semibold rounded-xl transition shadow-sm"
                 >
                   {loading
                     ? (isRegisterSociety ? "Creating society..." : isSignup ? "Creating account..." : "Signing in...")
@@ -718,8 +733,8 @@ export default function LoginPage() {
             )}
           </form>
 
-          <div className="px-6 pb-6 text-center">
-            <Link href="/" className="text-sm text-muted-foreground hover:text-primary">
+          <div className="px-6 sm:px-8 pb-6 pt-1 text-center">
+            <Link href="/" className="text-sm font-medium text-slate-500 hover:text-emerald-600 transition">
               Back to home
             </Link>
           </div>

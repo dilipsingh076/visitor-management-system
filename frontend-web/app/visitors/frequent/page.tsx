@@ -1,106 +1,24 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useState } from "react";
 import Link from "next/link";
-import { isAuthenticated, getCachedUser, canInviteVisitor } from "@/lib/auth";
-import { apiClient } from "@/lib/api";
-import { API } from "@/lib/api/endpoints";
+import { useRouter } from "next/navigation";
+import { canInviteVisitor } from "@/lib/auth";
+import { useAuth } from "@/features/auth";
 import { Avatar, Button, Input, EmptyState, PageHeader } from "@/components/ui";
-
-interface FrequentVisitor {
-  id: string;
-  name: string;
-  phone: string;
-  purpose: string;
-  visit_count: number;
-  last_visit?: string;
-}
-
-type VisitRow = {
-  visitor_id: string;
-  visitor_name: string;
-  visitor_phone: string;
-  purpose?: string;
-  created_at: string;
-};
-
-function formatLastVisit(iso?: string): string {
-  if (!iso) return "—";
-  const d = new Date(iso);
-  const now = new Date();
-  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  const visitDay = new Date(d.getFullYear(), d.getMonth(), d.getDate());
-  const diffDays = Math.floor((today.getTime() - visitDay.getTime()) / (24 * 60 * 60 * 1000));
-  if (diffDays === 0) return "Today";
-  if (diffDays === 1) return "Yesterday";
-  if (diffDays < 7) return `${diffDays} days ago`;
-  if (diffDays < 14) return "Last week";
-  return d.toLocaleDateString();
-}
-
-function deriveFrequent(visits: VisitRow[]): FrequentVisitor[] {
-  const byVisitor = new Map<string, { visitor_id: string; name: string; phone: string; purposes: string[]; dates: string[] }>();
-  for (const v of visits) {
-    const key = v.visitor_id;
-    const existing = byVisitor.get(key);
-    const purpose = v.purpose || "Visit";
-    if (!existing) {
-      byVisitor.set(key, { visitor_id: key, name: v.visitor_name, phone: v.visitor_phone || "", purposes: [purpose], dates: [v.created_at] });
-    } else {
-      existing.dates.push(v.created_at);
-      if (!existing.purposes.includes(purpose)) existing.purposes.push(purpose);
-    }
-  }
-  return Array.from(byVisitor.entries())
-    .map(([_, data]) => ({
-      id: data.visitor_id,
-      name: data.name,
-      phone: data.phone,
-      purpose: data.purposes[0] || "Visit",
-      visit_count: data.dates.length,
-      last_visit: formatLastVisit(data.dates.sort().reverse()[0]),
-    }))
-    .sort((a, b) => b.visit_count - a.visit_count);
-}
+import { useFrequentVisitors, type FrequentVisitor } from "@/features/visitors";
 
 export default function FrequentVisitorsPage() {
   const router = useRouter();
-  const [visitors, setVisitors] = useState<FrequentVisitor[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { user, loading: authLoading } = useAuth({
+    requireAuth: true,
+    requireRole: canInviteVisitor,
+    redirectTo: "/dashboard",
+  });
   const [searchQuery, setSearchQuery] = useState("");
-
-  useEffect(() => {
-    if (!isAuthenticated()) {
-      router.push("/login");
-      return;
-    }
-
-    const user = getCachedUser();
-    if (!canInviteVisitor(user)) {
-      router.push("/dashboard");
-      return;
-    }
-
-    const fetchVisits = async () => {
-      setLoading(true);
-      try {
-        const res = await apiClient.get<VisitRow[]>(`${API.visitors.list}?host_id=me&limit=100`);
-        if (res.data && Array.isArray(res.data)) {
-          setVisitors(deriveFrequent(res.data));
-        } else {
-          setVisitors([]);
-        }
-      } catch (e) {
-        console.error("Failed to fetch visits:", e);
-        setVisitors([]);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchVisits();
-  }, [router]);
+  const frequentQ = useFrequentVisitors(Boolean(user));
+  const visitors = frequentQ.data ?? [];
+  const loading = frequentQ.isLoading;
 
   const handleQuickInvite = (visitor: FrequentVisitor) => {
     router.push(`/visitors/invite?name=${encodeURIComponent(visitor.name)}&phone=${encodeURIComponent(visitor.phone)}&purpose=${encodeURIComponent(visitor.purpose)}`);
@@ -113,6 +31,7 @@ export default function FrequentVisitorsPage() {
       v.purpose.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
+  if (authLoading || !user) return null;
   if (loading) {
     return (
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
