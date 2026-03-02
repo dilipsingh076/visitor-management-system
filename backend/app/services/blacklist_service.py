@@ -6,7 +6,6 @@ from sqlalchemy import select, and_
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.visitor import Visitor, Blacklist
-from app.services.visit_service import get_or_create_visitor
 
 
 async def is_visitor_blacklisted_for_society(
@@ -117,6 +116,7 @@ async def add_to_blacklist_by_phone(
     society_id: UUID,
 ) -> Visitor:
     """Add visitor to this society's blacklist by phone. Creates visitor if not exists."""
+    from app.services.visit_service import get_or_create_visitor
     visitor = await get_or_create_visitor(db, phone=phone, full_name=full_name)
     return await add_to_blacklist(db, visitor.id, reason, blacklisted_by, society_id)
 

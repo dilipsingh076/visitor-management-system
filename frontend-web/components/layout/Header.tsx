@@ -1,13 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
 import { removeToken, getPrimaryRole, ROLE_LABELS, canAccessGuardPage, canAccessCheckin, canAccessWalkin, canAccessPlatform } from "@/lib/auth";
 import { useAuthContext } from "@/features/auth";
-import { Button, LinkButton } from "@/components/ui";
+import { Badge, Button, Container, LinkButton, NavLink } from "@/components/ui";
 
 export default function Header() {
-  const pathname = usePathname();
   const { user, isAuthenticated } = useAuthContext();
   const authenticated = isAuthenticated;
 
@@ -16,25 +14,9 @@ export default function Header() {
     window.location.href = "/";
   };
 
-  const navLink = (href: string, label: string) => {
-    const active = pathname === href;
-    return (
-      <Link
-        href={href}
-        className={`px-4 py-2 rounded-lg text-sm font-medium transition ${
-          active
-            ? "bg-primary-light text-primary"
-            : "text-muted hover:bg-muted-bg hover:text-foreground"
-        }`}
-      >
-        {label}
-      </Link>
-    );
-  };
-
   return (
     <header className="bg-card border-b border-border sticky top-0 z-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <Container>
         <div className="flex justify-between items-center h-16">
           <div className="flex items-center gap-8">
             <Link href="/" className="flex items-center gap-2">
@@ -48,25 +30,25 @@ export default function Header() {
             <nav className="flex flex-wrap items-center gap-1">
               {authenticated && user ? (
                 <>
-                  {navLink("/dashboard", "Dashboard")}
-                  {navLink("/visitors", "Visitors")}
-                  {canAccessCheckin(user) && navLink("/checkin", "Check-in")}
-                  {canAccessWalkin(user) && navLink("/checkin/walkin", "Walk-in")}
-                  {canAccessGuardPage(user) && navLink("/guard", "Guard")}
-                  {canAccessPlatform(user) && navLink("/platform/societies", "Platform")}
+                  <NavLink href="/dashboard">Dashboard</NavLink>
+                  <NavLink href="/visitors">Visitors</NavLink>
+                  {canAccessCheckin(user) && <NavLink href="/checkin">Check-in</NavLink>}
+                  {canAccessWalkin(user) && <NavLink href="/checkin/walkin">Walk-in</NavLink>}
+                  {canAccessGuardPage(user) && <NavLink href="/guard">Guard</NavLink>}
+                  {canAccessPlatform(user) && <NavLink href="/platform/societies">Platform</NavLink>}
                 </>
               ) : authenticated ? (
                 <>
-                  {navLink("/dashboard", "Dashboard")}
-                  {navLink("/visitors", "Visitors")}
+                  <NavLink href="/dashboard">Dashboard</NavLink>
+                  <NavLink href="/visitors">Visitors</NavLink>
                 </>
               ) : (
                 <>
-                  {navLink("/features", "Features")}
-                  {navLink("/use-cases", "Use Cases")}
-                  {navLink("/how-it-works", "How it works")}
-                  {navLink("/about", "About")}
-                  {navLink("/contact", "Contact")}
+                  <NavLink href="/features">Features</NavLink>
+                  <NavLink href="/use-cases">Use Cases</NavLink>
+                  <NavLink href="/how-it-works">How it works</NavLink>
+                  <NavLink href="/about">About</NavLink>
+                  <NavLink href="/contact">Contact</NavLink>
                 </>
               )}
             </nav>
@@ -75,15 +57,12 @@ export default function Header() {
             {authenticated ? (
               <>
                 {user && (
-                  <span className="hidden sm:inline text-sm text-muted">
+                  <span className="hidden sm:inline text-sm text-muted-foreground">
                     <span className="text-foreground font-medium">{user.username}</span>
                     <span className="mx-1.5">·</span>
-                    <span
-                      className="px-2 py-0.5 rounded font-medium bg-primary-light text-primary"
-                      title="Your assigned role"
-                    >
+                    <Badge variant="primary" size="sm" title="Your assigned role">
                       {ROLE_LABELS[getPrimaryRole(user)] ?? getPrimaryRole(user)}
-                    </span>
+                    </Badge>
                   </span>
                 )}
                 <Button variant="ghost" size="md" onClick={handleLogout}>
@@ -97,7 +76,7 @@ export default function Header() {
             )}
           </div>
         </div>
-      </div>
+      </Container>
     </header>
   );
 }

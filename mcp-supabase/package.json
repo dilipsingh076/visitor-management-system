@@ -1,0 +1,22 @@
+{
+  "name": "vms-mcp-supabase",
+  "version": "1.0.0",
+  "description": "MCP server to run SQL and inspect VMS Supabase database (vmsdevelop)",
+  "type": "module",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/index.js"
+  },
+  "engines": { "node": ">=18" },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.0",
+    "pg": "^8.13.0",
+    "zod": "^3.23.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20",
+    "@types/pg": "^8.11.0",
+    "typescript": "^5"
+  }
+}

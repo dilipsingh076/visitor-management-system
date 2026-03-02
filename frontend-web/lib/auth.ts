@@ -163,6 +163,7 @@ export async function registerSociety(data: {
   society_type?: string;
   registration_year?: string;
   buildings?: { name: string; code?: string }[];
+  admin_building_index?: number;
   email: string;
   password: string;
   full_name: string;

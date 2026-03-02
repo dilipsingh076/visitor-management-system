@@ -3,7 +3,6 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, status
 
 from app.core.dependencies import get_db, get_current_guard, get_current_user_id
-from app.db.seed import ensure_demo_user
 from app.schemas.blacklist import BlacklistAddRequest, BlacklistByPhoneRequest
 from app.services.blacklist_service import (
     add_to_blacklist,
@@ -46,7 +45,6 @@ async def list_blacklist_api(
     current_user=Depends(get_current_guard),
 ):
     """List blacklisted visitors for your society. Guard/admin only."""
-    await ensure_demo_user(db)
     society_id = _society_id_required(current_user)
     entries = await list_blacklisted(db, society_id=society_id)
     return [_to_entry(v, reason) for v, reason in entries]
@@ -60,7 +58,6 @@ async def add_blacklist(
     user_id=Depends(get_current_user_id),
 ):
     """Add visitor to your society's blacklist by visitor_id. Guard/admin only."""
-    await ensure_demo_user(db)
     society_id = _society_id_required(current_user)
     try:
         visitor = await add_to_blacklist(
@@ -84,7 +81,6 @@ async def add_blacklist_by_phone(
     user_id=Depends(get_current_user_id),
 ):
     """Add visitor to your society's blacklist by phone (creates visitor if not exists). Guard/admin only."""
-    await ensure_demo_user(db)
     society_id = _society_id_required(current_user)
     try:
         visitor = await add_to_blacklist_by_phone(
@@ -108,7 +104,6 @@ async def remove_blacklist(
     current_user=Depends(get_current_guard),
 ):
     """Remove visitor from your society's blacklist. Guard/admin only."""
-    await ensure_demo_user(db)
     society_id = _society_id_required(current_user)
     try:
         visitor = await remove_from_blacklist(db=db, visitor_id=visitor_id, society_id=society_id)

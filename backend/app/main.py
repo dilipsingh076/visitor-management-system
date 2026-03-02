@@ -7,10 +7,12 @@ from starlette.responses import Response
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 from fastapi.exceptions import RequestValidationError
+from fastapi import HTTPException
+from starlette.middleware.cors import CORSMiddleware
 import structlog
 
 from app.core.config import settings
-from app.api import auth, visitors, checkin, health, dashboard, residents, blacklist, notifications, societies, buildings, users
+from app.api import auth, visitors, checkin, health, dashboard, residents, blacklist, notifications, societies, buildings, users, dev
 
 # Configure structured logging
 logger = structlog.get_logger()
@@ -33,7 +35,8 @@ CORS_ALLOW_HEADERS_DEFAULT = "content-type, authorization, accept, accept-langua
 
 def _cors_headers_for_origin(origin: str | None, allow_headers: str | None = None) -> dict:
     """CORS headers: reflect origin for credentialed requests; allow_headers must be explicit (no *)."""
-    allow_origin = origin if origin else "*"
+    # With credentials, browser rejects "*"; use request origin or fallback for local dev
+    allow_origin = origin if origin else "http://localhost:3000"
     return {
         "Access-Control-Allow-Origin": allow_origin,
         "Access-Control-Allow-Credentials": "true",
@@ -72,7 +75,7 @@ class AddCORSMiddleware:
             nonlocal headers_sent
             if message["type"] == "http.response.start":
                 headers_sent = True
-                msg_headers = list(message.get("headers", []))
+                msg_headers = list(message.get("headers") or [])
                 for k, v in cors_headers.items():
                     msg_headers.append([k.lower().encode(), v.encode()])
                 message["headers"] = msg_headers
@@ -102,13 +105,33 @@ app = FastAPI(
     redoc_url="/redoc",
 )
 
-# CORS: single middleware that reflects request Origin (allows any origin + credentials)
+# CORS: custom middleware runs first (outermost) so it wraps all responses and adds CORS to every one (including 5xx)
 app.add_middleware(AddCORSMiddleware)
+# Starlette CORS as backup
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=CORS_ALLOW_ORIGINS,
+    allow_credentials=True,
+    allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allow_headers=["content-type", "authorization", "accept", "accept-language", "origin"],
+    expose_headers=["*"],
+)
 
 
 def _cors_headers(request: Request) -> dict:
     origin = request.headers.get("origin")
     return _cors_headers_for_origin(origin)
+
+
+@app.exception_handler(HTTPException)
+async def http_exception_handler(request: Request, exc: HTTPException):
+    """Ensure HTTPException responses (4xx/5xx) include CORS headers."""
+    content = {"detail": exc.detail} if isinstance(exc.detail, str) else (exc.detail if isinstance(exc.detail, dict) else {"detail": str(exc.detail)})
+    return JSONResponse(
+        status_code=exc.status_code,
+        content=content,
+        headers=_cors_headers(request),
+    )
 
 
 @app.exception_handler(RequestValidationError)
@@ -143,6 +166,7 @@ async def global_exception_handler(request: Request, exc: Exception):
 
 # Include routers
 app.include_router(health.router, prefix="/api/v1", tags=["health"])
+app.include_router(dev.router, prefix="/api/v1/dev", tags=["dev"])
 app.include_router(auth.router, prefix="/api/v1/auth", tags=["authentication"])
 app.include_router(visitors.router, prefix="/api/v1/visitors", tags=["visitors"])
 app.include_router(checkin.router, prefix="/api/v1/checkin", tags=["check-in"])
@@ -169,21 +193,16 @@ async def root():
 
 @app.on_event("startup")
 async def startup_event():
-    """Startup event handler."""
+    """Startup: init DB from DATABASE_URL (Supabase only). No fallback, no demo data."""
+    import app.models  # noqa: F401 - ensure all models registered
+    from app.core.database import init_db
+
     try:
-        import app.models  # noqa: F401 - ensure all models registered
-        from app.core.database import init_db, AsyncSessionLocal
-        from app.db.seed import ensure_demo_society, ensure_demo_users
         await init_db()
         logger.info("Database initialized")
-        if settings.AUTH_DEMO_MODE:
-            async with AsyncSessionLocal() as session:
-                await ensure_demo_society(session)
-                await ensure_demo_users(session)
-                await session.commit()
-            logger.info("Demo society and users ensured")
     except Exception as e:
         logger.warning("Database init skipped", error=str(e))
+        raise
     logger.info("Starting VMS API", version="1.0.0")
 
 

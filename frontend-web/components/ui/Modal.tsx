@@ -1,6 +1,7 @@
 "use client";
 
 import { forwardRef, useEffect } from "react";
+import { theme } from "@/lib/theme";
 
 export interface ModalProps {
   isOpen: boolean;
@@ -53,9 +54,9 @@ export const Modal = forwardRef<HTMLDivElement, ModalProps>(
           aria-labelledby={title ? "modal-title" : undefined}
         >
           {(title || showCloseButton) && (
-            <div className="flex items-center justify-between p-4 border-b border-border">
+            <div className={`flex items-center justify-between p-4 ${theme.surface.cardHeader}`}>
               {title && (
-                <h2 id="modal-title" className="text-lg font-semibold text-foreground">
+                <h2 id="modal-title" className={theme.text.heading1}>
                   {title}
                 </h2>
               )}

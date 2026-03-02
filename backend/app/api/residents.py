@@ -5,7 +5,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.core.dependencies import get_db, get_current_guard_or_admin
-from app.db.seed import ensure_demo_users
 from app.models.user import User
 
 router = APIRouter()
@@ -23,8 +22,6 @@ async def list_residents(
     Returns tower (building) name and flat number so guard can select by tower + flat;
     notification will go to that resident's device.
     """
-    await ensure_demo_users(db)
-
     stmt = (
         select(User)
         .options(selectinload(User.building))

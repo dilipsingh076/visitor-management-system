@@ -14,7 +14,6 @@ from app.core.dependencies import (
     get_current_any_role,
 )
 from app.core.rbac import is_admin, is_guard_or_admin, log_admin_action
-from app.db.seed import ensure_demo_user, ensure_demo_users
 from app.schemas.visitor import VisitCreate, WalkInCreate
 from app.schemas.checkin import CheckInResponse
 from app.services.visit_service import (
@@ -66,7 +65,6 @@ async def invite_visitor(
     current_user_id: UUID = Depends(get_current_user_id),
 ):
     """Resident or admin invites a visitor (creates pre-approval with QR & OTP). Host is current user."""
-    await ensure_demo_users(db)
     try:
         visit = await create_invitation(
             db=db,
@@ -110,7 +108,6 @@ async def walkin_visitor(
     Guard registers walk-in visitor. Resident is identified by host_id OR by building_id + flat_number (tower + flat).
     Notification is sent to that resident's device (in-app; push when implemented). No OTP for visitor.
     """
-    await ensure_demo_user(db)
     try:
         society_id = current_user.get("society_id")
         if not society_id:

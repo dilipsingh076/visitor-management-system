@@ -1,7 +1,6 @@
 """Notifications API for host alerts. Resident or admin only; data filtered by current user."""
 from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, status, Query
-from app.db.seed import ensure_demo_user
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -19,7 +18,6 @@ async def list_notifications(
     unread_only: bool = Query(False),
 ):
     """List notifications for current user (host). Resident or admin only."""
-    await ensure_demo_user(db)
     q = select(Notification).where(Notification.user_id == user_id).order_by(Notification.created_at.desc())
     if unread_only:
         q = q.where(Notification.read == False)
@@ -47,7 +45,6 @@ async def mark_read(
     user_id: UUID = Depends(get_current_user_id),
 ):
     """Mark notification as read. Resident or admin only; only own notifications."""
-    await ensure_demo_user(db)
     result = await db.execute(
         select(Notification).where(
             Notification.id == notification_id,

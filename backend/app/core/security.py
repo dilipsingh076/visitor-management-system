@@ -2,7 +2,7 @@
 Security utilities: password hashing, JWT (local + Keycloak).
 """
 import hashlib
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Dict, Optional, Any
 from jose import jwt, JWTError
 from jose.constants import ALGORITHMS
@@ -54,7 +54,8 @@ def create_access_token(
     full_name: Optional[str] = None,
 ) -> str:
     """Create a JWT for local auth (login/signup/register-society)."""
-    expire = datetime.utcnow() + timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
+    now = datetime.now(timezone.utc)
+    expire = now + timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
     payload = {
         "sub": str(user_id),
         "user_id": str(user_id),
@@ -62,8 +63,8 @@ def create_access_token(
         "preferred_username": full_name or email.split("@")[0],
         "realm_access": {"roles": roles},
         "iss": LOCAL_JWT_ISSUER,
-        "exp": expire,
-        "iat": datetime.utcnow(),
+        "exp": int(expire.timestamp()),
+        "iat": int(now.timestamp()),
     }
     if society_id:
         payload["society_id"] = str(society_id)

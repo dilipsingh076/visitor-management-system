@@ -1,6 +1,8 @@
 """
 Database configuration and session management.
+PostgreSQL: use SSL with cert verification off so pooler accepts connection without self-signed cert errors.
 """
+import ssl
 from typing import AsyncGenerator
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine, async_sessionmaker
@@ -42,8 +44,14 @@ USERS_EXTRA_PG = [
     ("is_verified", "BOOLEAN DEFAULT FALSE"),
 ]
 
-# SQLite needs StaticPool; PostgreSQL uses default pool
-_is_sqlite = settings.DATABASE_URL.startswith("sqlite")
+# Use asyncpg for PostgreSQL (Session pooler or direct). Supabase URIs are often postgres:// — normalize to postgresql+asyncpg://
+_database_url = settings.DATABASE_URL
+if _database_url.startswith("postgres://"):
+    _database_url = "postgresql+asyncpg://" + _database_url[len("postgres://"):]
+elif _database_url.startswith("postgresql://") and "+asyncpg" not in _database_url:
+    _database_url = "postgresql+asyncpg://" + _database_url[len("postgresql://"):]
+
+_is_sqlite = _database_url.startswith("sqlite")
 _engine_kw = {
     "echo": settings.DB_ECHO,
     "future": True,
@@ -54,8 +62,12 @@ if _is_sqlite:
 else:
     _engine_kw["pool_size"] = settings.DB_POOL_SIZE
     _engine_kw["max_overflow"] = settings.DB_MAX_OVERFLOW
+    _ctx = ssl.create_default_context()
+    _ctx.check_hostname = False
+    _ctx.verify_mode = ssl.CERT_NONE
+    _engine_kw["connect_args"] = {"ssl": _ctx}
 
-engine = create_async_engine(settings.DATABASE_URL, **_engine_kw)
+engine = create_async_engine(_database_url, **_engine_kw)
 
 # Create async session factory
 AsyncSessionLocal = async_sessionmaker(

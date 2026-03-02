@@ -1,6 +1,7 @@
 "use client";
 
 import { createContext, useContext, useState, forwardRef } from "react";
+import { theme } from "@/lib/theme";
 
 interface TabsContextType {
   activeTab: string;
@@ -113,3 +114,39 @@ export const TabsContent = forwardRef<HTMLDivElement, TabsContentProps>(
 );
 
 TabsContent.displayName = "TabsContent";
+
+/** Tab option for TabBar */
+export interface TabBarOption {
+  value: string;
+  label: string;
+}
+
+export interface TabBarProps {
+  tabs: TabBarOption[];
+  value: string;
+  onValueChange: (value: string) => void;
+  className?: string;
+}
+
+/**
+ * Horizontal tab bar using theme (e.g. for auth: Sign In | Sign Up | Register Society).
+ * Use value + onValueChange for controlled state.
+ */
+export function TabBar({ tabs, value, onValueChange, className = "" }: TabBarProps) {
+  return (
+    <div className={`${theme.auth.tabBar} ${className}`.trim()} role="tablist">
+      {tabs.map((tab) => (
+        <button
+          key={tab.value}
+          type="button"
+          role="tab"
+          aria-selected={value === tab.value}
+          onClick={() => onValueChange(tab.value)}
+          className={`${theme.auth.tab} ${value === tab.value ? theme.auth.tabActive : theme.auth.tabInactive}`}
+        >
+          {tab.label}
+        </button>
+      ))}
+    </div>
+  );
+}

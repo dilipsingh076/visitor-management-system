@@ -17,7 +17,7 @@ export function PageHeader({ title, description, action, centered }: PageHeaderP
     >
       <div className={centered ? "max-w-2xl" : ""}>
         <h1 className="text-3xl font-bold text-foreground">{title}</h1>
-        {description && <p className="text-muted mt-1">{description}</p>}
+        {description && <p className="text-muted-foreground mt-1 text-sm">{description}</p>}
       </div>
       {action}
     </div>

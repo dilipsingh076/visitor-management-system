@@ -5,7 +5,7 @@ import { useSearchParams } from "next/navigation";
 import { canInviteVisitor } from "@/lib/auth";
 import { useAuth } from "@/features/auth";
 import Link from "next/link";
-import { Input, Button } from "@/components/ui";
+import { Alert, Button, Input, Select } from "@/components/ui";
 import {
   useBuildings,
   useInviteVisitor,
@@ -96,36 +96,32 @@ function InviteContent() {
           </Button>
         </div>
       ) : (
-        <form onSubmit={handleSubmit} className="bg-card rounded-xl border border-border p-6">
-          {error && <div className="mb-4 p-3 bg-error-light text-error rounded-lg text-sm">{error}</div>}
-          <Input label="Visitor name" value={name} onChange={(e) => setName(e.target.value)} required placeholder="Full name" />
-          <Input label="Phone (10 digits)" value={phone} onChange={(e) => setPhone(e.target.value.replace(/\D/g, "").slice(0, 10))} maxLength={10} placeholder="9876543210" />
+        <form onSubmit={handleSubmit} className="bg-card rounded-xl border border-border p-6 space-y-4">
+          {error && <Alert variant="error">{error}</Alert>}
+          <Input id="name" label="Visitor name" value={name} onChange={(e) => setName(e.target.value)} required placeholder="Full name" noMargin />
+          <Input id="phone" label="Phone (10 digits)" value={phone} onChange={(e) => setPhone(e.target.value.replace(/\D/g, "").slice(0, 10))} maxLength={10} placeholder="9876543210" noMargin />
           {buildings.length > 0 && (
-            <div className="space-y-2">
-              <label className="block text-sm font-medium text-foreground">Building / Wing (optional)</label>
-              <select
-                value={buildingId}
-                onChange={(e) => setBuildingId(e.target.value)}
-                className="w-full px-3 py-2 border border-border rounded-lg bg-background"
-              >
-                <option value="">— None —</option>
-                {buildings.map((b) => (
-                  <option key={b.id} value={b.id}>{b.name}{b.code ? ` (${b.code})` : ""}</option>
-                ))}
-              </select>
-            </div>
-          )}
-          <Input label="Purpose (optional)" value={purpose} onChange={(e) => setPurpose(e.target.value)} placeholder="Meeting, delivery, etc." />
-          <div className="space-y-2">
-            <label className="block text-sm font-medium text-foreground">Expected arrival (optional)</label>
-            <input
-              type="datetime-local"
-              value={expectedArrival}
-              onChange={(e) => setExpectedArrival(e.target.value)}
-              className="w-full px-3 py-2 border border-border rounded-lg bg-background"
+            <Select
+              id="building"
+              label="Building / Wing (optional)"
+              value={buildingId}
+              onChange={(e) => setBuildingId(e.target.value)}
+              options={[
+                { value: "", label: "— None —" },
+                ...buildings.map((b) => ({ value: b.id, label: `${b.name}${b.code ? ` (${b.code})` : ""}` })),
+              ]}
             />
-            <p className="text-xs text-muted">Check-in allowed ±60 min of this time</p>
-          </div>
+          )}
+          <Input id="purpose" label="Purpose (optional)" value={purpose} onChange={(e) => setPurpose(e.target.value)} placeholder="Meeting, delivery, etc." noMargin />
+          <Input
+            id="expectedArrival"
+            type="datetime-local"
+            label="Expected arrival (optional)"
+            value={expectedArrival}
+            onChange={(e) => setExpectedArrival(e.target.value)}
+            hint="Check-in allowed ±60 min of this time"
+            noMargin
+          />
           <Button type="submit" disabled={loading} fullWidth>
             {loading ? "Creating..." : "Create Invitation"}
           </Button>

@@ -1,6 +1,7 @@
 """
 Authentication endpoints: login, signup, register-society, me, logout.
 """
+import structlog
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.responses import JSONResponse
 from sqlalchemy import select
@@ -82,7 +83,16 @@ async def signup(body: SignupRequest, db: AsyncSession = Depends(get_db)):
 @router.post("/register-society")
 async def register_society(body: RegisterSocietyRequest, db: AsyncSession = Depends(get_db)):
     """Register a new society and create the first admin user."""
+    log = structlog.get_logger()
+    log.info("register_society: request received", society_name=body.society_name, email=body.email)
     buildings = [{"name": b.name, "code": b.code} for b in (body.buildings or [])]
+    if not buildings or not any((b.get("name") or "").strip() for b in buildings):
+        log.warning("register_society: validation failed", reason="no_buildings")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="At least one building (name) is required. Add a building in step 4.",
+        )
+    log.info("register_society: calling auth_register_society", buildings_count=len(buildings))
     try:
         user, society, token = await auth_register_society(
             db,
@@ -98,7 +108,8 @@ async def register_society(body: RegisterSocietyRequest, db: AsyncSession = Depe
             registration_number=body.registration_number,
             society_type=body.society_type,
             registration_year=body.registration_year,
-            buildings=buildings if buildings else None,
+            buildings=buildings,
+            admin_building_index=body.admin_building_index if body.admin_building_index is not None else 0,
             email=body.email,
             password=body.password,
             full_name=body.full_name,
@@ -106,32 +117,37 @@ async def register_society(body: RegisterSocietyRequest, db: AsyncSession = Depe
             flat_number=body.flat_number,
         )
     except ValueError as e:
+        log.warning("register_society: ValueError", detail=str(e))
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
     except HTTPException:
         raise
     except Exception as e:
+        log.error(
+            "register_society: exception",
+            error=str(e),
+            error_type=type(e).__name__,
+            exc_info=True,
+        )
         from sqlalchemy.exc import IntegrityError, OperationalError
         if isinstance(e, IntegrityError):
-            msg = str(e.orig).lower() if getattr(e, "orig", None) else ""
+            msg = str(getattr(e, "orig", e)).lower()
             if "societies.slug" in msg or "slug" in msg:
                 detail = "A society with this name (or code) already exists. Try a different society name."
             elif "users.email" in msg or "email" in msg:
                 detail = "This email is already registered. Use a different email or log in."
             else:
                 detail = "Email or society code already in use. Try a different email or society code."
-            detail += " Data is stored in backend/vms.db unless you set DATABASE_URL to Supabase."
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=detail)
         if isinstance(e, OperationalError):
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail="Database schema may be outdated. Try deleting vms.db and restarting the server.",
+                detail=f"Database error: {str(e)}",
             )
-        import structlog
-        structlog.get_logger().error("register_society failed", error=str(e), exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Registration failed. Please try again or contact support.",
+            detail=str(e),
         )
+    log.info("register_society: success", society_id=str(society.id), user_id=str(user.id))
     user_data = _user_to_response(user, society)
     return JSONResponse(
         content={

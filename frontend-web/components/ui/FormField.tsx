@@ -15,7 +15,7 @@ export function FormField({ label, error, required, children }: FormFieldProps) 
     <div className="mb-4">
       {label && <Label required={required}>{label}</Label>}
       {children}
-      {error && <p className="mt-1 text-sm text-error">{error}</p>}
+      {error && <p className="mt-1.5 text-xs text-error" role="alert">{error}</p>}
     </div>
   );
 }

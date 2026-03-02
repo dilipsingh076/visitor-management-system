@@ -1,6 +1,7 @@
 "use client";
 
 import { forwardRef } from "react";
+import { theme } from "@/lib/theme";
 
 export interface EmptyStateProps extends React.HTMLAttributes<HTMLDivElement> {
   icon?: React.ReactNode;
@@ -22,8 +23,8 @@ export const EmptyState = forwardRef<HTMLDivElement, EmptyStateProps>(
             {icon}
           </div>
         )}
-        <h3 className="text-lg font-semibold text-foreground mb-1">{title}</h3>
-        {description && <p className="text-muted-foreground text-sm mb-4 max-w-sm">{description}</p>}
+        <h3 className={`${theme.text.heading1} mb-1`}>{title}</h3>
+        {description && <p className={`${theme.text.muted} mb-4 max-w-sm`}>{description}</p>}
         {action && <div className="mt-2">{action}</div>}
       </div>
     );

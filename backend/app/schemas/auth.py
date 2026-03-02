@@ -48,7 +48,8 @@ class RegisterSocietyRequest(BaseModel):
     registration_number: str | None = None
     society_type: str | None = None
     registration_year: str | None = None
-    buildings: list[RegisterSocietyBuilding] | None = None
+    buildings: list[RegisterSocietyBuilding] | None = None  # At least one required when using register flow
+    admin_building_index: int | None = 0  # Which building (by order) the first admin belongs to
     email: EmailStr
     password: str = Field(..., min_length=6)
     full_name: str = Field(..., min_length=1)

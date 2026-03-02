@@ -39,18 +39,12 @@ Generated from a full review of the login page, layout, and related code. Use th
 
 ## 2. Codebase / structure issues
 
-### 2.1 Monolithic login page
-- **Where:** `app/login/page.tsx` (~747 lines).
-- **Issue:** One large component with all state and markup for Sign In, Sign Up, and Register Society; harder to maintain and test.
-- **Fix:** Split into smaller pieces, e.g.:
-  - `AuthTabs` (tab bar)
-  - `LoginForm`, `SignupForm`, `RegisterSocietyWizard` (or steps as subcomponents)
-  - Shared `inputClass` / `labelClass` in a small `authStyles` module or constants file.
+### 2.1 ~~Monolithic login page~~ (fixed)
+- **Where:** `app/login/page.tsx` was ~747 lines.
+- **Done:** Split into `app/login/_components/`: `auth-styles.ts`, `AuthLabel`, `AuthInput`, `AuthSelect`, `AuthTabs`, `LoginForm`, `SignupForm`, `RegisterSocietyWizard`. Page now composes these and holds state only.
 
-### 2.2 No shared auth form components
-- **Where:** Inputs and labels are repeated with the same classes.
-- **Issue:** Any design change requires updates in many places; risk of drift.
-- **Fix:** Introduce `AuthInput`, `AuthLabel`, `AuthSelect` (or a single `AuthField`) that use the shared styles.
+### 2.2 ~~No shared auth form components~~ (fixed)
+- **Done:** `AuthInput`, `AuthLabel`, `AuthSelect` in `app/login/_components/` use `auth-styles.ts`. Login, signup, and register society flows use these components.
 
 ### 2.3 MCP server not in Cursor by default
 - **Where:** `.cursor/mcp.json` uses a relative path `./mcp-visualize/dist/index.js`.

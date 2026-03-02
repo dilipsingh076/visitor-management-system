@@ -6,12 +6,15 @@ import uuid
 from datetime import datetime
 from typing import Optional
 
+import structlog
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.society import Society, Building
 from app.models.user import User
 from app.core.security import hash_password, verify_password, create_access_token
+
+log = structlog.get_logger()
 
 
 def _slugify(text: str) -> str:
@@ -61,6 +64,7 @@ async def register_society(
     society_type: Optional[str] = None,
     registration_year: Optional[str] = None,
     buildings: Optional[list[dict]] = None,
+    admin_building_index: int = 0,
     email: str,
     password: str,
     full_name: str,
@@ -71,14 +75,19 @@ async def register_society(
     Create society, optional buildings, and first admin user. Returns (user, society, token).
     """
     slug = (society_slug or "").strip() or _slugify(society_name)
+    log.info("register_society service: start", slug=slug, email=email)
     # Ensure slug unique
     result = await db.execute(select(Society).where(Society.slug == slug))
     if result.scalar_one_or_none():
+        log.warning("register_society service: slug exists", slug=slug)
         raise ValueError(f"Society with slug '{slug}' already exists")
+    log.info("register_society service: slug ok")
     # Check email unique
     result = await db.execute(select(User).where(User.email == email.strip().lower()))
     if result.scalar_one_or_none():
+        log.warning("register_society service: email exists", email=email)
         raise ValueError("Email already registered")
+    log.info("register_society service: email ok")
 
     def _opt_str(v: Optional[str]) -> Optional[str]:
         if v is None:
@@ -105,6 +114,7 @@ async def register_society(
     )
     db.add(society)
     await db.flush()
+    log.info("register_society service: society created", society_id=str(society.id))
 
     building_ids = []
     for i, b in enumerate(buildings or []):
@@ -122,6 +132,10 @@ async def register_society(
         db.add(building)
         await db.flush()
         building_ids.append(building.id)
+    log.info("register_society service: buildings created", count=len(building_ids))
+
+    idx = admin_building_index if 0 <= admin_building_index < len(building_ids) else 0
+    admin_building_id = building_ids[idx] if building_ids else None
 
     admin = User(
         email=(email or "").strip().lower(),
@@ -132,12 +146,14 @@ async def register_society(
         is_active=True,
         password_hash=hash_password(password),
         society_id=society.id,
-        building_id=building_ids[0] if building_ids else None,
+        building_id=admin_building_id,
         keycloak_id=None,
     )
     db.add(admin)
     await db.flush()
+    log.info("register_society service: admin user created", user_id=str(admin.id))
 
+    log.info("register_society service: creating token")
     token = create_access_token(
         user_id=str(admin.id),
         email=admin.email,
@@ -146,6 +162,7 @@ async def register_society(
         building_id=str(admin.building_id) if admin.building_id else None,
         full_name=admin.full_name,
     )
+    log.info("register_society service: done")
     return admin, society, token
 
 
