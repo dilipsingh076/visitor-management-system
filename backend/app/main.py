@@ -36,7 +36,10 @@ CORS_ALLOW_HEADERS_DEFAULT = "content-type, authorization, accept, accept-langua
 def _cors_headers_for_origin(origin: str | None, allow_headers: str | None = None) -> dict:
     """CORS headers: reflect origin for credentialed requests; allow_headers must be explicit (no *)."""
     # With credentials, browser rejects "*"; use request origin or fallback for local dev
-    allow_origin = origin if origin else "http://localhost:3000"
+    if origin and origin in CORS_ALLOW_ORIGINS:
+        allow_origin = origin
+    else:
+        allow_origin = "http://localhost:3000"
     return {
         "Access-Control-Allow-Origin": allow_origin,
         "Access-Control-Allow-Credentials": "true",
@@ -119,18 +122,25 @@ app.add_middleware(
 
 
 def _cors_headers(request: Request) -> dict:
-    origin = request.headers.get("origin")
+    """CORS headers for exception responses; always include Allow-Origin so 5xx are not blocked by CORS."""
+    try:
+        origin = request.headers.get("origin") if request else None
+    except Exception:
+        origin = None
+    if not origin or origin not in CORS_ALLOW_ORIGINS:
+        origin = "http://localhost:3000"
     return _cors_headers_for_origin(origin)
 
 
 @app.exception_handler(HTTPException)
 async def http_exception_handler(request: Request, exc: HTTPException):
-    """Ensure HTTPException responses (4xx/5xx) include CORS headers."""
+    """Ensure HTTPException responses (4xx/5xx) include CORS so browser does not hide them."""
     content = {"detail": exc.detail} if isinstance(exc.detail, str) else (exc.detail if isinstance(exc.detail, dict) else {"detail": str(exc.detail)})
+    cors = _cors_headers(request)
     return JSONResponse(
         status_code=exc.status_code,
         content=content,
-        headers=_cors_headers(request),
+        headers={**cors, "Content-Type": "application/json"},
     )
 
 
@@ -156,12 +166,17 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
 
 @app.exception_handler(Exception)
 async def global_exception_handler(request: Request, exc: Exception):
-    """Ensure 5xx errors return JSON with CORS headers; log full traceback."""
-    logger.error("Unhandled exception", path=request.url.path, error=str(exc), traceback=traceback.format_exc())
+    """Ensure 5xx errors return JSON with CORS so browser does not report CORS instead of 500."""
+    try:
+        path = request.url.path
+    except Exception:
+        path = ""
+    logger.error("Unhandled exception", path=path, error=str(exc), traceback=traceback.format_exc())
+    cors = _cors_headers(request)
     return JSONResponse(
         status_code=500,
         content={"detail": str(exc), "type": type(exc).__name__},
-        headers=_cors_headers(request),
+        headers={**cors, "Content-Type": "application/json"},
     )
 
 # Include routers

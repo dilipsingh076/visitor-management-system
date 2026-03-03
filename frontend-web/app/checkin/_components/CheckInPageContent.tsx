@@ -10,7 +10,7 @@ export function CheckInPageContent() {
   const { user, loading: authLoading } = useAuth({
     requireAuth: true,
     requireRole: canAccessCheckin,
-    redirectTo: "/dashboard?message=Guard+or+admin+only",
+    redirectTo: "/dashboard?message=Guard+or+committee+only",
   });
   const [otp, setOtp] = useState("");
   const [consent, setConsent] = useState(false);
@@ -23,7 +23,7 @@ export function CheckInPageContent() {
   if (!canAccessCheckin(user)) {
     return (
       <div className="max-w-md mx-auto px-4 py-10 text-center text-muted">
-        <p>Check-in at gate is for Guard or Admin only.</p>
+        <p>Check-in at gate is for Guard or Committee only.</p>
         <p className="mt-2 text-sm">Redirecting...</p>
       </div>
     );

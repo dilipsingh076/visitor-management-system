@@ -6,6 +6,7 @@ import {
   canInviteVisitor,
   canAccessGuardPage,
   canAccessCheckin,
+  isSocietyAdmin,
   isAuthenticated,
   getCachedUser,
   ROLE_LABELS,
@@ -33,14 +34,14 @@ describe('Auth Utilities', () => {
       expect(getPrimaryRole(user)).toBe('guard');
     });
 
-    it('returns admin if in roles array', () => {
+    it('returns chairman if in roles array', () => {
       const user = {
         id: '1',
-        email: 'admin@example.com',
-        roles: ['admin', 'guard', 'resident'],
-        username: 'admin',
+        email: 'chairman@example.com',
+        roles: ['chairman', 'guard', 'resident'],
+        username: 'chairman',
       };
-      expect(getPrimaryRole(user)).toBe('admin');
+      expect(getPrimaryRole(user)).toBe('chairman');
     });
 
     it('returns guard if admin not in roles', () => {
@@ -76,13 +77,13 @@ describe('Auth Utilities', () => {
       expect(canInviteVisitor(user)).toBe(true);
     });
 
-    it('returns true for admin', () => {
+    it('returns true for chairman (committee)', () => {
       const user = {
         id: '1',
-        email: 'admin@example.com',
-        roles: ['admin'],
-        role: 'admin',
-        username: 'admin',
+        email: 'chairman@example.com',
+        roles: ['chairman'],
+        role: 'chairman',
+        username: 'chairman',
       };
       expect(canInviteVisitor(user)).toBe(true);
     });
@@ -115,13 +116,13 @@ describe('Auth Utilities', () => {
       expect(canAccessGuardPage(user)).toBe(true);
     });
 
-    it('returns true for admin', () => {
+    it('returns true for chairman (committee)', () => {
       const user = {
         id: '1',
-        email: 'admin@example.com',
-        roles: ['admin'],
-        role: 'admin',
-        username: 'admin',
+        email: 'chairman@example.com',
+        roles: ['chairman'],
+        role: 'chairman',
+        username: 'chairman',
       };
       expect(canAccessGuardPage(user)).toBe(true);
     });
@@ -150,13 +151,13 @@ describe('Auth Utilities', () => {
       expect(canAccessCheckin(user)).toBe(true);
     });
 
-    it('returns true for admin', () => {
+    it('returns true for chairman (committee)', () => {
       const user = {
         id: '1',
-        email: 'admin@example.com',
-        roles: ['admin'],
-        role: 'admin',
-        username: 'admin',
+        email: 'chairman@example.com',
+        roles: ['chairman'],
+        role: 'chairman',
+        username: 'chairman',
       };
       expect(canAccessCheckin(user)).toBe(true);
     });
@@ -205,9 +206,24 @@ describe('Auth Utilities', () => {
 
   describe('ROLE_LABELS', () => {
     it('has correct labels', () => {
-      expect(ROLE_LABELS.admin).toBe('Admin');
+      expect(ROLE_LABELS.chairman).toBe('Chairman');
+      expect(ROLE_LABELS.secretary).toBe('Secretary');
       expect(ROLE_LABELS.guard).toBe('Guard');
       expect(ROLE_LABELS.resident).toBe('Resident');
+      expect(ROLE_LABELS.platform_admin).toBe('Platform Admin');
+    });
+  });
+
+  describe('isSocietyAdmin', () => {
+    it('returns true for chairman, secretary, treasurer, platform_admin', () => {
+      expect(isSocietyAdmin('chairman')).toBe(true);
+      expect(isSocietyAdmin('secretary')).toBe(true);
+      expect(isSocietyAdmin('treasurer')).toBe(true);
+      expect(isSocietyAdmin('platform_admin')).toBe(true);
+    });
+    it('returns false for resident and guard', () => {
+      expect(isSocietyAdmin('resident')).toBe(false);
+      expect(isSocietyAdmin('guard')).toBe(false);
     });
   });
 });

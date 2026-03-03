@@ -1,7 +1,7 @@
 "use client";
 
 import { useSearchParams } from "next/navigation";
-import { canInviteVisitor, getPrimaryRole } from "@/lib/auth";
+import { canInviteVisitor, getPrimaryRole, isSocietyAdmin } from "@/lib/auth";
 import { useAuth } from "@/features/auth";
 import Link from "next/link";
 import { PageHeader, LinkButton, Card } from "@/components/ui";
@@ -29,7 +29,7 @@ export function VisitorsPageContent() {
     : "";
 
   const visitsQ = useVisitorsList({ status, scope, enabled: Boolean(user) });
-  const notificationsQ = useUnreadNotifications(Boolean(user) && (role === "resident" || role === "admin"));
+  const notificationsQ = useUnreadNotifications(Boolean(user) && (role === "resident" || isSocietyAdmin(role)));
   const markReadMutation = useMarkNotificationRead();
   const approveMutation = useApproveVisit();
 
@@ -53,7 +53,7 @@ export function VisitorsPageContent() {
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
       <PageHeader
         title="Visitors"
-        description={canInviteVisitor(user) ? "Manage visits. Pending invites need your approval before visitor can check in." : "View visits. Guards see all; residents see their own."}
+        description={canInviteVisitor(user) ? "Manage visits. Pending invites need your approval before the visitor can check in." : "View visits. Guards & Committee see all; residents see their own."}
         action={canInviteVisitor(user) ? <LinkButton href="/visitors/invite" variant="primary" size="md">+ Invite Visitor</LinkButton> : undefined}
       />
       {notifications.length > 0 && (

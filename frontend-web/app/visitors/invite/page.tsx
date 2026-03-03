@@ -17,7 +17,7 @@ function InviteContent() {
   const { user, loading: authLoading } = useAuth({
     requireAuth: true,
     requireRole: canInviteVisitor,
-    redirectTo: "/dashboard?message=Resident+or+admin+only",
+    redirectTo: "/dashboard?message=Resident+or+committee+only",
   });
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");

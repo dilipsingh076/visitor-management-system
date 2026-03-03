@@ -259,13 +259,14 @@ export async function createBuilding(body: {
   return res.data;
 }
 
-/** User list item (society users). */
+/** User list item (society users). One user can have multiple roles. */
 export interface UserListItem {
   id: string;
   email: string;
   full_name: string;
   username: string;
   role: string;
+  roles?: string[];
   phone: string | null;
   flat_number: string | null;
   is_active: boolean;
@@ -273,11 +274,14 @@ export interface UserListItem {
   last_login: string | null;
 }
 
-/** List users in current user's society. Admin only. */
+/** List users in current user's society. Admin only. Throws on 403/401 so callers can show the error. */
 export async function listUsers(role?: string): Promise<UserListItem[]> {
   const q = role ? `?role=${encodeURIComponent(role)}` : "";
   const res = await apiClient.get<UserListItem[]>(`/users${q}`);
-  if (res.error || !res.data) return [];
+  if (res.error) {
+    throw new Error(res.error);
+  }
+  if (!res.data) return [];
   return Array.isArray(res.data) ? res.data : [];
 }
 
@@ -291,6 +295,16 @@ export async function createUser(body: {
   flat_number?: string;
 }): Promise<{ user: UserListItem | null; error?: string }> {
   const res = await apiClient.post<UserListItem>("/users/", body);
+  if (res.error) return { user: null, error: res.error };
+  return { user: res.data ?? null };
+}
+
+/** Update user in current user's society (roles, name, phone, flat). Committee only. Resident/guard only via signup. */
+export async function updateUser(
+  userId: string,
+  body: { roles?: string[]; full_name?: string; phone?: string; flat_number?: string }
+): Promise<{ user: UserListItem | null; error?: string }> {
+  const res = await apiClient.patch<UserListItem>(`/users/${userId}`, body);
   if (res.error) return { user: null, error: res.error };
   return { user: res.data ?? null };
 }

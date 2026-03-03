@@ -21,6 +21,7 @@ type AuthContextValue = {
   loading: boolean;
   isAuthenticated: boolean;
   refetch: () => Promise<User | null>;
+  setUser: (user: User | null) => void;
 };
 
 const AuthContext = createContext<AuthContextValue | null>(null);
@@ -43,6 +44,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
     const cached = getCachedUser() as User | null;
     if (cached) setUser(cached);
+    if (typeof window !== "undefined") {
+      const token = localStorage.getItem("access_token");
+      if (token && !document.cookie.includes("vms_access=")) {
+        document.cookie = `vms_access=${encodeURIComponent(token)}; path=/; max-age=2592000; SameSite=Lax`;
+      }
+    }
 
     const load = async () => {
       const demo = getDemoUser() as User | null;
@@ -59,11 +66,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const isAuthenticated = Boolean(user ?? checkAuth());
+  const resolvedUser = user ?? (checkAuth() ? getCachedUser() : null);
   const value: AuthContextValue = {
-    user,
+    user: resolvedUser,
     loading,
     isAuthenticated,
     refetch,
+    setUser,
   };
 
   return (

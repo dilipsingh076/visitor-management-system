@@ -10,7 +10,9 @@ type Building = { id: string; code: string | null; name: string };
 type Props = {
   societyCode: string;
   onSocietyCodeChange: (value: string) => void;
+  onSocietyCodeBlur?: () => void;
   societyNotFound: boolean;
+  societyLoading?: boolean;
   selectedRole: Role;
   onRoleChange: (role: Role) => void;
   fullName: string;
@@ -33,7 +35,9 @@ type Props = {
 export function SignupForm({
   societyCode,
   onSocietyCodeChange,
+  onSocietyCodeBlur,
   societyNotFound,
+  societyLoading = false,
   selectedRole,
   onRoleChange,
   fullName,
@@ -54,16 +58,17 @@ export function SignupForm({
 }: Props) {
   return (
     <div className="space-y-4 [&_input]:py-2.5 [&_select]:py-2.5">
-      {/* Society code + role */}
+      {/* Society code: enter then tab out to load buildings */}
       <div className="space-y-3">
         <Input
           id="societyCode"
           label="Society code *"
           value={societyCode}
           onChange={(e) => onSocietyCodeChange(e.target.value)}
+          onBlur={onSocietyCodeBlur}
           placeholder="e.g. green-valley or demo-society"
           required
-          hint="From your building manager, or Register your society to create one."
+          hint={societyLoading ? "Checking society…" : "Enter your society code and tab out to load buildings. Get the code from your committee or register a new society."}
           error={
             societyNotFound
               ? "Society not found. Check the code or register a new society."
@@ -85,11 +90,38 @@ export function SignupForm({
               </button>
             ))}
           </div>
-          <p className="text-[10px] text-muted-foreground mt-1">Admin only when you Register a society.</p>
+          <p className="text-[10px] text-muted-foreground mt-1">Committee roles are assigned when you Register a society.</p>
         </div>
       </div>
 
-      {/* Your details: name + email (or building) */}
+      {/* Building + Flat (after society is loaded) */}
+      {buildings.length > 0 && (
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-3 rounded-lg bg-muted-bg/50 border border-border">
+          <Select
+            id="building"
+            label="Building *"
+            value={selectedBuildingId}
+            onChange={(e) => onBuildingChange(e.target.value)}
+            options={[
+              { value: "", label: "— Select your building —" },
+              ...buildings.map((b) => ({
+                value: b.id,
+                label: b.code ? `${b.name} (${b.code})` : b.name,
+              })),
+            ]}
+          />
+          <Input
+            id="flatNumber"
+            label="Flat / unit *"
+            value={flatNumber}
+            onChange={(e) => onFlatNumberChange(e.target.value)}
+            placeholder="e.g. 101, A-201"
+            noMargin
+          />
+        </div>
+      )}
+
+      {/* Name + Email */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <Input
           id="fullName"
@@ -100,34 +132,6 @@ export function SignupForm({
           required
           noMargin
         />
-        {buildings.length > 0 ? (
-          <Select
-            id="building"
-            label="Building / wing"
-            value={selectedBuildingId}
-            onChange={(e) => onBuildingChange(e.target.value)}
-            options={[
-              { value: "", label: "— Select —" },
-              ...buildings.map((b) => ({
-                value: b.id,
-                label: `${b.name}${b.code ? ` (${b.code})` : ""}`,
-              })),
-            ]}
-          />
-        ) : (
-          <Input
-            id="email"
-            type="email"
-            label="Email *"
-            value={email}
-            onChange={(e) => onEmailChange(e.target.value)}
-            placeholder="your@email.com"
-            required
-            noMargin
-          />
-        )}
-      </div>
-      {buildings.length > 0 && (
         <Input
           id="email"
           type="email"
@@ -138,7 +142,7 @@ export function SignupForm({
           required
           noMargin
         />
-      )}
+      </div>
 
       {/* Password + confirm */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -167,26 +171,16 @@ export function SignupForm({
         />
       </div>
 
-      {/* Contact: phone + flat */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        <Input
-          id="phone"
-          type="tel"
-          label="Phone"
-          value={phone}
-          onChange={(e) => onPhoneChange(e.target.value)}
-          placeholder="1234567890"
-          noMargin
-        />
-        <Input
-          id="flatNumber"
-          label="Flat / unit"
-          value={flatNumber}
-          onChange={(e) => onFlatNumberChange(e.target.value)}
-          placeholder="A-101"
-          noMargin
-        />
-      </div>
+      {/* Phone */}
+      <Input
+        id="phone"
+        type="tel"
+        label="Phone"
+        value={phone}
+        onChange={(e) => onPhoneChange(e.target.value)}
+        placeholder="1234567890"
+        noMargin
+      />
     </div>
   );
 }

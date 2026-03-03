@@ -22,15 +22,14 @@ router = APIRouter()
 
 
 def _primary_role(roles: list) -> str:
-    """Return single assigned/primary role for display. Order: admin > guard > resident."""
+    """Return single assigned/primary role for display. Order: platform_admin > chairman > secretary > treasurer > guard > resident. 'admin' mapped to chairman for backward compat."""
     if not roles:
         return "resident"
+    for r in ("platform_admin", "chairman", "secretary", "treasurer", "guard", "resident"):
+        if r in roles:
+            return r
     if "admin" in roles:
-        return "admin"
-    if "guard" in roles:
-        return "guard"
-    if "resident" in roles:
-        return "resident"
+        return "chairman"  # backward compat: old admin → chairman for display
     return roles[0] if roles else "resident"
 
 
@@ -80,9 +79,18 @@ async def signup(body: SignupRequest, db: AsyncSession = Depends(get_db)):
     )
 
 
+@router.get("/register-society/check")
+async def register_society_check():
+    """Debug: GET to verify API is reachable (e.g. from frontend at localhost:3000). Returns 200."""
+    return JSONResponse(content={"ok": True, "message": "Register-society API is reachable"})
+
 @router.post("/register-society")
 async def register_society(body: RegisterSocietyRequest, db: AsyncSession = Depends(get_db)):
-    """Register a new society and create the first admin user."""
+    """
+    Register a new society and create the first admin user.
+    Flow: validate buildings -> auth_register_society (society + buildings + admin user) -> return user + token.
+    Errors: 400 (validation, duplicate slug/email), 500 (DB/server). All responses include JSON body with 'detail' on error.
+    """
     log = structlog.get_logger()
     log.info("register_society: request received", society_name=body.society_name, email=body.email)
     buildings = [{"name": b.name, "code": b.code} for b in (body.buildings or [])]
@@ -143,19 +151,22 @@ async def register_society(body: RegisterSocietyRequest, db: AsyncSession = Depe
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail=f"Database error: {str(e)}",
             )
+        detail_msg = str(e)
+        log.error("register_society: returning 500", detail=detail_msg)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=str(e),
+            detail=detail_msg,
         )
     log.info("register_society: success", society_id=str(society.id), user_id=str(user.id))
     user_data = _user_to_response(user, society)
     return JSONResponse(
+        status_code=200,
         content={
             "user": user_data,
             "society": {"id": str(society.id), "slug": society.slug, "name": society.name},
             "access_token": token,
             "token_type": "bearer",
-        }
+        },
     )
 
 
@@ -178,13 +189,18 @@ async def get_current_user_info(current_user: dict = Depends(get_current_user), 
         "society_id": society_id,
         "building_id": current_user.get("building_id"),
     }
-    # Load society and user details from DB when available
+    # Load society and user details from DB when available (use DB role as primary)
     if user_id and society_id:
         from uuid import UUID
         try:
             result = await db.execute(select(User).where(User.id == UUID(user_id)))
             user = result.scalar_one_or_none()
             if user:
+                # Use DB roles (supports multiple roles); primary = first
+                from app.api.users import _user_roles
+                roles = _user_roles(user)
+                payload["roles"] = roles
+                payload["role"] = "chairman" if user.role == "admin" else (roles[0] if roles else user.role)
                 result = await db.execute(select(Society).where(Society.id == user.society_id))
                 society = result.scalar_one_or_none()
                 if society:

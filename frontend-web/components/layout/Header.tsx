@@ -1,13 +1,21 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import Link from "next/link";
-import { removeToken, getPrimaryRole, ROLE_LABELS, canAccessGuardPage, canAccessCheckin, canAccessWalkin, canAccessPlatform } from "@/lib/auth";
+import { removeToken, getPrimaryRole, ROLE_LABELS, getRoleResponsibility, canAccessGuardPage, canAccessCheckin, canAccessWalkin, canAccessPlatform, canAccessSocietyManagement } from "@/lib/auth";
 import { useAuthContext } from "@/features/auth";
 import { Badge, Button, Container, LinkButton, NavLink } from "@/components/ui";
 
+/** Render auth-dependent nav only after mount to avoid hydration mismatch (auth comes from client storage). */
 export default function Header() {
+  const [mounted, setMounted] = useState(false);
   const { user, isAuthenticated } = useAuthContext();
-  const authenticated = isAuthenticated;
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  const authenticated = mounted && isAuthenticated;
 
   const handleLogout = () => {
     removeToken();
@@ -35,6 +43,7 @@ export default function Header() {
                   {canAccessCheckin(user) && <NavLink href="/checkin">Check-in</NavLink>}
                   {canAccessWalkin(user) && <NavLink href="/checkin/walkin">Walk-in</NavLink>}
                   {canAccessGuardPage(user) && <NavLink href="/guard">Guard</NavLink>}
+                  {canAccessSocietyManagement(user) && <NavLink href="/admin/users">Management</NavLink>}
                   {canAccessPlatform(user) && <NavLink href="/platform/societies">Platform</NavLink>}
                 </>
               ) : authenticated ? (
@@ -57,10 +66,14 @@ export default function Header() {
             {authenticated ? (
               <>
                 {user && (
-                  <span className="hidden sm:inline text-sm text-muted-foreground">
+                  <span className="hidden sm:inline text-sm text-muted-foreground flex items-center gap-2">
                     <span className="text-foreground font-medium">{user.username}</span>
                     <span className="mx-1.5">·</span>
-                    <Badge variant="primary" size="sm" title="Your assigned role">
+                    <Badge
+                      variant="primary"
+                      size="sm"
+                      title={getRoleResponsibility(getPrimaryRole(user))}
+                    >
                       {ROLE_LABELS[getPrimaryRole(user)] ?? getPrimaryRole(user)}
                     </Badge>
                   </span>

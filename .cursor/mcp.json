@@ -8,8 +8,11 @@
       "command": "node",
       "args": ["C:/Users/LENOVO/Desktop/Visitor management systme/mcp-supabase/dist/index.js"],
       "env": {
-        "DATABASE_URL": "postgresql+asyncpg://postgres:UZBuN4EPMSNAViLh@db.ibuskfesyzvyruhudvvr.supabase.co:5432/postgres"
+        "DATABASE_URL": "postgresql://postgres.ibuskfesyzvyruhudvvr:UZBuN4EPMSNAViLh@aws-1-ap-southeast-1.pooler.supabase.com:5432/postgres"
       }
+    },
+    "supabase": {
+      "url": "https://mcp.supabase.com/mcp?project_ref=ibuskfesyzvyruhudvvr"
     }
   }
 }

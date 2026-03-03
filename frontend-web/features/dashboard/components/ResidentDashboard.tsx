@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useQueryClient } from "@tanstack/react-query";
 import { Avatar, Badge, Button, EmptyState, StatCardSkeleton } from "@/components/ui";
 import type { User } from "@/lib/auth";
+import { getPrimaryRole, getRoleResponsibility } from "@/lib/auth";
 import { useDashboardMyRequests, useDashboardStats } from "../hooks/useDashboardData";
 import { dashboardKeys } from "../hooks/keys";
 import { useFrequentVisitors } from "@/features/visitors";
@@ -63,7 +64,9 @@ export function ResidentDashboard({ user }: ResidentDashboardProps) {
           <h1 className="text-2xl md:text-3xl font-bold text-foreground">
             Resident Dashboard
           </h1>
-          <p className="text-muted-foreground">Welcome, {user.username}</p>
+          <p className="text-muted-foreground mt-0.5">
+            Welcome, {user.username} · {getRoleResponsibility(getPrimaryRole(user))}
+          </p>
         </div>
         <div className="flex gap-2 flex-wrap">
           <Link href="/visitors/invite">

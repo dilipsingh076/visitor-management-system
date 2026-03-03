@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Alert } from "@/components/ui";
 import { theme } from "@/lib/theme";
 import { registerSociety } from "@/lib/auth";
+import { useAuthContext } from "@/features/auth";
 import {
   AuthLayout,
   RegisterSocietyWizard,
@@ -14,6 +15,7 @@ import {
 
 export default function RegisterSocietyPage() {
   const router = useRouter();
+  const { setUser } = useAuthContext();
   const [societyName, setSocietyName] = useState("");
   const [societySlug, setSocietySlug] = useState("");
   const [societyAddress, setSocietyAddress] = useState("");
@@ -26,7 +28,7 @@ export default function RegisterSocietyPage() {
   const [registrationNumber, setRegistrationNumber] = useState("");
   const [societyType, setSocietyType] = useState("");
   const [registrationYear, setRegistrationYear] = useState("");
-  const [registerBuildings, setRegisterBuildings] = useState<{ name: string; code: string }[]>([]);
+  const [registerBuildings, setRegisterBuildings] = useState<{ name: string }[]>([]);
   const [adminBuildingIndex, setAdminBuildingIndex] = useState(0);
   const [registerStep, setRegisterStep] = useState(1);
   const [fullName, setFullName] = useState("");
@@ -82,7 +84,7 @@ export default function RegisterSocietyPage() {
     }
     const buildingsPayload = registerBuildings
       .filter((b) => b.name.trim())
-      .map((b) => ({ name: b.name.trim(), code: b.code.trim() || undefined }));
+      .map((b) => ({ name: b.name.trim() }));
     if (buildingsPayload.length === 0) {
       setError("Add at least one building in step 4 before registering.");
       setLoading(false);
@@ -111,10 +113,12 @@ export default function RegisterSocietyPage() {
     });
     if (result.error) {
       setError(result.error);
+      if (typeof window !== "undefined") console.error("[RegisterSociety] Backend error:", result.error);
       setLoading(false);
       return;
     }
     if (result.user) {
+      setUser(result.user);
       setLoading(false);
       router.push("/dashboard");
       return;

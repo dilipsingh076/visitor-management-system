@@ -22,7 +22,7 @@ class SignupRequest(BaseModel):
     email: EmailStr
     password: str = Field(..., min_length=6)
     full_name: str = Field(..., min_length=1)
-    role: str = Field(..., pattern="^(guard|resident)$")
+    role: str = Field(..., pattern="^(guard|resident)$")  # Committee roles assigned by admin, not signup
     society_slug: str = Field(..., min_length=1)
     building_id: str | None = None
     phone: str | None = None

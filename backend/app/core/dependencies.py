@@ -10,6 +10,7 @@ import structlog
 
 from app.core.config import settings
 from app.core.database import get_db_session
+from app.core.roles import ALL_ADMIN_ROLES
 from app.core.security import verify_token
 from app.db.seed import DEMO_USER_ID, DEMO_SOCIETY_ID
 
@@ -61,7 +62,7 @@ async def get_current_user(
             "email": "demo@vms.local",
             "preferred_username": "demo",
             "user_id": str(DEMO_USER_ID),
-            "realm_access": {"roles": ["resident", "guard", "admin"]},
+            "realm_access": {"roles": ["resident", "guard", "chairman"]},
             "society_id": str(DEMO_SOCIETY_ID),
         }
 
@@ -83,13 +84,13 @@ async def get_current_admin(
     current_user: dict = Depends(get_current_user),
 ) -> dict:
     """
-    Require admin role.
+    Require society-admin or platform-admin role (Chairman, Secretary, Treasurer, or Platform Admin).
     """
     roles = current_user.get("realm_access", {}).get("roles", [])
-    if "admin" not in roles:
+    if not any(r in roles for r in ALL_ADMIN_ROLES):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Admin access required",
+            detail="Committee or platform admin access required",
         )
     return current_user
 
@@ -98,13 +99,13 @@ async def get_current_guard(
     current_user: dict = Depends(get_current_user),
 ) -> dict:
     """
-    Require guard or admin role.
+    Require guard or committee/platform admin role.
     """
     roles = current_user.get("realm_access", {}).get("roles", [])
-    if "guard" not in roles and "admin" not in roles:
+    if "guard" not in roles and not any(r in roles for r in ALL_ADMIN_ROLES):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Guard or admin access required",
+            detail="Guard or committee access required",
         )
     return current_user
 
@@ -129,13 +130,13 @@ async def get_current_resident(
     current_user: dict = Depends(get_current_user),
 ) -> dict:
     """
-    Require resident or admin role.
+    Require resident or committee/platform admin role.
     """
     roles = current_user.get("realm_access", {}).get("roles", [])
-    if "resident" not in roles and "admin" not in roles:
+    if "resident" not in roles and not any(r in roles for r in ALL_ADMIN_ROLES):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Resident or admin access required",
+            detail="Resident or committee access required",
         )
     return current_user
 

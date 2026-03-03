@@ -19,4 +19,4 @@ export interface User {
   society?: SocietySummary;
 }
 
-export type RoleLabelKey = "admin" | "guard" | "resident" | "super_admin";
+export type RoleLabelKey = "chairman" | "secretary" | "treasurer" | "resident" | "guard" | "platform_admin";

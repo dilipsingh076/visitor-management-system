@@ -25,7 +25,8 @@ class User(Base):
     flat_number = Column(String(50), nullable=True, index=True)
     is_active = Column(Boolean, default=True, nullable=False)
     is_verified = Column(Boolean, default=False, nullable=True)  # Email/account verification
-    role = Column(String(50), nullable=False)  # admin, guard, resident, super_admin
+    role = Column(String(50), nullable=False)  # primary role (first in roles); kept for backward compat
+    roles = Column(JSON, nullable=True)  # list of role strings; if None, use [role]; one user can have multiple roles
     password_hash = Column(String(255), nullable=True)  # For local auth; null if Keycloak
     society_id = Column(GUID(), ForeignKey("societies.id", ondelete="SET NULL"), nullable=True, index=True)
     building_id = Column(GUID(), ForeignKey("buildings.id", ondelete="SET NULL"), nullable=True, index=True)

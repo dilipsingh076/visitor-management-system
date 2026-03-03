@@ -26,11 +26,12 @@ class Settings(BaseSettings):
 
     CORS_ORIGINS: List[str] = ["*"]  # Allow all origins
 
-    # Database: set in .env to Supabase (postgresql+asyncpg://postgres:PASSWORD@db.XXX.supabase.co:5432/postgres)
+    # Database: set in .env to Supabase URI from Dashboard → Settings → Database → Connection string
     DATABASE_URL: str = f"sqlite+aiosqlite:///{_DEFAULT_DB.as_posix()}"
     DB_ECHO: bool = False
     DB_POOL_SIZE: int = 5
     DB_MAX_OVERFLOW: int = 10
+    DB_USE_SSL: bool = False  # Set True if Supabase requires SSL (e.g. pooler)
 
     # Keycloak
     KEYCLOAK_URL: str = "http://localhost:8080"

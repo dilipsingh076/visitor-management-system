@@ -1,15 +1,17 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Alert } from "@/components/ui";
 import { theme } from "@/lib/theme";
 import { getSocietyBySlug } from "@/lib/api";
 import { signup } from "@/lib/auth";
+import { useAuthContext } from "@/features/auth";
 import { AuthLayout, SignupForm } from "../_components";
 
 export default function SignupPage() {
   const router = useRouter();
+  const { setUser } = useAuthContext();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -20,33 +22,35 @@ export default function SignupPage() {
   const [buildings, setBuildings] = useState<{ id: string; code: string | null; name: string }[]>([]);
   const [selectedBuildingId, setSelectedBuildingId] = useState("");
   const [societyNotFound, setSocietyNotFound] = useState(false);
+  const [societyLoading, setSocietyLoading] = useState(false);
   const [selectedRole, setSelectedRole] = useState<"resident" | "guard">("resident");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
-    if (!societyCode.trim()) {
+  const handleSocietyCodeBlur = () => {
+    const code = societyCode.trim();
+    if (!code) {
       setBuildings([]);
       setSelectedBuildingId("");
       setSocietyNotFound(false);
       return;
     }
-    let cancelled = false;
+    setSocietyLoading(true);
     setSocietyNotFound(false);
-    getSocietyBySlug(societyCode.trim(), true).then((s) => {
-      if (cancelled) return;
-      if (!s) {
-        setBuildings([]);
+    getSocietyBySlug(code, true)
+      .then((s) => {
+        if (!s) {
+          setBuildings([]);
+          setSelectedBuildingId("");
+          setSocietyNotFound(true);
+          return;
+        }
+        setSocietyNotFound(false);
+        setBuildings(s.buildings || []);
         setSelectedBuildingId("");
-        setSocietyNotFound(true);
-        return;
-      }
-      setSocietyNotFound(false);
-      setBuildings(s.buildings || []);
-      setSelectedBuildingId("");
-    });
-    return () => { cancelled = true; };
-  }, [societyCode]);
+      })
+      .finally(() => setSocietyLoading(false));
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -59,6 +63,16 @@ export default function SignupPage() {
     }
     if (societyNotFound) {
       setError("Society not found. Check the code or use Register Society to create a new one.");
+      setLoading(false);
+      return;
+    }
+    if (buildings.length > 0 && selectedRole === "resident" && !selectedBuildingId) {
+      setError("Please select your building.");
+      setLoading(false);
+      return;
+    }
+    if (buildings.length > 0 && selectedRole === "resident" && !flatNumber.trim()) {
+      setError("Please enter your flat / unit number.");
       setLoading(false);
       return;
     }
@@ -93,6 +107,7 @@ export default function SignupPage() {
       return;
     }
     if (result.user) {
+      setUser(result.user);
       setLoading(false);
       router.push("/dashboard");
       return;
@@ -116,7 +131,9 @@ export default function SignupPage() {
         <SignupForm
           societyCode={societyCode}
           onSocietyCodeChange={setSocietyCode}
+          onSocietyCodeBlur={handleSocietyCodeBlur}
           societyNotFound={societyNotFound}
+          societyLoading={societyLoading}
           selectedRole={selectedRole}
           onRoleChange={setSelectedRole}
           fullName={fullName}

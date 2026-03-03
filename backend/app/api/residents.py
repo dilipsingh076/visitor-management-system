@@ -5,6 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.core.dependencies import get_db, get_current_guard_or_admin
+from app.core.roles import RESIDENT_HOST_ROLES
 from app.models.user import User
 
 router = APIRouter()
@@ -25,7 +26,7 @@ async def list_residents(
     stmt = (
         select(User)
         .options(selectinload(User.building))
-        .where(User.role.in_(["resident", "admin"]), User.is_active == True)
+        .where(User.role.in_(RESIDENT_HOST_ROLES), User.is_active == True)
         .order_by(User.full_name)
         .limit(limit)
     )

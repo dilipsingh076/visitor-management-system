@@ -1,1 +1,1 @@
-export { getUsers, createUserEntity } from "./admin.service";
+export { getUsers, createUserEntity, updateUserEntity } from "./admin.service";

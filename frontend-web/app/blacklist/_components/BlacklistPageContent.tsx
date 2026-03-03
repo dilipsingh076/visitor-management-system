@@ -16,7 +16,7 @@ export function BlacklistPageContent() {
   const { user, loading: authLoading } = useAuth({
     requireAuth: true,
     requireRole: canAccessGuardPage,
-    redirectTo: "/dashboard?message=Guard+or+admin+only",
+    redirectTo: "/dashboard?message=Guard+or+committee+only",
   });
 
   const { data: list = [], isLoading: listLoading } = useGuardBlacklist();
@@ -64,7 +64,7 @@ export function BlacklistPageContent() {
     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
       <PageHeader
         title="Blacklist"
-        description="Denied visitors cannot check in or be invited. Add or remove entries (Guard or Admin only)."
+        description="Denied visitors cannot check in or be invited. Add or remove entries (Guard & Committee)."
         action={
           <Link href="/dashboard">
             <Button variant="secondary">← Dashboard</Button>

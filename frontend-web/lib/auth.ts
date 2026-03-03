@@ -27,47 +27,83 @@ export interface User {
   society?: SocietySummary;
 }
 
+/** Real-world roles: Chairman, Secretary, Treasurer, Resident, Guard, Platform Admin */
 export const ROLE_LABELS: Record<string, string> = {
-  admin: "Admin",
-  guard: "Guard",
+  chairman: "Chairman",
+  secretary: "Secretary",
+  treasurer: "Treasurer",
   resident: "Resident",
-  super_admin: "Platform Admin",
+  guard: "Guard",
+  platform_admin: "Platform Admin",
 };
+
+/** Short responsibility line for UI (dashboard headers, empty states) */
+export const ROLE_RESPONSIBILITIES: Record<string, string> = {
+  chairman: "Full society control: users, buildings, blacklist & reports",
+  secretary: "Day-to-day operations: users, visitors & reports",
+  treasurer: "Society oversight: users, blacklist & reports",
+  resident: "Invite visitors and manage your visit approvals",
+  guard: "Check-in, walk-in, blacklist & muster at the gate",
+  platform_admin: "Manage all societies and platform settings",
+};
+
+export function getRoleResponsibility(role: string): string {
+  return ROLE_RESPONSIBILITIES[role] ?? "View and manage according to your role";
+};
+
+/** True if role is committee (Chairman, Secretary, Treasurer) or Platform Admin */
+export function isSocietyAdmin(role: string): boolean {
+  return (
+    role === "platform_admin" ||
+    role === "chairman" ||
+    role === "secretary" ||
+    role === "treasurer"
+  );
+}
+
+/** True if role is society committee only (Chairman, Secretary, Treasurer) — not Platform Admin */
+export function isCommittee(role: string): boolean {
+  return role === "chairman" || role === "secretary" || role === "treasurer";
+}
 
 export function getPrimaryRole(user: User | null): string {
   if (!user) return "resident";
   if (user.role) return user.role;
   const roles = user.roles || [];
-  if (roles.includes("super_admin")) return "super_admin";
-  if (roles.includes("admin")) return "admin";
-  if (roles.includes("guard")) return "guard";
-  if (roles.includes("resident")) return "resident";
+  const order = ["platform_admin", "chairman", "secretary", "treasurer", "guard", "resident"];
+  for (const r of order) {
+    if (roles.includes(r)) return r;
+  }
   return roles[0] || "resident";
 }
 
 export function canAccessPlatform(user: User | null): boolean {
-  const role = getPrimaryRole(user);
-  return role === "super_admin";
+  return getPrimaryRole(user) === "platform_admin";
 }
 
 export function canInviteVisitor(user: User | null): boolean {
   const role = getPrimaryRole(user);
-  return role === "resident" || role === "admin";
+  return role === "resident" || isSocietyAdmin(role);
 }
 
 export function canAccessGuardPage(user: User | null): boolean {
   const role = getPrimaryRole(user);
-  return role === "guard" || role === "admin";
+  return role === "guard" || isSocietyAdmin(role);
 }
 
 export function canAccessCheckin(user: User | null): boolean {
   const role = getPrimaryRole(user);
-  return role === "guard" || role === "admin";
+  return role === "guard" || isSocietyAdmin(role);
 }
 
 export function canAccessWalkin(user: User | null): boolean {
   const role = getPrimaryRole(user);
-  return role === "guard" || role === "admin";
+  return role === "guard" || isSocietyAdmin(role);
+}
+
+/** Committee (Chairman/Secretary/Treasurer) can access Society Management — users, settings */
+export function canAccessSocietyManagement(user: User | null): boolean {
+  return isCommittee(getPrimaryRole(user));
 }
 
 export const authConfig = {
@@ -95,6 +131,18 @@ export function getLogoutUrl(): string {
     redirect_uri: authConfig.redirectUri,
   });
   return `${authConfig.keycloakUrl}/realms/${authConfig.realm}/protocol/openid-connect/logout?${params}`;
+}
+
+const AUTH_COOKIE_NAME = "vms_access";
+
+function setAuthCookie(token: string): void {
+  if (typeof document === "undefined") return;
+  document.cookie = `${AUTH_COOKIE_NAME}=${encodeURIComponent(token)}; path=/; max-age=2592000; SameSite=Lax`;
+}
+
+function clearAuthCookie(): void {
+  if (typeof document === "undefined") return;
+  document.cookie = `${AUTH_COOKIE_NAME}=; path=/; max-age=0`;
 }
 
 // Auth state stored in memory for current session
@@ -137,7 +185,10 @@ export async function signup(data: {
 
     if (typeof window !== "undefined") {
       sessionStorage.setItem("vms_user", JSON.stringify(user));
-      if (accessToken) localStorage.setItem("access_token", accessToken);
+      if (accessToken) {
+        localStorage.setItem("access_token", accessToken);
+        setAuthCookie(accessToken);
+      }
     }
 
     return { user };
@@ -149,6 +200,19 @@ export async function signup(data: {
 /**
  * Register a new society and its first admin (building manager).
  */
+/**
+ * Extract error message from API error response (JSON or text).
+ * Backend returns { detail: string } or { detail: [{ msg: string }] } for validation.
+ */
+function getErrorMessage(err: unknown, fallback: string): string {
+  if (err && typeof err === "object" && "detail" in err) {
+    const d = (err as { detail?: unknown }).detail;
+    if (typeof d === "string") return d;
+    if (Array.isArray(d) && d[0] && typeof d[0] === "object" && "msg" in d[0]) return String((d[0] as { msg: string }).msg);
+  }
+  return fallback;
+}
+
 export async function registerSociety(data: {
   society_name: string;
   society_slug?: string;
@@ -170,25 +234,41 @@ export async function registerSociety(data: {
   phone?: string;
   flat_number?: string;
 }): Promise<{ user: User | null; society?: { id: string; slug: string; name: string }; error?: string }> {
+  const url = `${API_BASE_URL}/auth/register-society`;
   try {
-    const response = await fetch(`${API_BASE_URL}/auth/register-society`, {
+    const response = await fetch(url, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       credentials: "include",
       body: JSON.stringify(data),
     });
 
+    const responseText = await response.text();
     if (!response.ok) {
-      const err = await response.json().catch(() => ({}));
-      const detail = err.detail;
-      const message = typeof detail === "string" ? detail : Array.isArray(detail) ? (detail[0]?.msg || "Registration failed") : "Registration failed";
+      let err: unknown = {};
+      try {
+        err = responseText ? JSON.parse(responseText) : {};
+      } catch {
+        err = { detail: responseText || `HTTP ${response.status}` };
+      }
+      const message = getErrorMessage(err, `Registration failed (${response.status})`);
+      if (typeof window !== "undefined") {
+        console.error("[registerSociety] API error:", response.status, response.statusText, err);
+      }
       return { user: null, error: message };
     }
 
-    const result = await response.json();
+    let result: { user?: User; society?: SocietySummary; access_token?: string };
+    try {
+      result = responseText ? JSON.parse(responseText) : {};
+    } catch {
+      if (typeof window !== "undefined") console.error("[registerSociety] Invalid JSON:", responseText?.slice(0, 200));
+      return { user: null, error: "Invalid response from server" };
+    }
+
     const user = result.user as User;
     const society = result.society as SocietySummary | undefined;
-    if (society) user.society = society;
+    if (society && user) user.society = society;
     const accessToken = result.access_token as string | undefined;
 
     _currentUser = user;
@@ -196,12 +276,19 @@ export async function registerSociety(data: {
 
     if (typeof window !== "undefined") {
       sessionStorage.setItem("vms_user", JSON.stringify(user));
-      if (accessToken) localStorage.setItem("access_token", accessToken);
+      if (accessToken) {
+        localStorage.setItem("access_token", accessToken);
+        setAuthCookie(accessToken);
+      }
     }
 
     return { user, society };
   } catch (error) {
-    return { user: null, error: error instanceof Error ? error.message : "Network error" };
+    const message = error instanceof Error ? error.message : "Network error";
+    if (typeof window !== "undefined") {
+      console.error("[registerSociety] Request failed:", url, error);
+    }
+    return { user: null, error: message };
   }
 }
 
@@ -232,7 +319,10 @@ export async function login(email: string, password: string): Promise<{ user: Us
 
     if (typeof window !== "undefined") {
       sessionStorage.setItem("vms_user", JSON.stringify(user));
-      if (accessToken) localStorage.setItem("access_token", accessToken);
+      if (accessToken) {
+        localStorage.setItem("access_token", accessToken);
+        setAuthCookie(accessToken);
+      }
     }
 
     return { user };
@@ -268,7 +358,10 @@ export async function demoLogin(email: string, role: string): Promise<{ user: Us
 
     if (typeof window !== "undefined") {
       sessionStorage.setItem("vms_user", JSON.stringify(user));
-      if (accessToken) localStorage.setItem("access_token", accessToken);
+      if (accessToken) {
+        localStorage.setItem("access_token", accessToken);
+        setAuthCookie(accessToken);
+      }
     }
 
     return { user };
@@ -298,6 +391,7 @@ export async function logout(): Promise<void> {
     sessionStorage.removeItem("vms_user");
     localStorage.removeItem("access_token");
     localStorage.removeItem("demo_user");
+    clearAuthCookie();
   }
 }
 
@@ -393,6 +487,7 @@ export function getCachedUser(): User | null {
 export function setToken(token: string): void {
   if (typeof window !== "undefined") {
     localStorage.setItem("access_token", token);
+    setAuthCookie(token);
   }
 }
 

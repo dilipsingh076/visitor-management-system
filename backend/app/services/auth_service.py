@@ -10,6 +10,7 @@ import structlog
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.roles import SOCIETY_ADMIN_ROLES
 from app.models.society import Society, Building
 from app.models.user import User
 from app.core.security import hash_password, verify_password, create_access_token
@@ -25,11 +26,24 @@ def _slugify(text: str) -> str:
     return text or str(uuid.uuid4())[:8]
 
 
+def _get_roles(user: User) -> list:
+    """Return user's roles list; supports legacy single role."""
+    if user.roles and isinstance(user.roles, list) and len(user.roles) > 0:
+        return [str(r) for r in user.roles]
+    return [user.role] if user.role else []
+
+
+def _roles_for_token(user: User) -> list:
+    """Roles to put in JWT: user's roles plus resident if committee (for resident actions)."""
+    roles = _get_roles(user)
+    if any(r in SOCIETY_ADMIN_ROLES for r in roles) and "resident" not in roles:
+        roles = roles + ["resident"]
+    return roles
+
+
 def _user_to_response(user: User, society: Optional[Society] = None) -> dict:
     """Build user + society dict for API response."""
-    roles = [user.role]
-    if user.role == "admin":
-        roles.append("resident")  # Admin can do resident actions
+    roles = _roles_for_token(user)
     data = {
         "id": str(user.id),
         "user_id": str(user.id),
@@ -37,7 +51,7 @@ def _user_to_response(user: User, society: Optional[Society] = None) -> dict:
         "username": user.full_name,
         "full_name": user.full_name,
         "roles": roles,
-        "role": user.role,
+        "role": roles[0] if roles else user.role,
         "phone": user.phone,
         "flat_number": user.flat_number,
         "society_id": str(user.society_id) if user.society_id else None,
@@ -142,7 +156,8 @@ async def register_society(
         full_name=(full_name or "").strip(),
         phone=_opt_str(phone),
         flat_number=_opt_str(flat_number),
-        role="admin",
+        role="chairman",
+        roles=["chairman"],
         is_active=True,
         password_hash=hash_password(password),
         society_id=society.id,
@@ -157,7 +172,7 @@ async def register_society(
     token = create_access_token(
         user_id=str(admin.id),
         email=admin.email,
-        roles=[admin.role, "resident"],
+        roles=_roles_for_token(admin),
         society_id=str(society.id),
         building_id=str(admin.building_id) if admin.building_id else None,
         full_name=admin.full_name,
@@ -182,8 +197,8 @@ async def signup(
     Create user (guard or resident) in existing society. Returns (user, society, token).
     Rejects role=admin (400).
     """
-    if role == "admin":
-        raise ValueError("Admin can only be created via Register Society")
+    if role in ("chairman", "secretary", "treasurer", "platform_admin"):
+        raise ValueError("Committee and platform admin can only be created via Register Society or by existing admins")
     if role not in ("guard", "resident"):
         raise ValueError("Role must be guard or resident")
 
@@ -220,6 +235,7 @@ async def signup(
         phone=phone.strip() if phone else None,
         flat_number=flat_number.strip() if flat_number else None,
         role=role,
+        roles=[role],
         is_active=True,
         password_hash=hash_password(password),
         society_id=society.id,
@@ -232,7 +248,7 @@ async def signup(
     token = create_access_token(
         user_id=str(user.id),
         email=user.email,
-        roles=[user.role],
+        roles=_roles_for_token(user),
         society_id=str(society.id),
         building_id=str(user.building_id) if user.building_id else None,
         full_name=user.full_name,
@@ -264,13 +280,10 @@ async def login(db: AsyncSession, email: str, password: str) -> tuple[User, Opti
         result = await db.execute(select(Society).where(Society.id == user.society_id))
         society = result.scalar_one_or_none()
 
-    roles = [user.role]
-    if user.role == "admin":
-        roles.append("resident")
     token = create_access_token(
         user_id=str(user.id),
         email=user.email,
-        roles=roles,
+        roles=_roles_for_token(user),
         society_id=str(user.society_id) if user.society_id else None,
         building_id=str(user.building_id) if user.building_id else None,
         full_name=user.full_name,

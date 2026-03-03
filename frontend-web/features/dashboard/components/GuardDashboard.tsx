@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import Link from "next/link";
 import { Avatar, Badge, Button, Input, EmptyState, StatCardSkeleton } from "@/components/ui";
 import type { User } from "@/lib/auth";
+import { getPrimaryRole, getRoleResponsibility } from "@/lib/auth";
 import { useDashboardStats } from "../hooks/useDashboardData";
 import { useVisitorsList } from "@/features/visitors";
 import { useGuardCheckout, useGuardExportMuster } from "@/features/guard";
@@ -76,7 +77,9 @@ export function GuardDashboard({ user }: GuardDashboardProps) {
             <span className="w-3 h-3 rounded-full bg-success animate-pulse" />
             Security Desk
           </h1>
-          <p className="text-muted-foreground">Welcome, {user.username}</p>
+          <p className="text-muted-foreground mt-0.5">
+            Welcome, {user.username} · {getRoleResponsibility(getPrimaryRole(user))}
+          </p>
         </div>
         <div className="flex gap-2">
           <Button variant="secondary" onClick={() => exportMuster()}>

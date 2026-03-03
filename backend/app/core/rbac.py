@@ -1,6 +1,6 @@
 """
 RBAC helpers: role checks and admin audit logging.
-Centralizes authorization logic; use with FastAPI dependencies.
+Uses real-world roles: chairman, secretary, treasurer, resident, guard, platform_admin.
 """
 from typing import List, Optional
 from uuid import UUID
@@ -8,6 +8,7 @@ from fastapi import Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.dependencies import get_current_user
+from app.core.roles import roles_include_any_admin, roles_include_guard_or_admin, roles_include_resident_or_admin
 from app.models.audit import AuditLog
 
 
@@ -17,23 +18,22 @@ def get_roles(current_user: dict) -> List[str]:
 
 
 def is_admin(current_user: dict) -> bool:
-    return "admin" in get_roles(current_user)
+    """True if user has society-admin or platform-admin role."""
+    return roles_include_any_admin(get_roles(current_user))
 
 
 def is_guard_or_admin(current_user: dict) -> bool:
-    roles = get_roles(current_user)
-    return "guard" in roles or "admin" in roles
+    return roles_include_guard_or_admin(get_roles(current_user))
 
 
 def is_resident_or_admin(current_user: dict) -> bool:
-    roles = get_roles(current_user)
-    return "resident" in roles or "admin" in roles
+    return roles_include_resident_or_admin(get_roles(current_user))
 
 
 def require_roles(allowed_roles: List[str]):
     """
     Factory: returns a dependency that requires at least one of the given roles.
-    Use: current_user: dict = Depends(require_roles(["guard", "admin"]))
+    Use: current_user: dict = Depends(require_roles(["guard", "chairman"]))
     """
 
     async def _require_roles(

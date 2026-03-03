@@ -24,7 +24,7 @@ export function GuardPageContent() {
   const { user, loading: authLoading } = useAuth({
     requireAuth: true,
     requireRole: canAccessGuardPage,
-    redirectTo: "/dashboard?message=Guard+or+admin+only",
+    redirectTo: "/dashboard?message=Guard+or+committee+only",
   });
 
   const pendingQ = useGuardPending();

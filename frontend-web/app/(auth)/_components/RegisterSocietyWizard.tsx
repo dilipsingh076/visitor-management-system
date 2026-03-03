@@ -11,6 +11,22 @@ const SOCIETY_TYPE_OPTIONS = [
   { value: "other", label: "Other" },
 ];
 
+/** Labels and placeholders by society type (CHS/AOA = tower+flat; RWA = block/sector + plot/house). */
+function getSocietyTypeLabels(societyType: string) {
+  const rwa = societyType === "rwa";
+  return {
+    buildingLabel: rwa ? "Block / Sector" : "Building (Tower / Block)",
+    unitLabel: rwa ? "Plot or House number" : "Flat / unit",
+    buildingPlaceholder: rwa ? "e.g. Block A, Sector 1" : "e.g. Tower A",
+    unitPlaceholder: rwa ? "e.g. P-12 or H-5" : "e.g. 1201 or A-101",
+    step4Title: rwa ? "Blocks / sectors (required)" : "Buildings (required)",
+    step4Hint: rwa
+      ? "Add at least one block or sector. You can add more from the dashboard later."
+      : "Add at least one building (tower or wing). You can add more from the dashboard later.",
+    addBuildingButton: rwa ? "+ Add block / sector" : "+ Add building",
+  };
+}
+
 export type RegisterSocietyState = {
   registerStep: number;
   societyName: string;
@@ -25,7 +41,7 @@ export type RegisterSocietyState = {
   registrationNumber: string;
   societyType: string;
   registrationYear: string;
-  registerBuildings: { name: string; code: string }[];
+  registerBuildings: { name: string }[];
   adminBuildingIndex: number;
   fullName: string;
   email: string;
@@ -50,7 +66,7 @@ type Props = {
     setRegistrationNumber: (s: string) => void;
     setSocietyType: (s: string) => void;
     setRegistrationYear: (s: string) => void;
-    setRegisterBuildings: (updater: (prev: { name: string; code: string }[]) => { name: string; code: string }[]) => void;
+    setRegisterBuildings: (updater: (prev: { name: string }[]) => { name: string }[]) => void;
     setAdminBuildingIndex: (n: number) => void;
     setFullName: (s: string) => void;
     setEmail: (s: string) => void;
@@ -84,7 +100,7 @@ export function RegisterSocietyWizard({ state, setters, canProceed }: Props) {
           {step === 1 && "Society basics"}
           {step === 2 && "Address & contact"}
           {step === 3 && "Official documents"}
-          {step === 4 && "Buildings (required)"}
+          {step === 4 && (getSocietyTypeLabels(state.societyType).step4Title)}
           {step === 5 && "Your admin account"}
         </p>
       </div>
@@ -191,6 +207,7 @@ export function RegisterSocietyWizard({ state, setters, canProceed }: Props) {
             value={state.registrationNumber}
             onChange={(e) => setters.setRegistrationNumber(e.target.value)}
             placeholder="e.g. MH/HSG/2024/12345"
+            hint={state.societyType === "cooperative_housing" ? "Recommended for Cooperative Housing (Registrar registration no.)." : undefined}
             noMargin
           />
           <Select
@@ -212,60 +229,50 @@ export function RegisterSocietyWizard({ state, setters, canProceed }: Props) {
       )}
 
       {/* Step 4 */}
-      {step === 4 && (
-        <div className={theme.auth.wizardStepBody}>
-          <p className={theme.text.muted}>Add at least one building (tower or wing). You can add more from the dashboard later.</p>
-          {state.registerBuildings.map((b, idx) => (
-            <div key={idx} className="flex gap-2 items-end">
-              <div className="flex-1">
-                <input
-                  type="text"
-                  value={b.name}
-                  onChange={(e) =>
-                    setters.setRegisterBuildings((prev) =>
-                      prev.map((p, i) => (i === idx ? { ...p, name: e.target.value } : p))
-                    )
+      {step === 4 && (() => {
+        const labels = getSocietyTypeLabels(state.societyType);
+        return (
+          <div className={theme.auth.wizardStepBody}>
+            <p className={theme.text.muted}>{labels.step4Hint}</p>
+            {state.registerBuildings.map((b, idx) => (
+              <div key={idx} className="flex gap-2 items-end">
+                <div className="flex-1">
+                  <input
+                    type="text"
+                    value={b.name}
+                    onChange={(e) =>
+                      setters.setRegisterBuildings((prev) =>
+                        prev.map((p, i) => (i === idx ? { ...p, name: e.target.value } : p))
+                      )
+                    }
+                    placeholder={labels.buildingPlaceholder}
+                    className={theme.input.base}
+                  />
+                </div>
+                <button
+                  type="button"
+                  onClick={() =>
+                    setters.setRegisterBuildings((prev) => prev.filter((_, i) => i !== idx))
                   }
-                  placeholder="e.g. Tower A"
-                  className={theme.input.base}
-                />
+                  className={theme.auth.wizardRemoveBtn}
+                  aria-label="Remove"
+                >
+                  ✕
+                </button>
               </div>
-              <div className="w-24 min-w-[5rem]">
-                <input
-                  type="text"
-                  value={b.code}
-                  onChange={(e) =>
-                    setters.setRegisterBuildings((prev) =>
-                      prev.map((p, i) => (i === idx ? { ...p, code: e.target.value } : p))
-                    )
-                  }
-                  placeholder="Code"
-                  className={theme.input.base}
-                />
-              </div>
-              <button
-                type="button"
-                onClick={() =>
-                  setters.setRegisterBuildings((prev) => prev.filter((_, i) => i !== idx))
-                }
-                className={theme.auth.wizardRemoveBtn}
-                aria-label="Remove"
-              >
-                ✕
-              </button>
-            </div>
-          ))}
-          <button
-            type="button"
-            onClick={() =>
-              setters.setRegisterBuildings((prev) => [...prev, { name: "", code: "" }])
-            }
-            className={theme.auth.wizardAddLink}
-          >
-            + Add building
-          </button>
-        </div>
-      )}
+            ))}
+            <button
+              type="button"
+              onClick={() =>
+                setters.setRegisterBuildings((prev) => [...prev, { name: "" }])
+              }
+              className={theme.auth.wizardAddLink}
+            >
+              {labels.addBuildingButton}
+            </button>
+          </div>
+        );
+      })()}
 
       {/* Step 5 */}
       {step === 5 && (
@@ -310,32 +317,40 @@ export function RegisterSocietyWizard({ state, setters, canProceed }: Props) {
             placeholder="1234567890"
             noMargin
           />
-          {state.registerBuildings.filter((b) => b.name.trim()).length > 0 && (
-            <div className="space-y-2">
-              <label className={theme.text.label} htmlFor="regBuilding">
-                Your building *
-              </label>
-              <Select
-                id="regBuilding"
-                value={String(state.adminBuildingIndex)}
-                onChange={(e) => setters.setAdminBuildingIndex(parseInt(e.target.value, 10))}
+          {state.registerBuildings.filter((b) => b.name.trim()).length > 0 && (() => {
+            const labels = getSocietyTypeLabels(state.societyType);
+            return (
+              <div className="space-y-2">
+                <label className={theme.text.label} htmlFor="regBuilding">
+                  Your {labels.buildingLabel.toLowerCase()} *
+                </label>
+                <Select
+                  id="regBuilding"
+                  value={String(state.adminBuildingIndex)}
+                  onChange={(e) => setters.setAdminBuildingIndex(parseInt(e.target.value, 10))}
                 options={state.registerBuildings
                   .filter((b) => b.name.trim())
                   .map((b, idx) => ({
                     value: String(idx),
-                    label: b.code.trim() ? `${b.name.trim()} (${b.code.trim()})` : b.name.trim(),
+                    label: b.name.trim(),
                   }))}
+                />
+              </div>
+            );
+          })()}
+          {(() => {
+            const labels = getSocietyTypeLabels(state.societyType);
+            return (
+              <Input
+                id="regFlatNumber"
+                label={`Your ${labels.unitLabel} *`}
+                value={state.flatNumber}
+                onChange={(e) => setters.setFlatNumber(e.target.value)}
+                placeholder={labels.unitPlaceholder}
+                noMargin
               />
-            </div>
-          )}
-          <Input
-            id="regFlatNumber"
-            label="Your flat / unit *"
-            value={state.flatNumber}
-            onChange={(e) => setters.setFlatNumber(e.target.value)}
-            placeholder="e.g. 1201 or A-101"
-            noMargin
-          />
+            );
+          })()}
         </div>
       )}
 

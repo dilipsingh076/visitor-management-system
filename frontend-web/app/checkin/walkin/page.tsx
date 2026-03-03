@@ -29,7 +29,7 @@ export default function WalkInPage() {
   const { user, loading: authLoading } = useAuth({
     requireAuth: true,
     requireRole: canAccessWalkin,
-    redirectTo: "/dashboard?message=Guard+or+admin+only",
+    redirectTo: "/dashboard?message=Guard+or+committee+only",
   });
   const { data: residents = [], isLoading: residentsLoading } = useResidents();
 

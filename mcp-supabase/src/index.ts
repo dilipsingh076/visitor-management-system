@@ -20,11 +20,13 @@ function getPool(): pg.Pool {
       "Missing DATABASE_URL or SUPABASE_DB_URL. Add it in Cursor MCP config (env) for this server. Do NOT paste it in chat."
     );
   }
+  const isSupabase = /supabase\.co|pooler\.supabase\.com/.test(url);
   return new Pool({
     connectionString: url,
     max: 1,
     idleTimeoutMillis: 5000,
     connectionTimeoutMillis: 8000,
+    ...(isSupabase && { ssl: { rejectUnauthorized: false } }),
   });
 }
 

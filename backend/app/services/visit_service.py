@@ -11,6 +11,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.constants.visit import OTP_EXPIRE_MINUTES, OTP_LENGTH, QR_PREFIX, ARRIVAL_WINDOW_MINUTES
+from app.core.roles import RESIDENT_HOST_ROLES
 from app.models.visitor import Visit, VisitStatus, Visitor, ConsentLog
 from app.models.user import User
 from app.models.notification import Notification
@@ -62,7 +63,7 @@ async def get_resident_by_building_and_flat(
             User.society_id == society_id,
             User.building_id == building_id,
             User.flat_number.ilike(flat_clean),
-            User.role.in_(["resident", "admin"]),
+            User.role.in_(RESIDENT_HOST_ROLES),
             User.is_active == True,
         )
         .limit(1)
