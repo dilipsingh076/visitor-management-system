@@ -34,13 +34,13 @@ export default function FrequentVisitorsPage() {
   if (authLoading || !user) return null;
   if (loading) {
     return (
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
-        <div className="animate-pulse space-y-4">
-          <div className="h-8 bg-muted-bg rounded w-48" />
-          <div className="h-12 bg-muted-bg rounded" />
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 py-6">
+        <div className="animate-pulse space-y-3">
+          <div className="h-6 bg-muted-bg rounded w-40" />
+          <div className="h-9 bg-muted-bg rounded" />
           <div className="space-y-2">
             {[1, 2, 3].map((i) => (
-              <div key={i} className="h-20 bg-muted-bg rounded-xl" />
+              <div key={i} className="h-14 bg-muted-bg rounded-lg" />
             ))}
           </div>
         </div>
@@ -49,14 +49,14 @@ export default function FrequentVisitorsPage() {
   }
 
   return (
-    <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <div className="max-w-4xl mx-auto px-4 sm:px-6 py-6">
       <PageHeader
         title="Frequent Visitors"
         description="Visitors from your visit history — invite again quickly"
         action={
           <Link href="/visitors/invite">
-            <Button>
-              <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <Button size="sm">
+              <svg className="w-3.5 h-3.5 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
               </svg>
               Invite Visitor
@@ -65,7 +65,7 @@ export default function FrequentVisitorsPage() {
         }
       />
 
-      <div className="relative mb-6">
+      <div className="relative mb-4">
         <svg
           className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground"
           fill="none"
@@ -83,20 +83,20 @@ export default function FrequentVisitorsPage() {
       </div>
 
       {filteredVisitors.length > 0 ? (
-        <div className="bg-card rounded-xl border border-border overflow-hidden divide-y divide-border">
+        <div className="bg-card rounded-lg border border-border overflow-hidden divide-y divide-border">
           {filteredVisitors.map((visitor) => (
-            <div key={visitor.id} className="p-4 flex items-center justify-between hover:bg-muted-bg/50 transition">
-              <div className="flex items-center gap-3">
-                <Avatar name={visitor.name} size="lg" />
-                <div>
-                  <p className="font-semibold text-foreground">{visitor.name}</p>
-                  <p className="text-sm text-muted-foreground">{visitor.purpose}</p>
-                  <p className="text-xs text-muted-foreground mt-1">
+            <div key={visitor.id} className="p-3 flex items-center justify-between hover:bg-muted-bg/50 transition">
+              <div className="flex items-center gap-2 min-w-0">
+                <Avatar name={visitor.name} size="sm" />
+                <div className="min-w-0">
+                  <p className="font-medium text-sm text-foreground truncate">{visitor.name}</p>
+                  <p className="text-xs text-muted-foreground truncate">{visitor.purpose}</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">
                     {visitor.visit_count} visits · Last: {visitor.last_visit}
                   </p>
                 </div>
               </div>
-              <Button size="sm" onClick={() => handleQuickInvite(visitor)}>
+              <Button size="sm" onClick={() => handleQuickInvite(visitor)} className="shrink-0">
                 Quick Invite
               </Button>
             </div>

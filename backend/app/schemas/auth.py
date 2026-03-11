@@ -1,6 +1,7 @@
 """Pydantic schemas for auth endpoints."""
+import re
 from typing import Annotated
-from pydantic import BaseModel, EmailStr, Field, field_validator
+from pydantic import BaseModel, Field, field_validator
 
 
 def _coerce_optional_str(v):
@@ -13,13 +14,31 @@ def _coerce_optional_str(v):
     return s if s else None
 
 
+# Allow .local and other reserved TLDs (seed/dev emails like chairman@sunsetresidency.local)
+_EMAIL_RELAXED = re.compile(r"^[^\s@]+@[^\s@]+\.[^\s@]+$")
+
+
+def _validate_email_relaxed(v: str) -> str:
+    s = (v or "").strip().lower()
+    if not s:
+        raise ValueError("Email is required")
+    if _EMAIL_RELAXED.match(s):
+        return s
+    raise ValueError("Invalid email format")
+
+
 class LoginRequest(BaseModel):
-    email: EmailStr
+    email: str
     password: str
+
+    @field_validator("email", mode="before")
+    @classmethod
+    def email_format(cls, v):
+        return _validate_email_relaxed(v)
 
 
 class SignupRequest(BaseModel):
-    email: EmailStr
+    email: str
     password: str = Field(..., min_length=6)
     full_name: str = Field(..., min_length=1)
     role: str = Field(..., pattern="^(guard|resident)$")  # Committee roles assigned by admin, not signup
@@ -27,6 +46,11 @@ class SignupRequest(BaseModel):
     building_id: str | None = None
     phone: str | None = None
     flat_number: str | None = None
+
+    @field_validator("email", mode="before")
+    @classmethod
+    def email_format(cls, v):
+        return _validate_email_relaxed(v)
 
 
 class RegisterSocietyBuilding(BaseModel):
@@ -42,7 +66,7 @@ class RegisterSocietyRequest(BaseModel):
     state: str | None = None
     pincode: str | None = None
     country: str | None = "India"
-    contact_email: EmailStr
+    contact_email: str
     contact_phone: str | None = None
     # Official / document-related (optional; helps verify society)
     registration_number: str | None = None
@@ -50,11 +74,16 @@ class RegisterSocietyRequest(BaseModel):
     registration_year: str | None = None
     buildings: list[RegisterSocietyBuilding] | None = None  # At least one required when using register flow
     admin_building_index: int | None = 0  # Which building (by order) the first admin belongs to
-    email: EmailStr
+    email: str
     password: str = Field(..., min_length=6)
     full_name: str = Field(..., min_length=1)
     phone: str | None = None
     flat_number: str | None = None  # First admin's flat (e.g. "1201")
+
+    @field_validator("email", "contact_email", mode="before")
+    @classmethod
+    def email_format(cls, v):
+        return _validate_email_relaxed(v)
 
     @field_validator(
         "society_slug", "address", "city", "state", "pincode", "country",

@@ -54,8 +54,8 @@ export function BlacklistSection({
 
   return (
     <section>
-      <h2 className="text-lg font-semibold text-foreground mb-1">Blacklist</h2>
-      <p className="text-muted-foreground text-sm mb-4">
+      <h2 className="text-base font-semibold text-foreground mb-0.5">Blacklist</h2>
+      <p className="text-muted-foreground text-xs mb-2">
         Denied visitors cannot check in or be invited.
       </p>
 
@@ -63,14 +63,15 @@ export function BlacklistSection({
         <Button
           type="button"
           variant="secondary"
-          className="mb-4"
+          size="sm"
+          className="mb-3"
           onClick={() => setShowForm(true)}
         >
           + Add to blacklist (by phone)
         </Button>
       ) : (
-        <div className="mb-4 p-4 bg-muted-bg/50 rounded-xl border border-border space-y-3">
-          <form onSubmit={handleSubmit} className="space-y-3">
+        <div className="mb-3 p-3 bg-muted-bg/50 rounded-lg border border-border space-y-2">
+          <form onSubmit={handleSubmit} className="space-y-2">
             <Input
               placeholder="Visitor name"
               value={name}
@@ -106,24 +107,24 @@ export function BlacklistSection({
       )}
 
       {entries.length === 0 ? (
-        <p className="py-6 text-center text-muted-foreground text-sm rounded-xl border border-border bg-card">
+        <p className="py-4 text-center text-muted-foreground text-xs rounded-lg border border-border bg-card">
           No blacklisted visitors.
         </p>
       ) : (
-        <div className="rounded-xl border border-border overflow-hidden bg-card">
+        <div className="rounded-lg border border-border overflow-hidden bg-card">
           <table className="min-w-full">
             <thead>
               <tr>
-                <th className="px-4 py-2.5 text-left text-xs font-medium text-muted-foreground">
+                <th className="px-3 py-2 text-left text-xs font-medium text-muted-foreground">
                   Visitor
                 </th>
-                <th className="px-4 py-2.5 text-left text-xs font-medium text-muted-foreground">
+                <th className="px-3 py-2 text-left text-xs font-medium text-muted-foreground">
                   Phone
                 </th>
-                <th className="px-4 py-2.5 text-left text-xs font-medium text-muted-foreground">
+                <th className="px-3 py-2 text-left text-xs font-medium text-muted-foreground">
                   Reason
                 </th>
-                <th className="px-4 py-2.5 text-left text-xs font-medium text-muted-foreground">
+                <th className="px-3 py-2 text-left text-xs font-medium text-muted-foreground">
                   Action
                 </th>
               </tr>
@@ -131,10 +132,10 @@ export function BlacklistSection({
             <tbody className="divide-y divide-border">
               {entries.map((b) => (
                 <tr key={b.visitor_id}>
-                  <td className="px-4 py-3 font-medium">{b.visitor_name}</td>
-                  <td className="px-4 py-3">{b.visitor_phone}</td>
-                  <td className="px-4 py-3 text-muted-foreground">{b.reason}</td>
-                  <td className="px-4 py-3">
+                  <td className="px-3 py-2 text-sm font-medium">{b.visitor_name}</td>
+                  <td className="px-3 py-2 text-sm">{b.visitor_phone}</td>
+                  <td className="px-3 py-2 text-sm text-muted-foreground">{b.reason}</td>
+                  <td className="px-3 py-2">
                     <button
                       type="button"
                       onClick={() => onRemove(b.visitor_id)}

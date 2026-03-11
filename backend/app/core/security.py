@@ -125,9 +125,12 @@ async def verify_token(token: str) -> Dict[str, Any]:
                 options={"verify_aud": False},
             )
             if payload.get("iss") == LOCAL_JWT_ISSUER:
-                # Normalize for dependencies: sub, user_id, realm_access.roles, society_id
+                # Normalize for dependencies: sub, user_id, realm_access.roles, society_id (pass through as-is)
                 if "user_id" not in payload and "sub" in payload:
                     payload["user_id"] = payload["sub"]
+                # Ensure society_id is a string if present (some decoders return other types)
+                if "society_id" in payload and payload["society_id"] is not None:
+                    payload["society_id"] = str(payload["society_id"])
                 return payload
         except JWTError:
             pass

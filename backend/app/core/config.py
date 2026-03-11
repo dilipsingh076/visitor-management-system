@@ -22,7 +22,7 @@ class Settings(BaseSettings):
 
     # API
     API_V1_PREFIX: str = "/api/v1"
-    AUTH_DEMO_MODE: bool = True  # Skip Keycloak when True
+    # Auth behavior is always real JWT (no demo mode).
 
     CORS_ORIGINS: List[str] = ["*"]  # Allow all origins
 

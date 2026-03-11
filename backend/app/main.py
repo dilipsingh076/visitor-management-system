@@ -12,7 +12,7 @@ from starlette.middleware.cors import CORSMiddleware
 import structlog
 
 from app.core.config import settings
-from app.api import auth, visitors, checkin, health, dashboard, residents, blacklist, notifications, societies, buildings, users, dev
+from app.api import auth, visitors, checkin, health, dashboard, residents, blacklist, notifications, societies, buildings, users
 
 # Configure structured logging
 logger = structlog.get_logger()
@@ -181,7 +181,6 @@ async def global_exception_handler(request: Request, exc: Exception):
 
 # Include routers
 app.include_router(health.router, prefix="/api/v1", tags=["health"])
-app.include_router(dev.router, prefix="/api/v1/dev", tags=["dev"])
 app.include_router(auth.router, prefix="/api/v1/auth", tags=["authentication"])
 app.include_router(visitors.router, prefix="/api/v1/visitors", tags=["visitors"])
 app.include_router(checkin.router, prefix="/api/v1/checkin", tags=["check-in"])
@@ -208,16 +207,16 @@ async def root():
 
 @app.on_event("startup")
 async def startup_event():
-    """Startup: init DB from DATABASE_URL (Supabase only). No fallback, no demo data."""
+    """Startup: init DB."""
     import app.models  # noqa: F401 - ensure all models registered
-    from app.core.database import init_db
+    from app.core.database import init_db, AsyncSessionLocal
 
     try:
         await init_db()
         logger.info("Database initialized")
     except Exception as e:
-        logger.warning("Database init skipped", error=str(e))
-        raise
+        logger.warning("Database init skipped (API will start; DB required for requests)", error=str(e))
+
     logger.info("Starting VMS API", version="1.0.0")
 
 

@@ -5,13 +5,16 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, EmailStr, Field
-from sqlalchemy import select
+from sqlalchemy import select, text
 from sqlalchemy.ext.asyncio import AsyncSession
+import structlog
 
-from app.core.dependencies import get_db, get_current_user, get_current_admin, get_current_user_id
+from app.core.dependencies import get_db, get_current_admin
 from app.core.roles import SOCIETY_ADMIN_ROLES, JOIN_SOCIETY_ROLES
 from app.models.user import User
 from app.core.security import hash_password
+
+log = structlog.get_logger()
 
 router = APIRouter()
 
@@ -45,55 +48,93 @@ class UpdateUserRequest(BaseModel):
 
 @router.get("/")
 async def list_users(
-    role: str | None = Query(None),
+    role: str | None = Query(None, description="Filter by role"),
     current_user: dict = Depends(get_current_admin),
     db: AsyncSession = Depends(get_db),
 ):
     """
-    List users in current user's society. Admin only.
-    If token has no society_id, resolve it from the current user's DB record.
+    List all users in the current user's society (including chairman).
+    Requires committee role (chairman, secretary, treasurer) or platform_admin.
+    Society is taken from the JWT (society_id) or from the current user's DB row.
     """
-    society_id = current_user.get("society_id")
-    if not society_id:
+    # 1. Get society_id from token (set at login/register) or from current user's DB row
+    sid_str = current_user.get("society_id")
+    if sid_str is not None:
+        sid_str = str(sid_str).strip() or None
+    if not sid_str:
         user_id_raw = current_user.get("user_id") or current_user.get("sub")
         if user_id_raw:
             try:
-                uid = UUID(user_id_raw)
-                result = await db.execute(select(User).where(User.id == uid))
-                db_user = result.scalar_one_or_none()
-                if db_user and db_user.society_id:
-                    society_id = str(db_user.society_id)
+                row = await db.execute(select(User).where(User.id == UUID(str(user_id_raw))))
+                u = row.scalar_one_or_none()
+                if u and u.society_id is not None:
+                    sid_str = str(u.society_id)
             except (ValueError, TypeError):
                 pass
-    if not society_id:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="No society context. Try logging in again.")
+    if not sid_str:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="No society. Log in again or ensure your account is linked to a society.",
+        )
+    sid_str = sid_str.lower()
     try:
-        sid = UUID(society_id)
+        sid = UUID(sid_str)
     except ValueError:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Invalid society context")
-    q = select(User).where(User.society_id == sid, User.is_active == True).order_by(User.full_name)
-    result = await db.execute(q)
-    users = result.scalars().all()
-    # Filter by role if requested (match any of user's roles)
+
+    # 2. List all active users in this society (raw SQL so society_id filter always works)
+    # Postgres: society_id::text; SQLite: society_id is string. Rollback on error so session stays valid.
+    rows = []
+    try:
+        raw_sql = text("""
+            SELECT id, email, full_name, phone, flat_number, is_active, role, roles, created_at, last_login
+            FROM users
+            WHERE society_id::text = :sid AND is_active = true
+            ORDER BY full_name
+        """)
+        result = await db.execute(raw_sql, {"sid": sid_str})
+        rows = result.mappings().fetchall()
+    except Exception:
+        await db.rollback()
+        raw_sql = text("""
+            SELECT id, email, full_name, phone, flat_number, is_active, role, roles, created_at, last_login
+            FROM users
+            WHERE society_id = :sid AND is_active = 1
+            ORDER BY full_name
+        """)
+        result = await db.execute(raw_sql, {"sid": sid_str})
+        rows = result.mappings().fetchall()
+
+    def _roles_from_row(row) -> list:
+        r = row.get("roles")
+        if r is not None and isinstance(r, list) and r:
+            return [str(x) for x in r]
+        role_val = row.get("role")
+        return [role_val] if role_val else []
+
+    # 3. Optional role filter
     if role and role.strip():
-        r = role.strip()
-        users = [u for u in users if r in _user_roles(u)]
+        r = role.strip().lower()
+        rows = [row for row in rows if r in _roles_from_row(row)]
+
+    log.info("list_users", society_id=sid_str, count=len(rows))
+
     return JSONResponse(
         content=[
             {
-                "id": str(u.id),
-                "email": u.email,
-                "full_name": u.full_name,
-                "username": u.full_name,
-                "role": _user_roles(u)[0] if _user_roles(u) else u.role,
-                "roles": _user_roles(u),
-                "phone": u.phone,
-                "flat_number": u.flat_number,
-                "is_active": u.is_active,
-                "created_at": u.created_at.isoformat() if u.created_at else None,
-                "last_login": u.last_login.isoformat() if u.last_login else None,
+                "id": str(row["id"]),
+                "email": row["email"],
+                "full_name": row["full_name"],
+                "username": row["full_name"],
+                "role": (_roles_from_row(row)[0] if _roles_from_row(row) else row.get("role") or "resident"),
+                "roles": _roles_from_row(row),
+                "phone": row.get("phone"),
+                "flat_number": row.get("flat_number"),
+                "is_active": bool(row.get("is_active", True)),
+                "created_at": row["created_at"].isoformat() if row.get("created_at") else None,
+                "last_login": row["last_login"].isoformat() if row.get("last_login") else None,
             }
-            for u in users
+            for row in rows
         ]
     )
 

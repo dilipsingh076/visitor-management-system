@@ -50,69 +50,69 @@ export function VisitorsPageContent() {
   };
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <div className="max-w-4xl mx-auto px-4 sm:px-6 py-6">
       <PageHeader
         title="Visitors"
-        description={canInviteVisitor(user) ? "Manage visits. Pending invites need your approval before the visitor can check in." : "View visits. Guards & Committee see all; residents see their own."}
-        action={canInviteVisitor(user) ? <LinkButton href="/visitors/invite" variant="primary" size="md">+ Invite Visitor</LinkButton> : undefined}
+        description={canInviteVisitor(user) ? "Pending invites need your approval." : "View visits (guards & committee see all)."}
+        action={canInviteVisitor(user) ? <LinkButton href="/visitors/invite" variant="primary" size="sm">+ Invite</LinkButton> : undefined}
       />
       {notifications.length > 0 && (
-        <div className="mb-6 space-y-2">
+        <div className="mb-4 space-y-1.5">
           {notifications.map((n) => (
-            <div key={n.id} className="flex items-center justify-between p-4 bg-success-light border border-success/30 rounded-xl">
-              <div>
-                <p className="font-medium text-success">{n.title}</p>
-                <p className="text-sm text-muted">{n.body}</p>
-                <p className="text-xs text-muted mt-1">{new Date(n.created_at).toLocaleString()}</p>
+            <div key={n.id} className="flex items-center justify-between px-3 py-2 bg-success-light border border-success/30 rounded-lg text-sm">
+              <div className="min-w-0">
+                <p className="font-medium text-success truncate">{n.title}</p>
+                <p className="text-xs text-muted truncate">{n.body}</p>
               </div>
-              <button onClick={() => markReadMutation.mutate(n.id)} disabled={markReadMutation.isPending} className="px-3 py-1.5 text-sm bg-success text-white rounded-lg hover:bg-green-700">
+              <button onClick={() => markReadMutation.mutate(n.id)} disabled={markReadMutation.isPending} className="shrink-0 ml-2 px-2 py-1 text-xs bg-success text-white rounded hover:bg-green-700">
                 Dismiss
               </button>
             </div>
           ))}
         </div>
       )}
-      <div className="flex gap-2 mb-6">
-        <Link href="/visitors" className={`px-4 py-2 rounded-lg text-sm font-medium ${!statusFilter ? "bg-border text-foreground" : "bg-muted-bg text-muted hover:bg-border"}`}>All</Link>
-        <Link href="/visitors?status=pending" className={`px-4 py-2 rounded-lg text-sm font-medium ${statusFilter === "pending" ? "bg-warning-light text-warning" : "bg-muted-bg text-muted hover:bg-border"}`}>Pending approval</Link>
-        <Link href="/visitors?status=approved" className={`px-4 py-2 rounded-lg text-sm font-medium ${statusFilter === "approved" ? "bg-info-light text-info" : "bg-muted-bg text-muted hover:bg-border"}`}>Approved</Link>
-        <Link href="/visitors?status=checked_in" className={`px-4 py-2 rounded-lg text-sm font-medium ${statusFilter === "checked_in" ? "bg-primary-light text-primary" : "bg-muted-bg text-muted hover:bg-border"}`}>Checked in</Link>
+      <div className="flex gap-1.5 mb-4 flex-wrap">
+        <Link href="/visitors" className={`px-3 py-1.5 rounded-lg text-xs font-medium ${!statusFilter ? "bg-border text-foreground" : "bg-muted-bg text-muted hover:bg-border"}`}>All</Link>
+        <Link href="/visitors?status=pending" className={`px-3 py-1.5 rounded-lg text-xs font-medium ${statusFilter === "pending" ? "bg-warning-light text-warning" : "bg-muted-bg text-muted hover:bg-border"}`}>Pending</Link>
+        <Link href="/visitors?status=approved" className={`px-3 py-1.5 rounded-lg text-xs font-medium ${statusFilter === "approved" ? "bg-info-light text-info" : "bg-muted-bg text-muted hover:bg-border"}`}>Approved</Link>
+        <Link href="/visitors?status=checked_in" className={`px-3 py-1.5 rounded-lg text-xs font-medium ${statusFilter === "checked_in" ? "bg-primary-light text-primary" : "bg-muted-bg text-muted hover:bg-border"}`}>Checked in</Link>
       </div>
-      <Card className="overflow-hidden">
+      <Card className="overflow-hidden rounded-lg">
         {loadingState ? (
-          <div className="p-12 text-center text-muted-foreground">Loading...</div>
+          <div className="py-8 text-center text-sm text-muted-foreground">Loading…</div>
         ) : visits.length === 0 ? (
-          <div className="p-12 text-center">
-            <p className="text-muted-foreground mb-4">{statusFilter ? `No ${statusFilter.replace("_", " ")} visits` : "No visits yet"}</p>
-            {!statusFilter && <Link href="/visitors/invite" className="text-primary hover:underline">Invite your first visitor</Link>}
+          <div className="py-8 text-center text-sm text-muted-foreground">
+            {statusFilter ? `No ${statusFilter.replace("_", " ")} visits` : "No visits yet."}
+            {!statusFilter && " "}
+            {!statusFilter && <Link href="/visitors/invite" className="text-primary hover:underline">Invite visitor</Link>}
           </div>
         ) : (
           <table className="min-w-full divide-y divide-border">
-            <thead className="bg-background">
+            <thead className="bg-muted-bg/50">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase">Visitor</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase">Phone</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase">Status</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase">Purpose</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase">Date</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase">Actions</th>
+                <th className="px-3 py-2 text-left text-xs font-medium text-muted-foreground uppercase">Visitor</th>
+                <th className="px-3 py-2 text-left text-xs font-medium text-muted-foreground uppercase">Phone</th>
+                <th className="px-3 py-2 text-left text-xs font-medium text-muted-foreground uppercase">Status</th>
+                <th className="px-3 py-2 text-left text-xs font-medium text-muted-foreground uppercase hidden sm:table-cell">Purpose</th>
+                <th className="px-3 py-2 text-left text-xs font-medium text-muted-foreground uppercase hidden md:table-cell">Date</th>
+                <th className="px-3 py-2 text-left text-xs font-medium text-muted-foreground uppercase">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-border">
+            <tbody className="divide-y divide-border bg-card">
               {visits.map((v) => (
-                <tr key={v.id} className="hover:bg-background">
-                  <td className="px-6 py-4 font-medium text-foreground">{v.visitor_name}</td>
-                  <td className="px-6 py-4 text-muted">{v.visitor_phone}</td>
-                  <td><span className={`px-2 py-1 rounded-full text-xs font-medium ${statusColor(v.status)}`}>{v.status.replace("_", " ")}</span></td>
-                  <td className="px-6 py-4 text-muted">{v.purpose || "-"}</td>
-                  <td className="px-6 py-4 text-muted">{new Date(v.created_at).toLocaleString()}</td>
-                  <td className="px-6 py-4">
+                <tr key={v.id} className="hover:bg-muted-bg/30">
+                  <td className="px-3 py-2 text-sm font-medium text-foreground">{v.visitor_name}</td>
+                  <td className="px-3 py-2 text-sm text-muted">{v.visitor_phone}</td>
+                  <td className="px-3 py-2"><span className={`px-2 py-0.5 rounded text-xs font-medium ${statusColor(v.status)}`}>{v.status.replace("_", " ")}</span></td>
+                  <td className="px-3 py-2 text-sm text-muted hidden sm:table-cell">{v.purpose || "—"}</td>
+                  <td className="px-3 py-2 text-xs text-muted hidden md:table-cell">{new Date(v.created_at).toLocaleString()}</td>
+                  <td className="px-3 py-2">
                     {v.status === "pending" && canInviteVisitor(user) && (
-                      <button onClick={() => approveMutation.mutate(v.id)} disabled={approvingId === v.id} className="px-3 py-1.5 bg-primary text-white text-sm font-medium rounded-lg hover:bg-primary-hover disabled:opacity-50">
-                        {approvingId === v.id ? "..." : "Approve"}
+                      <button onClick={() => approveMutation.mutate(v.id)} disabled={approvingId === v.id} className="px-2 py-1 bg-primary text-white text-xs font-medium rounded hover:bg-primary-hover disabled:opacity-50">
+                        {approvingId === v.id ? "…" : "Approve"}
                       </button>
                     )}
-                    {v.status === "approved" && v.otp && <span className="text-xs text-muted-foreground">OTP: {v.otp}</span>}
+                    {v.status === "approved" && v.otp && <span className="text-xs text-muted">OTP: {v.otp}</span>}
                   </td>
                 </tr>
               ))}

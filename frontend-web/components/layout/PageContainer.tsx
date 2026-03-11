@@ -26,7 +26,7 @@ export function PageContainer({
 }: PageContainerProps) {
   return (
     <div
-      className={`mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10 ${maxWidthClass[maxWidth]} ${className}`.trim()}
+      className={`mx-auto px-4 sm:px-6 py-6 ${maxWidthClass[maxWidth]} ${className}`.trim()}
     >
       {children}
     </div>

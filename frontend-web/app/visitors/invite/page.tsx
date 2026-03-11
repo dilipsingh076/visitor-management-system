@@ -78,25 +78,25 @@ function InviteContent() {
   }
 
   return (
-    <div className="max-w-lg mx-auto px-4 py-10">
-      <Link href="/visitors" className="text-muted hover:text-primary mb-4 inline-block">← Back</Link>
-      <h1 className="text-2xl font-bold text-foreground mb-2">Invite Visitor</h1>
-      <p className="text-muted mb-8">Pre-approve a visitor with QR code and OTP</p>
+    <div className="max-w-lg mx-auto px-4 py-6">
+      <Link href="/visitors" className="text-muted hover:text-primary mb-3 inline-block text-sm">← Back</Link>
+      <h1 className="text-xl font-semibold text-foreground mb-0.5">Invite Visitor</h1>
+      <p className="text-muted text-xs mb-5">Pre-approve a visitor with QR code and OTP</p>
 
       {result ? (
-        <div className="bg-primary-muted border border-primary/30 rounded-xl p-6">
-          <h2 className="text-lg font-semibold text-primary mb-4">Invitation created!</h2>
-          <p className="text-muted mb-2">Share with your visitor:</p>
-          <div className="bg-card rounded-lg p-4 space-y-2">
-            <p><span className="font-medium">OTP:</span> <code className="text-lg font-mono">{result.otp}</code></p>
-            {result.qr_code && <p><span className="font-medium">QR:</span> {result.qr_code}</p>}
+        <div className="bg-primary-muted border border-primary/30 rounded-lg p-4">
+          <h2 className="text-base font-semibold text-primary mb-2">Invitation created!</h2>
+          <p className="text-muted text-xs mb-2">Share with your visitor:</p>
+          <div className="bg-card rounded-lg p-3 space-y-1">
+            <p className="text-sm"><span className="font-medium">OTP:</span> <code className="font-mono">{result.otp}</code></p>
+            {result.qr_code && <p className="text-sm"><span className="font-medium">QR:</span> {result.qr_code}</p>}
           </div>
-          <Button onClick={() => { setResult(null); setName(""); setPhone(""); setPurpose(""); setExpectedArrival(""); }} className="mt-4">
+          <Button size="sm" onClick={() => { setResult(null); setName(""); setPhone(""); setPurpose(""); setExpectedArrival(""); }} className="mt-3">
             Invite another
           </Button>
         </div>
       ) : (
-        <form onSubmit={handleSubmit} className="bg-card rounded-xl border border-border p-6 space-y-4">
+        <form onSubmit={handleSubmit} className="bg-card rounded-lg border border-border p-4 space-y-3">
           {error && <Alert variant="error">{error}</Alert>}
           <Input id="name" label="Visitor name" value={name} onChange={(e) => setName(e.target.value)} required placeholder="Full name" noMargin />
           <Input id="phone" label="Phone (10 digits)" value={phone} onChange={(e) => setPhone(e.target.value.replace(/\D/g, "").slice(0, 10))} maxLength={10} placeholder="9876543210" noMargin />
@@ -122,7 +122,7 @@ function InviteContent() {
             hint="Check-in allowed ±60 min of this time"
             noMargin
           />
-          <Button type="submit" disabled={loading} fullWidth>
+          <Button type="submit" disabled={loading} fullWidth size="sm">
             {loading ? "Creating..." : "Create Invitation"}
           </Button>
         </form>

@@ -274,9 +274,12 @@ export interface UserListItem {
   last_login: string | null;
 }
 
-/** List users in current user's society. Admin only. Throws on 403/401 so callers can show the error. */
-export async function listUsers(role?: string): Promise<UserListItem[]> {
-  const q = role ? `?role=${encodeURIComponent(role)}` : "";
+/** List users in current user's society. Society is taken from the auth token; optional societyId is validated server-side. Admin only. */
+export async function listUsers(role?: string, societyId?: string | null): Promise<UserListItem[]> {
+  const params = new URLSearchParams();
+  if (role) params.set("role", role);
+  if (societyId) params.set("society_id", societyId);
+  const q = params.toString() ? `?${params.toString()}` : "";
   const res = await apiClient.get<UserListItem[]>(`/users${q}`);
   if (res.error) {
     throw new Error(res.error);

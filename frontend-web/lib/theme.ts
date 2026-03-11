@@ -64,9 +64,9 @@ export const theme = {
 
   /* Buttons */
   button: {
-    base: "font-medium transition disabled:opacity-60 disabled:cursor-not-allowed",
-    primary: "bg-primary hover:bg-primary-hover text-white",
-    secondary: "bg-card text-foreground border border-border hover:border-primary hover:bg-muted-bg",
+    base: "font-medium transition-all duration-200 disabled:opacity-60 disabled:cursor-not-allowed",
+    primary: "bg-primary hover:bg-primary-hover text-white shadow-[var(--shadow-button)] hover:shadow-[var(--shadow-button-hover)]",
+    secondary: "bg-card text-foreground border border-border hover:border-primary/50 hover:bg-muted-bg",
     ghost: "bg-card text-muted-foreground border border-border hover:border-primary/40 hover:bg-muted-bg",
     danger: "bg-error hover:bg-error-hover text-white",
     link: "text-muted-foreground hover:text-primary font-medium",
@@ -151,9 +151,9 @@ export const theme = {
 
   /* Nav */
   navLink: {
-    base: "px-4 py-2 rounded-lg text-sm font-medium transition",
-    active: "bg-primary-light text-primary",
-    inactive: "text-muted-foreground hover:bg-muted-bg hover:text-foreground",
+    base: "px-3.5 py-2 rounded-lg text-sm font-medium transition-all duration-200",
+    active: "bg-primary/10 text-primary font-medium",
+    inactive: "text-muted-foreground hover:bg-muted-bg/80 hover:text-foreground",
   },
 
   /* Footer */

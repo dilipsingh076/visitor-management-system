@@ -12,7 +12,6 @@ from app.core.config import settings
 from app.core.database import get_db_session
 from app.core.roles import ALL_ADMIN_ROLES
 from app.core.security import verify_token
-from app.db.seed import DEMO_USER_ID, DEMO_SOCIETY_ID
 
 logger = structlog.get_logger()
 security = HTTPBearer(auto_error=False)
@@ -29,16 +28,7 @@ async def get_db() -> AsyncGenerator[AsyncSession, None]:
 async def get_current_user_optional(
     credentials: Optional[HTTPAuthorizationCredentials] = Depends(security),
 ) -> Optional[dict]:
-    """Optional auth - returns demo user when in demo mode."""
-    from app.core.config import settings
-
-    if settings.AUTH_DEMO_MODE:
-        return {
-            "sub": "demo-user",
-            "email": "demo@vms.local",
-            "preferred_username": "demo",
-            "society_id": str(DEMO_SOCIETY_ID),
-        }
+    """Optional auth. Returns None when not authenticated."""
 
     if not credentials:
         return None
@@ -53,18 +43,7 @@ async def get_current_user_optional(
 async def get_current_user(
     credentials: Optional[HTTPAuthorizationCredentials] = Depends(security),
 ) -> dict:
-    """Get current user - uses demo user when AUTH_DEMO_MODE."""
-    from app.core.config import settings
-
-    if settings.AUTH_DEMO_MODE:
-        return {
-            "sub": "demo-user",
-            "email": "demo@vms.local",
-            "preferred_username": "demo",
-            "user_id": str(DEMO_USER_ID),
-            "realm_access": {"roles": ["resident", "guard", "chairman"]},
-            "society_id": str(DEMO_SOCIETY_ID),
-        }
+    """Get current user from Bearer token."""
 
     if not credentials:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Not authenticated")
@@ -113,16 +92,13 @@ async def get_current_guard(
 async def get_current_user_id(
     current_user: dict = Depends(get_current_user),
 ) -> UUID:
-    """Return current user's UUID for DB filtering. In demo mode returns DEMO_USER_ID."""
+    """Return current user's UUID for DB filtering."""
     uid = current_user.get("user_id")
     if uid:
         try:
             return UUID(uid)
         except (ValueError, TypeError):
             pass
-    sub = current_user.get("sub")
-    if settings.AUTH_DEMO_MODE and sub == "demo-user":
-        return DEMO_USER_ID
     raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="User ID not found")
 
 

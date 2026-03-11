@@ -12,8 +12,8 @@ export interface CardProps extends HTMLAttributes<HTMLDivElement> {
 }
 
 const variantClass: Record<CardVariant, string> = {
-  default: "bg-card rounded-xl border border-border shadow-soft",
-  elevated: "bg-card rounded-xl border border-border shadow-card",
+  default: "bg-card rounded-xl border border-border shadow-[var(--shadow-sm)] transition-shadow duration-200 hover:shadow-[var(--shadow-md)]",
+  elevated: "bg-card rounded-xl border border-border shadow-[var(--shadow-md)]",
   outlined: "bg-card rounded-xl border border-border",
 };
 

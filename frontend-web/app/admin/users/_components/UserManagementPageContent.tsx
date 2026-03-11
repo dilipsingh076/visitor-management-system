@@ -55,11 +55,11 @@ export function UserManagementPageContent() {
 
   if (isError && listError) {
     return (
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
-        <Alert variant="error" className="mb-4">
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 py-6">
+        <Alert variant="error" className="mb-3 text-sm">
           {listError.message}
         </Alert>
-        <p className="text-sm text-muted-foreground">
+        <p className="text-xs text-muted-foreground">
           If you just registered this society, try logging out and logging in again so your session has the correct society.
         </p>
       </div>
@@ -68,24 +68,24 @@ export function UserManagementPageContent() {
 
   if (isLoading) {
     return (
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
-        <div className="animate-pulse space-y-4">
-          <div className="h-8 bg-muted-bg rounded w-48" />
-          <div className="h-12 bg-muted-bg rounded" />
-          <div className="h-96 bg-muted-bg rounded-xl" />
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 py-6">
+        <div className="animate-pulse space-y-3">
+          <div className="h-6 bg-muted-bg rounded w-40" />
+          <div className="h-9 bg-muted-bg rounded" />
+          <div className="h-72 bg-muted-bg rounded-lg" />
         </div>
       </div>
     );
   }
 
   return (
-    <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <div className="max-w-4xl mx-auto px-4 sm:px-6 py-6">
       <PageHeader
         title="Society users"
-        description="All society users are listed below, including the Chairman. Chairman and committee can assign committee roles (Chairman, Secretary, Treasurer). Resident and Guard are assigned only through signup."
+        description="Chairman and committee can assign committee roles. Resident and Guard are assigned only through signup."
         action={
-          <Button onClick={modals.openAddModal}>
-            <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <Button size="sm" onClick={modals.openAddModal}>
+            <svg className="w-3.5 h-3.5 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
             </svg>
             Add User
@@ -93,30 +93,26 @@ export function UserManagementPageContent() {
         }
       />
 
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-        <div className="bg-card rounded-xl border border-border p-4">
-          <p className="text-muted-foreground text-sm">Total Users</p>
-          <p className="text-2xl font-bold text-foreground mt-1">{stats.total}</p>
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-4">
+        <div className="bg-card rounded-lg border border-border p-3">
+          <p className="text-muted-foreground text-xs">Total</p>
+          <p className="text-lg font-semibold text-foreground">{stats.total}</p>
         </div>
-        <div className="bg-card rounded-xl border border-border p-4">
-          <p className="text-muted-foreground text-sm">Committee</p>
-          <p className="text-2xl font-bold text-success mt-1">{stats.committee}</p>
+        <div className="bg-card rounded-lg border border-border p-3">
+          <p className="text-muted-foreground text-xs">Committee</p>
+          <p className="text-lg font-semibold text-success">{stats.committee}</p>
         </div>
-        <div className="bg-card rounded-xl border border-border p-4">
-          <p className="text-muted-foreground text-sm">Residents</p>
-          <p className="text-2xl font-bold text-info mt-1">{stats.residents}</p>
+        <div className="bg-card rounded-lg border border-border p-3">
+          <p className="text-muted-foreground text-xs">Residents</p>
+          <p className="text-lg font-semibold text-info">{stats.residents}</p>
         </div>
-        <div className="bg-card rounded-xl border border-border p-4">
-          <p className="text-muted-foreground text-sm">Guards</p>
-          <p className="text-2xl font-bold text-warning mt-1">{stats.guards}</p>
-        </div>
-        <div className="bg-card rounded-xl border border-border p-4">
-          <p className="text-muted-foreground text-sm">Active</p>
-          <p className="text-2xl font-bold text-success mt-1">{stats.active}</p>
+        <div className="bg-card rounded-lg border border-border p-3">
+          <p className="text-muted-foreground text-xs">Guards</p>
+          <p className="text-lg font-semibold text-warning">{stats.guards}</p>
         </div>
       </div>
 
-      <div className="flex flex-col md:flex-row gap-4 mb-6">
+      <div className="flex flex-col md:flex-row gap-3 mb-4">
         <div className="relative flex-1">
           <svg
             className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground"
@@ -141,40 +137,40 @@ export function UserManagementPageContent() {
         />
       </div>
 
-      <div className="bg-card rounded-xl shadow-sm border border-border overflow-hidden">
+      <div className="bg-card rounded-lg border border-border overflow-hidden shadow-[var(--shadow-sm)]">
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead className="bg-muted-bg/50 border-b border-border">
               <tr>
-                <th className="text-left px-4 py-3 text-sm font-medium text-muted-foreground">User</th>
-                <th className="text-left px-4 py-3 text-sm font-medium text-muted-foreground">Role</th>
-                <th className="text-left px-4 py-3 text-sm font-medium text-muted-foreground hidden md:table-cell">Flat</th>
-                <th className="text-left px-4 py-3 text-sm font-medium text-muted-foreground hidden lg:table-cell">Last Login</th>
-                <th className="text-left px-4 py-3 text-sm font-medium text-muted-foreground">Status</th>
-                <th className="text-right px-4 py-3 text-sm font-medium text-muted-foreground">Actions</th>
+                <th className="text-left px-3 py-2 text-xs font-medium text-muted-foreground">User</th>
+                <th className="text-left px-3 py-2 text-xs font-medium text-muted-foreground">Role</th>
+                <th className="text-left px-3 py-2 text-xs font-medium text-muted-foreground hidden md:table-cell">Flat</th>
+                <th className="text-left px-3 py-2 text-xs font-medium text-muted-foreground hidden lg:table-cell">Last Login</th>
+                <th className="text-left px-3 py-2 text-xs font-medium text-muted-foreground">Status</th>
+                <th className="text-right px-3 py-2 text-xs font-medium text-muted-foreground">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
               {filteredUsers.map((user) => (
                 <tr key={user.id} className="hover:bg-muted-bg/30 transition">
-                  <td className="px-4 py-3">
-                    <div className="flex items-center gap-3">
+                  <td className="px-3 py-2">
+                    <div className="flex items-center gap-2">
                       <Avatar name={user.username} size="sm" />
-                      <div>
-                        <p className="font-medium text-foreground text-sm">{user.username}</p>
-                        <p className="text-xs text-muted-foreground">{user.email}</p>
+                      <div className="min-w-0">
+                        <p className="font-medium text-foreground text-sm truncate">{user.username}</p>
+                        <p className="text-xs text-muted-foreground truncate">{user.email}</p>
                       </div>
                     </div>
                   </td>
-                  <td className="px-4 py-3">
+                  <td className="px-3 py-2">
                     <RoleBadges roles={user.roles ?? [user.role]} />
                   </td>
-                  <td className="px-4 py-3 text-sm text-muted-foreground hidden md:table-cell">{user.flat_number || "—"}</td>
-                  <td className="px-4 py-3 text-sm text-muted-foreground hidden lg:table-cell">{user.last_login || "Never"}</td>
-                  <td className="px-4 py-3">
-                    <Badge variant={user.status === "active" ? "success" : "default"}>{user.status}</Badge>
+                  <td className="px-3 py-2 text-xs text-muted-foreground hidden md:table-cell">{user.flat_number || "—"}</td>
+                  <td className="px-3 py-2 text-xs text-muted-foreground hidden lg:table-cell">{user.last_login || "Never"}</td>
+                  <td className="px-3 py-2">
+                    <Badge variant={user.status === "active" ? "success" : "default"} className="text-xs">{user.status}</Badge>
                   </td>
-                  <td className="px-4 py-3">
+                  <td className="px-3 py-2">
                     <div className="flex items-center justify-end gap-1">
                       <Button size="sm" variant="ghost" onClick={() => modals.openEditModal(user)} aria-label="Edit user">
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

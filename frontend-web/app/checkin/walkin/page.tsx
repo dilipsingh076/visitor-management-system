@@ -98,45 +98,45 @@ export default function WalkInPage() {
     <PageContainer maxWidth="lg">
       <Link
         href="/checkin"
-        className="inline-block text-muted-foreground hover:text-primary mb-6 text-sm"
+        className="inline-block text-muted-foreground hover:text-primary mb-3 text-xs"
       >
         ← Back
       </Link>
 
-      <h1 className="text-2xl font-bold text-foreground mb-2">
+      <h1 className="text-xl font-semibold text-foreground mb-0.5">
         Guard Walk-in
       </h1>
-      <p className="text-muted-foreground mb-8">
+      <p className="text-muted-foreground text-xs mb-5">
         Unknown person arrived? Register details. The resident will be notified by tower & flat to approve before entry.
       </p>
 
       {success ? (
-        <div className="rounded-xl border border-warning/30 bg-warning-light p-6">
+        <div className="rounded-lg border border-warning/30 bg-warning-light p-4">
           <div
-            className="w-12 h-12 rounded-full bg-warning flex items-center justify-center text-white text-xl font-bold mb-4"
+            className="w-10 h-10 rounded-full bg-warning flex items-center justify-center text-white text-lg font-bold mb-3"
             aria-hidden
           >
             ⏳
           </div>
-          <h2 className="text-lg font-semibold text-warning mb-2">
+          <h2 className="text-base font-semibold text-warning mb-1">
             Waiting for resident approval
           </h2>
-          <p className="text-muted-foreground mb-2">
+          <p className="text-muted-foreground text-sm mb-1">
             Visitor <strong>{name}</strong> wants to meet the resident. They have been notified on their device.
           </p>
-          <p className="text-muted-foreground text-sm mb-4">
+          <p className="text-muted-foreground text-xs mb-3">
             Once they approve, the visitor is allowed in and will appear in &quot;Currently inside&quot; on the Guard page. No OTP or extra step needed.
           </p>
-          <p className="text-warning text-sm font-medium mb-4">
+          <p className="text-warning text-xs font-medium mb-3">
             Do not allow entry until resident approves.
           </p>
-          <div className="flex flex-wrap gap-3">
-            <Button onClick={handleRegisterAnother} variant="secondary">
+          <div className="flex flex-wrap gap-2">
+            <Button size="sm" onClick={handleRegisterAnother} variant="secondary">
               Register another
             </Button>
             <Link
               href="/visitors?status=pending"
-              className="text-sm text-warning font-medium hover:underline"
+              className="text-xs text-warning font-medium hover:underline"
             >
               View pending approvals →
             </Link>
@@ -145,7 +145,7 @@ export default function WalkInPage() {
       ) : (
         <form
           onSubmit={handleSubmit}
-          className="rounded-xl border border-border bg-card p-6 space-y-4"
+          className="rounded-lg border border-border bg-card p-4 space-y-3"
         >
           {error && (
             <div
@@ -191,6 +191,7 @@ export default function WalkInPage() {
           <Button
             type="submit"
             fullWidth
+            size="sm"
             disabled={submitting || residents.length === 0 || residentsLoading}
           >
             {submitting ? "Registering…" : "Register Walk-in"}

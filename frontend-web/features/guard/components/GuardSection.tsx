@@ -34,14 +34,14 @@ export function GuardSection({
 }: GuardSectionProps) {
   return (
     <section>
-      <h2 className={`text-lg font-semibold mb-1 flex items-center gap-2 ${headingClasses[variant]}`}>
+      <h2 className={`text-base font-semibold mb-0.5 flex items-center gap-2 ${headingClasses[variant]}`}>
         {icon}
         {title}
       </h2>
       {description && (
-        <p className="text-muted-foreground text-sm mb-4">{description}</p>
+        <p className="text-muted-foreground text-xs mb-2">{description}</p>
       )}
-      <div className={`rounded-xl border overflow-hidden ${variantClasses[variant]}`}>
+      <div className={`rounded-lg border overflow-hidden ${variantClasses[variant]}`}>
         {children}
       </div>
     </section>

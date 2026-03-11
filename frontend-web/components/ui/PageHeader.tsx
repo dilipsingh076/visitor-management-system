@@ -13,13 +13,13 @@ export interface PageHeaderProps {
 export function PageHeader({ title, description, action, centered }: PageHeaderProps) {
   return (
     <div
-      className={`flex ${centered ? "flex-col text-center items-center" : "justify-between items-center"} mb-8 gap-4`}
+      className={`flex ${centered ? "flex-col text-center items-center" : "flex-col sm:flex-row sm:justify-between sm:items-center"} mb-4 gap-3`}
     >
-      <div className={centered ? "max-w-2xl" : ""}>
-        <h1 className="text-3xl font-bold text-foreground">{title}</h1>
-        {description && <p className="text-muted-foreground mt-1 text-sm">{description}</p>}
+      <div className={centered ? "max-w-2xl" : "min-w-0"}>
+        <h1 className="text-xl font-semibold text-foreground tracking-tight">{title}</h1>
+        {description && <p className="text-muted-foreground mt-0.5 text-xs sm:text-sm max-w-2xl">{description}</p>}
       </div>
-      {action}
+      {action && <div className="shrink-0">{action}</div>}
     </div>
   );
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useAuthContext } from "@/features/auth";
 import { Card, LinkButton, HeroIllustration } from "@/components/ui";
@@ -8,6 +8,11 @@ import { Card, LinkButton, HeroIllustration } from "@/components/ui";
 export function HomePageContent() {
   const { isAuthenticated: authenticated } = useAuthContext();
   const [heroImageError, setHeroImageError] = useState(false);
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+
+  // Use auth only after mount so server and initial client render match (avoids hydration error).
+  const showDashboardCta = mounted && authenticated;
 
   return (
     <div className="min-h-screen">
@@ -38,7 +43,7 @@ export function HomePageContent() {
             <p className="text-base text-slate-400 mx-auto mb-10 lg:w-2/3">
               Fewer surprises at the gate. One system for residents, visitors, and security.
             </p>
-            {authenticated ? (
+            {showDashboardCta ? (
               <LinkButton href="/dashboard" variant="primary" size="lg" className="inline-flex items-center gap-2 shadow-xl bg-emerald-500 hover:bg-emerald-600 text-white border-0">
                 Go to Dashboard
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

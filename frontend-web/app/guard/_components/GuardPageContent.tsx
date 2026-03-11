@@ -92,12 +92,12 @@ export function GuardPageContent() {
 
   return (
     <PageContainer maxWidth="4xl">
-      <header className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
+      <header className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-5">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-foreground">
+          <h1 className="text-xl font-semibold text-foreground">
             Guard Dashboard
           </h1>
-          <p className="text-muted-foreground mt-0.5">
+          <p className="text-muted-foreground text-xs mt-0.5">
             Walk-ins and visit status at the gate
           </p>
         </div>
@@ -105,12 +105,13 @@ export function GuardPageContent() {
           <Button
             type="button"
             variant="secondary"
+            size="sm"
             onClick={() => exportMuster()}
           >
             Export Muster (CSV)
           </Button>
           <Link href="/checkin/walkin">
-            <Button variant="primary" className="bg-warning hover:bg-warning/90">
+            <Button variant="primary" size="sm" className="bg-warning hover:bg-warning/90">
               + Register Walk-in
             </Button>
           </Link>
@@ -118,11 +119,11 @@ export function GuardPageContent() {
       </header>
 
       {loading ? (
-        <div className="py-12 text-center text-muted-foreground">
+        <div className="py-8 text-center text-sm text-muted-foreground">
           Loading…
         </div>
       ) : (
-        <div className="space-y-8">
+        <div className="space-y-5">
           <GuardSection
             title="Waiting for resident approval"
             description="Do not allow entry. Resident has been notified on their dashboard."
@@ -212,7 +213,7 @@ export function GuardPageContent() {
         </div>
       )}
 
-      <footer className="mt-8 flex flex-wrap gap-4 text-sm">
+      <footer className="mt-5 flex flex-wrap gap-3 text-xs">
         <Link href="/visitors" className="text-muted-foreground hover:text-primary">
           View all visitors →
         </Link>
