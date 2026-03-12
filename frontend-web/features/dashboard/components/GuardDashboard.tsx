@@ -15,13 +15,13 @@ interface GuardDashboardProps {
   user: User;
 }
 
-const QUICK_ACTIONS = [
+const QUICK_ACTIONS: { href: string; label: string; primary?: boolean }[] = [
   { href: "/checkin", label: "Scan & check-in", primary: true },
   { href: "/checkin/walkin", label: "Walk-in" },
   { href: "/visitors", label: "All visitors" },
   { href: "/guard", label: "Guard view" },
   { href: "/blacklist", label: "Blacklist" },
-] as const;
+];
 
 export function GuardDashboard({ user }: GuardDashboardProps) {
   const [searchQuery, setSearchQuery] = useState("");

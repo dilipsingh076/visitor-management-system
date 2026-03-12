@@ -108,7 +108,7 @@ export function NotificationsPageContent() {
         </Card>
       )}
 
-      <Tabs value={tab} onValueChange={(v) => setTab(v as "unread" | "all")}>
+      <Tabs defaultValue="unread" value={tab} onValueChange={(v) => setTab(v as "unread" | "all")}>
         <TabsList className="p-1 h-10">
           <TabsTrigger value="unread" className="text-sm px-4 py-2">Unread</TabsTrigger>
           <TabsTrigger value="all" className="text-sm px-4 py-2">All</TabsTrigger>

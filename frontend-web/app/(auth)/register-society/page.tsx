@@ -61,6 +61,7 @@ export default function RegisterSocietyPage() {
     societyType,
     registrationYear,
     registerBuildings,
+    adminBuildingIndex,
     fullName,
     email,
     password,
