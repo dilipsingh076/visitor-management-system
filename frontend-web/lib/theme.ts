@@ -129,6 +129,7 @@ export const theme = {
   },
   /* Section label (e.g. "Your details") */
   sectionLabel: "text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3 block",
+  sectionTitle: "text-base font-semibold text-foreground",
   /* Section block: subtle container for form groups */
   sectionBlock: "rounded-xl border border-border/80 bg-muted-bg/40 p-4 sm:p-5",
 
@@ -142,11 +143,68 @@ export const theme = {
     default: "bg-muted-bg border-border text-foreground",
   },
 
-  /* Layout – container */
+  /* Layout – container / page wrapper */
   container: {
     base: "max-w-7xl mx-auto px-4 sm:px-6 lg:px-8",
-    narrow: "max-w-4xl mx-auto px-4 sm:px-6 lg:px-8",
-    wide: "max-w-[90rem] mx-auto px-4 sm:px-6 lg:px-8",
+    narrower: "max-w-lg mx-auto px-4 sm:px-6 py-6",
+    narrow: "max-w-4xl mx-auto px-4 sm:px-6 py-6",
+    wide: "max-w-6xl mx-auto px-4 sm:px-6 py-8",
+    "wide-xl": "max-w-[90rem] mx-auto px-4 sm:px-6 lg:px-8",
+  },
+
+  /* Stat cards (dashboard / user management) */
+  statCard: {
+    root: "bg-card rounded-lg border border-border p-3",
+    label: "text-muted-foreground text-xs",
+    value: "text-lg font-semibold text-foreground",
+    valueSuccess: "text-lg font-semibold text-success",
+    valueInfo: "text-lg font-semibold text-info",
+    valueWarning: "text-lg font-semibold text-warning",
+  },
+
+  /* Table (data tables) */
+  table: {
+    wrap: "overflow-x-auto",
+    thead: "bg-muted-bg/50 border-b border-border",
+    th: "text-left px-3 py-2 text-xs font-medium text-muted-foreground",
+    tbody: "divide-y divide-border",
+    td: "px-3 py-2",
+  },
+
+  /* Status badge (visit status, etc.) */
+  statusBadge: {
+    pending: "bg-warning-light text-warning",
+    approved: "bg-info-light text-info",
+    checked_in: "bg-success-light text-success",
+    checked_out: "bg-muted-bg text-foreground",
+    cancelled: "bg-error-light text-error",
+    default: "bg-muted-bg text-foreground",
+  },
+
+  /* Filter pills / tab links */
+  filterPill: {
+    base: "px-3 py-1.5 rounded-lg text-xs font-medium transition",
+    active: "bg-border text-foreground",
+    inactive: "bg-muted-bg text-muted hover:bg-border",
+    pending: "bg-warning-light text-warning",
+    approved: "bg-info-light text-info",
+    checked_in: "bg-primary-light text-primary",
+  },
+
+  /* Loading skeleton */
+  loading: {
+    page: "animate-pulse space-y-3",
+    line: "h-6 bg-muted-bg rounded w-40",
+    input: "h-9 bg-muted-bg rounded",
+    block: "h-14 bg-muted-bg rounded-lg",
+    card: "h-72 bg-muted-bg rounded-lg",
+  },
+
+  /* List / table surfaces */
+  list: {
+    card: "bg-card rounded-lg border border-border overflow-hidden divide-y divide-border",
+    rowHover: "hover:bg-muted-bg/50 transition",
+    rowHoverLight: "hover:bg-muted-bg/30",
   },
 
   /* Nav */

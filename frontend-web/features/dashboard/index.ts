@@ -3,7 +3,9 @@ export type { DashboardStats, Visit, MyRequestsResponse, RecentActivityItem } fr
 export { dashboardKeys } from "./hooks/keys";
 export { useDashboardStats, useDashboardMyRequests, useRecentVisits } from "./hooks/useDashboardData";
 
-export { AdminDashboard } from "./components/AdminDashboard";
+export { ChairmanDashboard } from "./components/ChairmanDashboard";
+export { SecretaryDashboard } from "./components/SecretaryDashboard";
+export { TreasurerDashboard } from "./components/TreasurerDashboard";
 export { GuardDashboard } from "./components/GuardDashboard";
 export { ResidentDashboard } from "./components/ResidentDashboard";
 

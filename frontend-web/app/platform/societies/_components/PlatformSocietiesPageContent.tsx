@@ -1,14 +1,12 @@
 "use client";
 
-import { useState } from "react";
 import { canAccessPlatform } from "@/lib/auth";
 import { useAuth } from "@/features/auth";
-import { useSocieties, useCreateSociety } from "@/features/platform";
+import { usePlatformSocietiesPage } from "@/features/platform";
 import { Button } from "@/components/ui";
-
-function slugFromName(name: string): string {
-  return name.trim().toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "society";
-}
+import { PageWrapper, PageLoadingSkeleton } from "@/components/common";
+import { theme } from "@/lib/theme";
+import { StatusBadge } from "@/components/common";
 
 export function PlatformSocietiesPageContent() {
   const { user, loading } = useAuth({
@@ -16,116 +14,120 @@ export function PlatformSocietiesPageContent() {
     requireRole: canAccessPlatform,
     redirectTo: "/dashboard",
   });
-  const { data: societies = [], isLoading } = useSocieties(!!user && canAccessPlatform(user));
-  const createMutation = useCreateSociety();
-  const [creating, setCreating] = useState(false);
-  const [createName, setCreateName] = useState("");
-  const [createSlug, setCreateSlug] = useState("");
-  const [createEmail, setCreateEmail] = useState("");
-  const [createError, setCreateError] = useState("");
-
-  const handleCreate = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setCreateError("");
-    if (!createName.trim() || !createSlug.trim() || !createEmail.trim()) {
-      setCreateError("Name, slug, and contact email are required.");
-      return;
-    }
-    const slug = createSlug.trim().toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "society";
-    try {
-      const created = await createMutation.mutateAsync({
-        name: createName.trim(),
-        slug,
-        contact_email: createEmail.trim(),
-      });
-      if (created) {
-        setCreateName("");
-        setCreateSlug("");
-        setCreateEmail("");
-        setCreating(false);
-      } else {
-        setCreateError("Failed to create society. Slug may already exist.");
-      }
-    } catch {
-      setCreateError("Failed to create society. Slug may already exist.");
-    }
-  };
+  const enabled = !!user && canAccessPlatform(user);
+  const {
+    societies,
+    isLoading,
+    creating,
+    setCreating,
+    createName,
+    setCreateName,
+    createSlug,
+    setCreateSlug,
+    createEmail,
+    setCreateEmail,
+    createError,
+    handleCreate,
+    createMutation,
+  } = usePlatformSocietiesPage(enabled);
 
   if (loading || !user) {
     return (
-      <div className="max-w-4xl mx-auto px-4 py-6">
-        <div className="h-6 w-40 bg-muted-bg rounded animate-pulse" />
-        <div className="mt-4 h-48 bg-muted-bg rounded animate-pulse" />
-      </div>
+      <PageWrapper width="narrow">
+        <PageLoadingSkeleton rows={4} showInput={false} />
+      </PageWrapper>
     );
   }
   if (!canAccessPlatform(user)) return null;
   if (isLoading) {
     return (
-      <div className="max-w-4xl mx-auto px-4 py-6">
-        <div className="h-6 w-40 bg-muted-bg rounded animate-pulse" />
-        <div className="mt-4 h-48 bg-muted-bg rounded animate-pulse" />
-      </div>
+      <PageWrapper width="narrow">
+        <PageLoadingSkeleton rows={4} showInput={false} />
+      </PageWrapper>
     );
   }
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-6">
+    <PageWrapper width="narrow">
       <div className="flex items-center justify-between mb-4">
-        <h1 className="text-xl font-semibold text-foreground">Platform — Societies</h1>
+        <h1 className={theme.text.heading1}>Platform — Societies</h1>
         <Button variant="primary" size="sm" onClick={() => setCreating((v) => !v)}>
           {creating ? "Cancel" : "Add Society"}
         </Button>
       </div>
       {creating && (
-        <form onSubmit={handleCreate} className="mb-5 p-4 bg-card border border-border rounded-lg space-y-3">
-          <h2 className="text-base font-semibold text-foreground">Create society</h2>
-          {createError && <p className="text-sm text-error bg-error-light px-3 py-2 rounded-lg">{createError}</p>}
+        <form onSubmit={handleCreate} className={`mb-5 p-4 ${theme.surface.card} ${theme.space.formStack}`}>
+          <h2 className={theme.sectionTitle}>Create society</h2>
+          {createError && <p className={theme.auth.alertError}>{createError}</p>}
           <div>
-            <label className="block text-sm font-medium text-muted mb-1">Name *</label>
-            <input type="text" value={createName} onChange={(e) => { setCreateName(e.target.value); if (!createSlug) setCreateSlug(slugFromName(e.target.value)); }} placeholder="Green Valley Apartments" className="w-full px-4 py-2 rounded-lg border border-border focus:ring-2 focus:ring-primary" />
+            <label className={theme.label}>Name *</label>
+            <input
+              type="text"
+              value={createName}
+              onChange={(e) => setCreateName(e.target.value)}
+              placeholder="Green Valley Apartments"
+              className={theme.input.base}
+            />
           </div>
           <div>
-            <label className="block text-sm font-medium text-muted mb-1">Slug (code) *</label>
-            <input type="text" value={createSlug} onChange={(e) => setCreateSlug(e.target.value)} placeholder="green-valley" className="w-full px-4 py-2 rounded-lg border border-border focus:ring-2 focus:ring-primary" />
+            <label className={theme.label}>Slug (code) *</label>
+            <input
+              type="text"
+              value={createSlug}
+              onChange={(e) => setCreateSlug(e.target.value)}
+              placeholder="green-valley"
+              className={theme.input.base}
+            />
           </div>
           <div>
-            <label className="block text-sm font-medium text-muted mb-1">Contact email *</label>
-            <input type="email" value={createEmail} onChange={(e) => setCreateEmail(e.target.value)} placeholder="admin@greenvalley.com" className="w-full px-4 py-2 rounded-lg border border-border focus:ring-2 focus:ring-primary" />
+            <label className={theme.label}>Contact email *</label>
+            <input
+              type="email"
+              value={createEmail}
+              onChange={(e) => setCreateEmail(e.target.value)}
+              placeholder="admin@greenvalley.com"
+              className={theme.input.base}
+            />
           </div>
           <Button type="submit" variant="primary" size="sm" disabled={createMutation.isPending}>
             {createMutation.isPending ? "Creating..." : "Create"}
           </Button>
         </form>
       )}
-      <div className="bg-card border border-border rounded-lg overflow-hidden">
-        <table className="w-full">
-          <thead className="bg-muted-bg border-b border-border">
-            <tr>
-              <th className="text-left px-3 py-2 text-xs font-medium text-muted">Name</th>
-              <th className="text-left px-3 py-2 text-xs font-medium text-muted">Slug</th>
-              <th className="text-left px-3 py-2 text-xs font-medium text-muted">Contact</th>
-              <th className="text-left px-3 py-2 text-xs font-medium text-muted">Status</th>
-            </tr>
-          </thead>
-          <tbody>
-            {societies.length === 0 ? (
-              <tr><td colSpan={4} className="px-3 py-6 text-center text-xs text-muted">No societies yet. Create one to get started.</td></tr>
-            ) : (
-              societies.map((s) => (
-                <tr key={s.id} className="border-b border-border last:border-0 hover:bg-muted-bg/30">
-                  <td className="px-3 py-2 text-sm text-foreground font-medium">{s.name}</td>
-                  <td className="px-3 py-2 text-muted font-mono text-xs">{s.slug}</td>
-                  <td className="px-3 py-2 text-muted text-xs">{s.contact_email}</td>
-                  <td className="px-3 py-2">
-                    <span className={`text-xs px-2 py-0.5 rounded ${s.status === "active" ? "bg-green-100 text-green-800" : "bg-muted-bg text-muted"}`}>{s.status}</span>
+      <div className={theme.list.card}>
+        <div className={theme.table.wrap}>
+          <table className="w-full">
+            <thead className={theme.table.thead}>
+              <tr>
+                <th className={theme.table.th}>Name</th>
+                <th className={theme.table.th}>Slug</th>
+                <th className={theme.table.th}>Contact</th>
+                <th className={theme.table.th}>Status</th>
+              </tr>
+            </thead>
+            <tbody className={theme.table.tbody}>
+              {societies.length === 0 ? (
+                <tr>
+                  <td colSpan={4} className={`${theme.table.td} text-center py-6 ${theme.text.mutedSmall}`}>
+                    No societies yet. Create one to get started.
                   </td>
                 </tr>
-              ))
-            )}
-          </tbody>
-        </table>
+              ) : (
+                societies.map((s) => (
+                  <tr key={s.id} className={theme.list.rowHoverLight}>
+                    <td className={`${theme.table.td} ${theme.text.body} font-medium text-foreground`}>{s.name}</td>
+                    <td className={`${theme.table.td} ${theme.text.mutedSmall} font-mono`}>{s.slug}</td>
+                    <td className={`${theme.table.td} ${theme.text.mutedSmall}`}>{s.contact_email}</td>
+                    <td className={theme.table.td}>
+                      <StatusBadge status={s.status === "active" ? "checked_in" : "default"} label={s.status} />
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
-    </div>
+    </PageWrapper>
   );
 }

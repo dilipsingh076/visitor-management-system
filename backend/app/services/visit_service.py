@@ -1,4 +1,5 @@
 """Visit & Visitor business logic."""
+import asyncio
 import json
 import secrets
 import uuid
@@ -17,6 +18,7 @@ from app.models.user import User
 from app.models.notification import Notification
 from app.models.society import Building
 from app.services.blacklist_service import is_visitor_blacklisted_for_society
+from app.core.notification_ws import broadcast_to_user
 
 
 async def ensure_user_in_society(
@@ -191,6 +193,7 @@ async def create_walkin_visit(
     )
     db.add(notif)
     await db.flush()
+    asyncio.create_task(broadcast_to_user(host_id, {"event": "notification"}))
     return visit
 
 
@@ -302,6 +305,7 @@ async def checkin_visit(
     )
     db.add(notif)
     await db.flush()
+    asyncio.create_task(broadcast_to_user(visit.host_id, {"event": "notification"}))
     return visit
 
 

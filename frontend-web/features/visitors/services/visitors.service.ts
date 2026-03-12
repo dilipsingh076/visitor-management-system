@@ -46,6 +46,12 @@ export async function getVisitorsList(params: GetVisitorsListParams): Promise<Vi
     : [];
 }
 
+export async function getVisitById(visitId: string): Promise<Visit | null> {
+  const res = await apiClient.get<Record<string, unknown>>(API.visitors.get(visitId));
+  if (res.error || !res.data) return null;
+  return normalizeVisit(res.data as Record<string, unknown>);
+}
+
 export async function approveVisit(visitId: string): Promise<void> {
   const res = await apiClient.patch(API.visitors.approve(visitId));
   if (res.error) throw new Error(res.error);

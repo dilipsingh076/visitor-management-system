@@ -1,2 +1,8 @@
 /** Re-export from dashboard feature (single source of truth). */
-export { ResidentDashboard, GuardDashboard, AdminDashboard } from "@/features/dashboard";
+export {
+  ResidentDashboard,
+  GuardDashboard,
+  ChairmanDashboard,
+  SecretaryDashboard,
+  TreasurerDashboard,
+} from "@/features/dashboard";

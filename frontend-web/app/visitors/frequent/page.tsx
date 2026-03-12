@@ -1,55 +1,34 @@
 "use client";
 
-import { useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { canInviteVisitor } from "@/lib/auth";
 import { useAuth } from "@/features/auth";
-import { Avatar, Button, Input, EmptyState, PageHeader } from "@/components/ui";
-import { useFrequentVisitors, type FrequentVisitor } from "@/features/visitors";
+import { Button, EmptyState, PageHeader } from "@/components/ui";
+import { useFrequentVisitorsPage } from "@/features/visitors";
+import { PageWrapper, PageLoadingSkeleton, SearchInput } from "@/components/common";
+import { theme } from "@/lib/theme";
+import { Avatar } from "@/components/ui";
 
 export default function FrequentVisitorsPage() {
-  const router = useRouter();
   const { user, loading: authLoading } = useAuth({
     requireAuth: true,
     requireRole: canInviteVisitor,
     redirectTo: "/dashboard",
   });
-  const [searchQuery, setSearchQuery] = useState("");
-  const frequentQ = useFrequentVisitors(Boolean(user));
-  const visitors = frequentQ.data ?? [];
-  const loading = frequentQ.isLoading;
-
-  const handleQuickInvite = (visitor: FrequentVisitor) => {
-    router.push(`/visitors/invite?name=${encodeURIComponent(visitor.name)}&phone=${encodeURIComponent(visitor.phone)}&purpose=${encodeURIComponent(visitor.purpose)}`);
-  };
-
-  const filteredVisitors = visitors.filter(
-    (v) =>
-      v.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      v.phone.includes(searchQuery) ||
-      v.purpose.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const { visitors, searchQuery, setSearchQuery, loading, handleQuickInvite } = useFrequentVisitorsPage(user ?? null);
 
   if (authLoading || !user) return null;
+
   if (loading) {
     return (
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 py-6">
-        <div className="animate-pulse space-y-3">
-          <div className="h-6 bg-muted-bg rounded w-40" />
-          <div className="h-9 bg-muted-bg rounded" />
-          <div className="space-y-2">
-            {[1, 2, 3].map((i) => (
-              <div key={i} className="h-14 bg-muted-bg rounded-lg" />
-            ))}
-          </div>
-        </div>
-      </div>
+      <PageWrapper>
+        <PageLoadingSkeleton rows={6} showInput />
+      </PageWrapper>
     );
   }
 
   return (
-    <div className="max-w-4xl mx-auto px-4 sm:px-6 py-6">
+    <PageWrapper>
       <PageHeader
         title="Frequent Visitors"
         description="Visitors from your visit history — invite again quickly"
@@ -65,33 +44,27 @@ export default function FrequentVisitorsPage() {
         }
       />
 
-      <div className="relative mb-4">
-        <svg
-          className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-        </svg>
-        <Input
-          placeholder="Search by name, phone, or purpose..."
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          className="pl-10"
-        />
-      </div>
+      <SearchInput
+        value={searchQuery}
+        onChange={setSearchQuery}
+        placeholder="Search by name, phone, or purpose..."
+        className="mb-4"
+        aria-label="Search frequent visitors"
+      />
 
-      {filteredVisitors.length > 0 ? (
-        <div className="bg-card rounded-lg border border-border overflow-hidden divide-y divide-border">
-          {filteredVisitors.map((visitor) => (
-            <div key={visitor.id} className="p-3 flex items-center justify-between hover:bg-muted-bg/50 transition">
+      {visitors.length > 0 ? (
+        <div className={theme.list.card}>
+          {visitors.map((visitor) => (
+            <div
+              key={visitor.id}
+              className={`p-3 flex items-center justify-between ${theme.list.rowHover}`}
+            >
               <div className="flex items-center gap-2 min-w-0">
                 <Avatar name={visitor.name} size="sm" />
                 <div className="min-w-0">
-                  <p className="font-medium text-sm text-foreground truncate">{visitor.name}</p>
-                  <p className="text-xs text-muted-foreground truncate">{visitor.purpose}</p>
-                  <p className="text-xs text-muted-foreground mt-0.5">
+                  <p className={`font-medium text-sm text-foreground truncate ${theme.text.body}`}>{visitor.name}</p>
+                  <p className={`text-xs text-muted-foreground truncate ${theme.text.mutedSmall}`}>{visitor.purpose}</p>
+                  <p className={`text-xs text-muted-foreground mt-0.5 ${theme.text.mutedSmall}`}>
                     {visitor.visit_count} visits · Last: {visitor.last_visit}
                   </p>
                 </div>
@@ -118,6 +91,6 @@ export default function FrequentVisitorsPage() {
           }
         />
       )}
-    </div>
+    </PageWrapper>
   );
 }

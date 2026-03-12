@@ -34,5 +34,6 @@ export const API = {
   notifications: {
     list: "/notifications",
     markRead: (id: string) => `/notifications/${id}/read`,
+    createSocietyNotice: "/notifications/society",
   },
 } as const;

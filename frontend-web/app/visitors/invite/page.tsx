@@ -11,6 +11,8 @@ import {
   useInviteVisitor,
   type InviteVisitorResult,
 } from "@/features/visitors";
+import { PageWrapper } from "@/components/common";
+import { theme } from "@/lib/theme";
 
 function InviteContent() {
   const searchParams = useSearchParams();
@@ -70,33 +72,35 @@ function InviteContent() {
   if (authLoading || !user) return null;
   if (!canInviteVisitor(user)) {
     return (
-      <div className="max-w-lg mx-auto px-4 py-10 text-center text-muted">
-        <p>Inviting visitors is for Resident or Admin only.</p>
-        <p className="mt-2 text-sm">Redirecting...</p>
-      </div>
+      <PageWrapper width="narrower">
+        <div className={`text-center py-10 ${theme.text.muted}`}>
+          <p>Inviting visitors is for Resident or Admin only.</p>
+          <p className={`mt-2 ${theme.text.body}`}>Redirecting...</p>
+        </div>
+      </PageWrapper>
     );
   }
 
   return (
-    <div className="max-w-lg mx-auto px-4 py-6">
-      <Link href="/visitors" className="text-muted hover:text-primary mb-3 inline-block text-sm">← Back</Link>
-      <h1 className="text-xl font-semibold text-foreground mb-0.5">Invite Visitor</h1>
-      <p className="text-muted text-xs mb-5">Pre-approve a visitor with QR code and OTP</p>
+    <PageWrapper width="narrower">
+      <Link href="/visitors" className={`${theme.button.link} mb-3 inline-block ${theme.text.body}`}>← Back</Link>
+      <h1 className={`${theme.text.heading1} mb-0.5`}>Invite Visitor</h1>
+      <p className={`${theme.text.mutedSmall} mb-5`}>Pre-approve a visitor with QR code and OTP</p>
 
       {result ? (
-        <div className="bg-primary-muted border border-primary/30 rounded-lg p-4">
-          <h2 className="text-base font-semibold text-primary mb-2">Invitation created!</h2>
-          <p className="text-muted text-xs mb-2">Share with your visitor:</p>
-          <div className="bg-card rounded-lg p-3 space-y-1">
-            <p className="text-sm"><span className="font-medium">OTP:</span> <code className="font-mono">{result.otp}</code></p>
-            {result.qr_code && <p className="text-sm"><span className="font-medium">QR:</span> {result.qr_code}</p>}
+        <div className={`${theme.alert.base} ${theme.alert.info} p-4`}>
+          <h2 className={`${theme.sectionTitle} text-primary mb-2`}>Invitation created!</h2>
+          <p className={`${theme.text.mutedSmall} mb-2`}>Share with your visitor:</p>
+          <div className={`${theme.surface.card} p-3 space-y-1`}>
+            <p className={theme.text.body}><span className="font-medium">OTP:</span> <code className="font-mono">{result.otp}</code></p>
+            {result.qr_code && <p className={theme.text.body}><span className="font-medium">QR:</span> {result.qr_code}</p>}
           </div>
           <Button size="sm" onClick={() => { setResult(null); setName(""); setPhone(""); setPurpose(""); setExpectedArrival(""); }} className="mt-3">
             Invite another
           </Button>
         </div>
       ) : (
-        <form onSubmit={handleSubmit} className="bg-card rounded-lg border border-border p-4 space-y-3">
+        <form onSubmit={handleSubmit} className={`${theme.surface.card} p-4 ${theme.space.formStack}`}>
           {error && <Alert variant="error">{error}</Alert>}
           <Input id="name" label="Visitor name" value={name} onChange={(e) => setName(e.target.value)} required placeholder="Full name" noMargin />
           <Input id="phone" label="Phone (10 digits)" value={phone} onChange={(e) => setPhone(e.target.value.replace(/\D/g, "").slice(0, 10))} maxLength={10} placeholder="9876543210" noMargin />
@@ -127,7 +131,7 @@ function InviteContent() {
           </Button>
         </form>
       )}
-    </div>
+    </PageWrapper>
   );
 }
 
@@ -135,9 +139,9 @@ export default function InvitePage() {
   return (
     <Suspense
       fallback={
-        <div className="max-w-lg mx-auto px-4 py-10 text-muted-foreground">
-          Loading…
-        </div>
+        <PageWrapper width="narrower">
+          <p className={theme.text.muted}>Loading…</p>
+        </PageWrapper>
       }
     >
       <InviteContent />

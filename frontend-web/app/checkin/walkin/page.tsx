@@ -7,8 +7,9 @@ import { canAccessWalkin } from "@/lib/auth";
 import { useAuth } from "@/features/auth";
 import { useResidents } from "@/features/residents";
 import { API } from "@/lib/api/endpoints";
-import { PageContainer } from "@/components/layout/PageContainer";
+import { PageWrapper } from "@/components/common";
 import { Input, Button, Select } from "@/components/ui";
+import { theme } from "@/lib/theme";
 import type { Resident } from "@/features/residents";
 
 const PHONE_LENGTH = 10;
@@ -85,49 +86,49 @@ export default function WalkInPage() {
   if (!user) return null;
   if (!canAccessWalkin(user)) {
     return (
-      <PageContainer maxWidth="lg">
-        <div className="text-center py-12 text-muted-foreground">
+      <PageWrapper width="narrower">
+        <div className={`text-center py-12 ${theme.text.muted}`}>
           <p>Registering walk-ins is for Guard or Admin only.</p>
-          <p className="mt-2 text-sm">Redirecting…</p>
+          <p className={`mt-2 ${theme.text.body}`}>Redirecting…</p>
         </div>
-      </PageContainer>
+      </PageWrapper>
     );
   }
 
   return (
-    <PageContainer maxWidth="lg">
+    <PageWrapper width="narrower">
       <Link
         href="/checkin"
-        className="inline-block text-muted-foreground hover:text-primary mb-3 text-xs"
+        className={`inline-block ${theme.button.link} mb-3 ${theme.text.mutedSmall}`}
       >
         ← Back
       </Link>
 
-      <h1 className="text-xl font-semibold text-foreground mb-0.5">
+      <h1 className={`${theme.text.heading1} mb-0.5`}>
         Guard Walk-in
       </h1>
-      <p className="text-muted-foreground text-xs mb-5">
+      <p className={`${theme.text.mutedSmall} mb-5`}>
         Unknown person arrived? Register details. The resident will be notified by tower & flat to approve before entry.
       </p>
 
       {success ? (
-        <div className="rounded-lg border border-warning/30 bg-warning-light p-4">
+        <div className={`${theme.alert.base} ${theme.alert.warning} p-4`}>
           <div
             className="w-10 h-10 rounded-full bg-warning flex items-center justify-center text-white text-lg font-bold mb-3"
             aria-hidden
           >
             ⏳
           </div>
-          <h2 className="text-base font-semibold text-warning mb-1">
+          <h2 className={`${theme.sectionTitle} text-warning mb-1`}>
             Waiting for resident approval
           </h2>
-          <p className="text-muted-foreground text-sm mb-1">
+          <p className={`${theme.text.body} mb-1`}>
             Visitor <strong>{name}</strong> wants to meet the resident. They have been notified on their device.
           </p>
-          <p className="text-muted-foreground text-xs mb-3">
+          <p className={`${theme.text.mutedSmall} mb-3`}>
             Once they approve, the visitor is allowed in and will appear in &quot;Currently inside&quot; on the Guard page. No OTP or extra step needed.
           </p>
-          <p className="text-warning text-xs font-medium mb-3">
+          <p className={`${theme.text.mutedSmall} text-warning font-medium mb-3`}>
             Do not allow entry until resident approves.
           </p>
           <div className="flex flex-wrap gap-2">
@@ -136,7 +137,7 @@ export default function WalkInPage() {
             </Button>
             <Link
               href="/visitors?status=pending"
-              className="text-xs text-warning font-medium hover:underline"
+              className={`${theme.text.mutedSmall} text-warning font-medium hover:underline`}
             >
               View pending approvals →
             </Link>
@@ -145,11 +146,11 @@ export default function WalkInPage() {
       ) : (
         <form
           onSubmit={handleSubmit}
-          className="rounded-lg border border-border bg-card p-4 space-y-3"
+          className={`${theme.surface.card} p-4 ${theme.space.formStack}`}
         >
           {error && (
             <div
-              className="p-3 rounded-lg bg-error/10 text-error text-sm"
+              className={theme.auth.alertError}
               role="alert"
             >
               {error}
@@ -198,6 +199,6 @@ export default function WalkInPage() {
           </Button>
         </form>
       )}
-    </PageContainer>
+    </PageWrapper>
   );
 }

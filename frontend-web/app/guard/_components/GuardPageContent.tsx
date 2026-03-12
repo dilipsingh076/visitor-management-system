@@ -17,8 +17,9 @@ import {
   useGuardRemoveBlacklist,
   useGuardExportMuster,
 } from "@/features/guard";
-import { PageContainer } from "@/components/layout/PageContainer";
+import { PageWrapper } from "@/components/common";
 import { Button } from "@/components/ui";
+import { theme } from "@/lib/theme";
 
 export function GuardPageContent() {
   const { user, loading: authLoading } = useAuth({
@@ -81,23 +82,23 @@ export function GuardPageContent() {
   if (!user) return null;
   if (!canAccessGuardPage(user)) {
     return (
-      <PageContainer>
-        <div className="text-center py-12 text-muted-foreground">
+      <PageWrapper width="narrow">
+        <div className={`text-center py-12 ${theme.text.muted}`}>
           <p>Access denied. This page is for Guard or Admin only.</p>
-          <p className="mt-2 text-sm">Redirecting to dashboard…</p>
+          <p className={`mt-2 ${theme.text.body}`}>Redirecting to dashboard…</p>
         </div>
-      </PageContainer>
+      </PageWrapper>
     );
   }
 
   return (
-    <PageContainer maxWidth="4xl">
+    <PageWrapper width="narrow">
       <header className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-5">
         <div>
-          <h1 className="text-xl font-semibold text-foreground">
+          <h1 className={theme.text.heading1}>
             Guard Dashboard
           </h1>
-          <p className="text-muted-foreground text-xs mt-0.5">
+          <p className={`${theme.text.mutedSmall} mt-0.5`}>
             Walk-ins and visit status at the gate
           </p>
         </div>
@@ -119,7 +120,7 @@ export function GuardPageContent() {
       </header>
 
       {loading ? (
-        <div className="py-8 text-center text-sm text-muted-foreground">
+        <div className={`py-8 text-center ${theme.text.muted}`}>
           Loading…
         </div>
       ) : (
@@ -213,14 +214,14 @@ export function GuardPageContent() {
         </div>
       )}
 
-      <footer className="mt-5 flex flex-wrap gap-3 text-xs">
-        <Link href="/visitors" className="text-muted-foreground hover:text-primary">
+      <footer className={`mt-5 flex flex-wrap gap-3 text-xs`}>
+        <Link href="/visitors" className={theme.button.link}>
           View all visitors →
         </Link>
-        <Link href="/checkin" className="text-muted-foreground hover:text-primary">
+        <Link href="/checkin" className={theme.button.link}>
           Check-in (OTP/QR) →
         </Link>
       </footer>
-    </PageContainer>
+    </PageWrapper>
   );
 }

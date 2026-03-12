@@ -11,6 +11,8 @@ import {
 } from "@/features/guard";
 import type { BlacklistEntry } from "@/types";
 import { PageHeader, Button, Input } from "@/components/ui";
+import { PageWrapper } from "@/components/common";
+import { theme } from "@/lib/theme";
 
 export function BlacklistPageContent() {
   const { user, loading: authLoading } = useAuth({
@@ -61,7 +63,7 @@ export function BlacklistPageContent() {
   if (!canAccessGuardPage(user)) return null;
 
   return (
-    <div className="max-w-4xl mx-auto px-4 sm:px-6 py-6">
+    <PageWrapper>
       <PageHeader
         title="Blacklist"
         description="Denied visitors cannot check in or be invited. Add or remove entries (Guard & Committee)."
@@ -71,9 +73,9 @@ export function BlacklistPageContent() {
           </Link>
         }
       />
-      <div className="mt-4 bg-card rounded-lg border border-border overflow-hidden">
-        <div className="p-3 border-b border-border flex items-center justify-between">
-          <h2 className="text-base font-semibold text-foreground">Blacklisted visitors</h2>
+      <div className={`mt-4 ${theme.list.card}`}>
+        <div className={`p-3 border-b border-border flex items-center justify-between`}>
+          <h2 className={theme.sectionTitle}>Blacklisted visitors</h2>
           {!showForm ? (
             <Button variant="secondary" size="sm" onClick={() => setShowForm(true)}>+ Add by phone</Button>
           ) : (
@@ -81,7 +83,7 @@ export function BlacklistPageContent() {
           )}
         </div>
         {showForm && (
-          <div className="p-3 bg-muted-bg/50 border-b border-border space-y-2">
+          <div className={`p-3 bg-muted-bg/50 border-b border-border ${theme.space.formStackSm}`}>
             <Input placeholder="Visitor name" value={name} onChange={(e) => setName(e.target.value)} className="text-sm" />
             <Input placeholder="Phone (10 digits)" value={phone} onChange={(e) => setPhone(e.target.value.replace(/\D/g, "").slice(0, 10))} maxLength={10} className="text-sm" />
             <Input placeholder="Reason" value={reason} onChange={(e) => setReason(e.target.value)} className="text-sm" />
@@ -97,10 +99,10 @@ export function BlacklistPageContent() {
             <div className="p-6 text-center text-xs text-muted-foreground">No blacklisted visitors.</div>
           ) : (
             list.map((b: BlacklistEntry) => (
-              <div key={b.visitor_id} className="p-3 flex items-center justify-between hover:bg-muted-bg/50">
+              <div key={b.visitor_id} className={`p-3 flex items-center justify-between ${theme.list.rowHover}`}>
                 <div className="min-w-0">
-                  <p className="font-medium text-sm text-foreground">{b.visitor_name}</p>
-                  <p className="text-xs text-muted-foreground">{b.visitor_phone}</p>
+                  <p className={`font-medium text-sm text-foreground ${theme.text.body}`}>{b.visitor_name}</p>
+                  <p className={theme.text.mutedSmall}>{b.visitor_phone}</p>
                   {b.reason && <p className="text-xs text-muted-foreground mt-0.5 truncate">{b.reason}</p>}
                 </div>
                 <Button size="sm" variant="ghost" className="text-success hover:bg-success/10 shrink-0" onClick={() => handleRemove(b.visitor_id)} disabled={removing === b.visitor_id}>
@@ -111,11 +113,11 @@ export function BlacklistPageContent() {
           )}
         </div>
       </div>
-      <p className="mt-3 text-xs text-muted-foreground">
-        <Link href="/guard" className="hover:text-primary">Guard desk</Link>
+      <p className={`mt-3 ${theme.text.mutedSmall}`}>
+        <Link href="/guard" className={theme.button.link}>Guard desk</Link>
         {" · "}
-        <Link href="/visitors" className="hover:text-primary">Visitors</Link>
+        <Link href="/visitors" className={theme.button.link}>Visitors</Link>
       </p>
-    </div>
+    </PageWrapper>
   );
 }

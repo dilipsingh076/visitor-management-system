@@ -2,12 +2,14 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
-import { Avatar, Button, Card, CardContent, CardHeader, Input, StatCard, StatCardSkeleton } from "@/components/ui";
+import { Avatar, Button, Card, CardContent, CardHeader, StatCard, StatCardSkeleton } from "@/components/ui";
 import type { User } from "@/lib/auth";
 import { getPrimaryRole, getRoleResponsibility } from "@/lib/auth";
 import { useDashboardStats } from "../hooks/useDashboardData";
 import { useVisitorsList } from "@/features/visitors";
 import { useGuardCheckout, useGuardExportMuster } from "@/features/guard";
+import { theme } from "@/lib/theme";
+import { SearchInput } from "@/components/common";
 
 interface GuardDashboardProps {
   user: User;
@@ -87,9 +89,8 @@ export function GuardDashboard({ user }: GuardDashboardProps) {
         </div>
       </section>
 
-      {/* Stats overview */}
       <section>
-        <h2 className="text-sm font-medium text-muted-foreground mb-3">Today at a glance</h2>
+        <h2 className={`${theme.text.muted} mb-3`}>Today at a glance</h2>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
           <StatCard label="Expected" value={expectedVisitors.length} variant="primary" />
           <StatCard label="Inside" value={stats?.checked_in ?? checkedInVisitors.length} variant="success" />
@@ -98,34 +99,34 @@ export function GuardDashboard({ user }: GuardDashboardProps) {
         </div>
       </section>
 
-      {/* Expected vs Inside — main work area */}
       <section>
         <div className="flex flex-wrap items-center justify-between gap-3 mb-3">
-          <h2 className="text-sm font-medium text-muted-foreground">Expected &amp; inside</h2>
-          <Input
-            placeholder="Search visitor, phone, resident..."
+          <h2 className={theme.text.muted}>Expected &amp; inside</h2>
+          <SearchInput
             value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="max-w-xs h-9 text-sm"
+            onChange={setSearchQuery}
+            placeholder="Search visitor, phone, resident..."
+            className="max-w-xs"
+            aria-label="Search expected visitors"
           />
         </div>
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           <Card variant="outlined" className="overflow-hidden">
-            <CardHeader className="border-b border-border py-3">
-              <span className="text-sm font-semibold text-foreground">Expected ({filteredExpected.length})</span>
+            <CardHeader className={`${theme.surface.cardHeader} py-3`}>
+              <span className={theme.sectionTitle}>Expected ({filteredExpected.length})</span>
             </CardHeader>
             <CardContent className="p-0">
               <div className="divide-y divide-border max-h-72 overflow-y-auto">
                 {filteredExpected.length === 0 ? (
-                  <div className="px-4 py-8 text-center text-sm text-muted-foreground">No expected visitors</div>
+                  <div className={`px-4 py-8 text-center ${theme.text.muted}`}>No expected visitors</div>
                 ) : (
                   filteredExpected.slice(0, 15).map((visitor) => (
                     <div key={visitor.id} className="px-4 py-2.5 flex items-center justify-between gap-2">
                       <div className="min-w-0 flex items-center gap-3">
                         <Avatar name={visitor.visitor_name} size="sm" />
                         <div className="min-w-0">
-                          <p className="text-sm font-medium text-foreground truncate">{visitor.visitor_name}</p>
-                          <p className="text-xs text-muted-foreground truncate">{visitor.host_name || visitor.purpose || "—"}</p>
+                          <p className={`${theme.text.body} font-medium text-foreground truncate`}>{visitor.visitor_name}</p>
+                          <p className={`${theme.text.mutedSmall} truncate`}>{visitor.host_name || visitor.purpose || "—"}</p>
                           {visitor.otp && <p className="text-xs font-mono text-primary mt-0.5">OTP: {visitor.otp}</p>}
                         </div>
                       </div>
@@ -139,20 +140,20 @@ export function GuardDashboard({ user }: GuardDashboardProps) {
 
           <Card variant="outlined" className="overflow-hidden">
             <CardHeader className="border-b border-border border-success/20 bg-success/5 py-3">
-              <span className="text-sm font-semibold text-foreground">Inside ({checkedInVisitors.length})</span>
+              <span className={theme.sectionTitle}>Inside ({checkedInVisitors.length})</span>
             </CardHeader>
             <CardContent className="p-0">
               <div className="divide-y divide-border max-h-72 overflow-y-auto">
                 {checkedInVisitors.length === 0 ? (
-                  <div className="px-4 py-8 text-center text-sm text-muted-foreground">No one inside</div>
+                  <div className={`px-4 py-8 text-center ${theme.text.muted}`}>No one inside</div>
                 ) : (
                   checkedInVisitors.slice(0, 15).map((visitor) => (
                     <div key={visitor.id} className="px-4 py-2.5 flex items-center justify-between gap-2">
                       <div className="min-w-0 flex items-center gap-3">
                         <Avatar name={visitor.visitor_name} size="sm" />
                         <div className="min-w-0">
-                          <p className="text-sm font-medium text-foreground truncate">{visitor.visitor_name}</p>
-                          <p className="text-xs text-muted-foreground truncate">
+                          <p className={`${theme.text.body} font-medium text-foreground truncate`}>{visitor.visitor_name}</p>
+                          <p className={`${theme.text.mutedSmall} truncate`}>
                             {visitor.host_name} · {visitor.actual_arrival ? new Date(visitor.actual_arrival).toLocaleTimeString() : ""}
                           </p>
                         </div>

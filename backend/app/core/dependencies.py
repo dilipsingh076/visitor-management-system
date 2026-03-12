@@ -102,6 +102,19 @@ async def get_current_user_id(
     raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="User ID not found")
 
 
+async def get_current_society_id(
+    current_user: dict = Depends(get_current_user),
+) -> UUID:
+    """Return current user's society UUID for society-scoped operations."""
+    sid = current_user.get("society_id")
+    if sid:
+        try:
+            return UUID(str(sid))
+        except (ValueError, TypeError):
+            pass
+    raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Society ID not found")
+
+
 async def get_current_resident(
     current_user: dict = Depends(get_current_user),
 ) -> dict:

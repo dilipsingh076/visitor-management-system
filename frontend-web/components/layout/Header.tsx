@@ -5,6 +5,7 @@ import Link from "next/link";
 import { removeToken, getPrimaryRole, ROLE_LABELS, getRoleResponsibility, canAccessGuardPage, canAccessCheckin, canAccessWalkin, canAccessPlatform, canAccessSocietyManagement } from "@/lib/auth";
 import { useAuthContext } from "@/features/auth";
 import { Badge, Button, Container, LinkButton, NavLink } from "@/components/ui";
+import { NotificationBell } from "./NotificationBell";
 
 /** Render auth-dependent nav only after mount to avoid hydration mismatch (auth comes from client storage). */
 export default function Header() {
@@ -40,6 +41,7 @@ export default function Header() {
                 <>
                   <NavLink href="/dashboard">Dashboard</NavLink>
                   <NavLink href="/visitors">Visitors</NavLink>
+                  <NavLink href="/notifications">Notifications</NavLink>
                   {canAccessCheckin(user) && <NavLink href="/checkin">Check-in</NavLink>}
                   {canAccessWalkin(user) && <NavLink href="/checkin/walkin">Walk-in</NavLink>}
                   {canAccessGuardPage(user) && <NavLink href="/guard">Guard</NavLink>}
@@ -50,6 +52,7 @@ export default function Header() {
                 <>
                   <NavLink href="/dashboard">Dashboard</NavLink>
                   <NavLink href="/visitors">Visitors</NavLink>
+                  <NavLink href="/notifications">Notifications</NavLink>
                 </>
               ) : (
                 <>
@@ -66,7 +69,9 @@ export default function Header() {
             {authenticated ? (
               <>
                 {user && (
-                  <span className="hidden sm:inline-flex items-center gap-2 text-sm text-muted-foreground">
+                  <>
+                    <NotificationBell user={user} />
+                    <span className="hidden sm:inline-flex items-center gap-2 text-sm text-muted-foreground">
                     <span className="text-foreground font-medium">{user.username}</span>
                     <span className="text-border">·</span>
                     <Badge
@@ -77,6 +82,7 @@ export default function Header() {
                       {ROLE_LABELS[getPrimaryRole(user)] ?? getPrimaryRole(user)}
                     </Badge>
                   </span>
+                  </>
                 )}
                 <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground" onClick={handleLogout}>
                   Logout

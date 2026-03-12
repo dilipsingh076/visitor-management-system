@@ -9,6 +9,8 @@ import {
   COMMITTEE_ROLES,
   shouldShowFlatForRole,
 } from "@/features/admin";
+import { PageWrapper, PageLoadingSkeleton, SearchInput } from "@/components/common";
+import { theme } from "@/lib/theme";
 
 function RoleBadges({ roles }: { roles: string[] }) {
   const list = Array.isArray(roles) && roles.length > 0 ? roles : [];
@@ -55,31 +57,27 @@ export function UserManagementPageContent() {
 
   if (isError && listError) {
     return (
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 py-6">
+      <PageWrapper width="narrow">
         <Alert variant="error" className="mb-3 text-sm">
           {listError.message}
         </Alert>
-        <p className="text-xs text-muted-foreground">
+        <p className={theme.text.mutedSmall}>
           If you just registered this society, try logging out and logging in again so your session has the correct society.
         </p>
-      </div>
+      </PageWrapper>
     );
   }
 
   if (isLoading) {
     return (
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 py-6">
-        <div className="animate-pulse space-y-3">
-          <div className="h-6 bg-muted-bg rounded w-40" />
-          <div className="h-9 bg-muted-bg rounded" />
-          <div className="h-72 bg-muted-bg rounded-lg" />
-        </div>
-      </div>
+      <PageWrapper width="narrow">
+        <PageLoadingSkeleton rows={5} showInput />
+      </PageWrapper>
     );
   }
 
   return (
-    <div className="max-w-4xl mx-auto px-4 sm:px-6 py-6">
+    <PageWrapper width="narrow">
       <PageHeader
         title="Society users"
         description="Chairman and committee can assign committee roles. Resident and Guard are assigned only through signup."
@@ -94,39 +92,31 @@ export function UserManagementPageContent() {
       />
 
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-4">
-        <div className="bg-card rounded-lg border border-border p-3">
-          <p className="text-muted-foreground text-xs">Total</p>
-          <p className="text-lg font-semibold text-foreground">{stats.total}</p>
+        <div className={theme.statCard.root}>
+          <p className={theme.statCard.label}>Total</p>
+          <p className={theme.statCard.value}>{stats.total}</p>
         </div>
-        <div className="bg-card rounded-lg border border-border p-3">
-          <p className="text-muted-foreground text-xs">Committee</p>
-          <p className="text-lg font-semibold text-success">{stats.committee}</p>
+        <div className={theme.statCard.root}>
+          <p className={theme.statCard.label}>Committee</p>
+          <p className={theme.statCard.valueSuccess}>{stats.committee}</p>
         </div>
-        <div className="bg-card rounded-lg border border-border p-3">
-          <p className="text-muted-foreground text-xs">Residents</p>
-          <p className="text-lg font-semibold text-info">{stats.residents}</p>
+        <div className={theme.statCard.root}>
+          <p className={theme.statCard.label}>Residents</p>
+          <p className={theme.statCard.valueInfo}>{stats.residents}</p>
         </div>
-        <div className="bg-card rounded-lg border border-border p-3">
-          <p className="text-muted-foreground text-xs">Guards</p>
-          <p className="text-lg font-semibold text-warning">{stats.guards}</p>
+        <div className={theme.statCard.root}>
+          <p className={theme.statCard.label}>Guards</p>
+          <p className={theme.statCard.valueWarning}>{stats.guards}</p>
         </div>
       </div>
 
       <div className="flex flex-col md:flex-row gap-3 mb-4">
-        <div className="relative flex-1">
-          <svg
-            className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-          </svg>
-          <Input
-            placeholder="Search by name, email, or flat..."
+        <div className="flex-1">
+          <SearchInput
             value={filters.searchQuery}
-            onChange={(e) => filters.setSearchQuery(e.target.value)}
-            className="pl-10"
+            onChange={filters.setSearchQuery}
+            placeholder="Search by name, email, or flat..."
+            aria-label="Search users"
           />
         </div>
         <Select
@@ -137,40 +127,40 @@ export function UserManagementPageContent() {
         />
       </div>
 
-      <div className="bg-card rounded-lg border border-border overflow-hidden shadow-[var(--shadow-sm)]">
-        <div className="overflow-x-auto">
+      <div className={`${theme.list.card} shadow-[var(--shadow-sm)]`}>
+        <div className={theme.table.wrap}>
           <table className="w-full">
-            <thead className="bg-muted-bg/50 border-b border-border">
+            <thead className={theme.table.thead}>
               <tr>
-                <th className="text-left px-3 py-2 text-xs font-medium text-muted-foreground">User</th>
-                <th className="text-left px-3 py-2 text-xs font-medium text-muted-foreground">Role</th>
-                <th className="text-left px-3 py-2 text-xs font-medium text-muted-foreground hidden md:table-cell">Flat</th>
-                <th className="text-left px-3 py-2 text-xs font-medium text-muted-foreground hidden lg:table-cell">Last Login</th>
-                <th className="text-left px-3 py-2 text-xs font-medium text-muted-foreground">Status</th>
-                <th className="text-right px-3 py-2 text-xs font-medium text-muted-foreground">Actions</th>
+                <th className={`${theme.table.th}`}>User</th>
+                <th className={theme.table.th}>Role</th>
+                <th className={`${theme.table.th} hidden md:table-cell`}>Flat</th>
+                <th className={`${theme.table.th} hidden lg:table-cell`}>Last Login</th>
+                <th className={theme.table.th}>Status</th>
+                <th className={`${theme.table.th} text-right`}>Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-border">
+            <tbody className={theme.table.tbody}>
               {filteredUsers.map((user) => (
-                <tr key={user.id} className="hover:bg-muted-bg/30 transition">
-                  <td className="px-3 py-2">
+                <tr key={user.id} className={theme.list.rowHoverLight}>
+                  <td className={theme.table.td}>
                     <div className="flex items-center gap-2">
                       <Avatar name={user.username} size="sm" />
                       <div className="min-w-0">
-                        <p className="font-medium text-foreground text-sm truncate">{user.username}</p>
-                        <p className="text-xs text-muted-foreground truncate">{user.email}</p>
+                        <p className={`${theme.text.body} font-medium text-foreground truncate`}>{user.username}</p>
+                        <p className={`${theme.text.mutedSmall} truncate`}>{user.email}</p>
                       </div>
                     </div>
                   </td>
-                  <td className="px-3 py-2">
+                  <td className={theme.table.td}>
                     <RoleBadges roles={user.roles ?? [user.role]} />
                   </td>
-                  <td className="px-3 py-2 text-xs text-muted-foreground hidden md:table-cell">{user.flat_number || "—"}</td>
-                  <td className="px-3 py-2 text-xs text-muted-foreground hidden lg:table-cell">{user.last_login || "Never"}</td>
-                  <td className="px-3 py-2">
+                  <td className={`${theme.table.td} ${theme.text.mutedSmall} hidden md:table-cell`}>{user.flat_number || "—"}</td>
+                  <td className={`${theme.table.td} ${theme.text.mutedSmall} hidden lg:table-cell`}>{user.last_login || "Never"}</td>
+                  <td className={theme.table.td}>
                     <Badge variant={user.status === "active" ? "success" : "default"} className="text-xs">{user.status}</Badge>
                   </td>
-                  <td className="px-3 py-2">
+                  <td className={theme.table.td}>
                     <div className="flex items-center justify-end gap-1">
                       <Button size="sm" variant="ghost" onClick={() => modals.openEditModal(user)} aria-label="Edit user">
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -244,7 +234,7 @@ export function UserManagementPageContent() {
           />
         )}
       </Modal>
-    </div>
+    </PageWrapper>
   );
 }
 
@@ -265,11 +255,11 @@ function AddUserForm({
   isSubmitting: boolean;
 }) {
   return (
-    <div className="space-y-4">
-      {error && <p className="text-sm text-error bg-error/10 px-3 py-2 rounded-lg">{error}</p>}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <div className={theme.space.formStack}>
+      {error && <p className={theme.auth.alertError}>{error}</p>}
+      <div className={theme.grid.formTwoCol}>
         <div>
-          <label className="block text-sm font-medium text-foreground mb-1">Email *</label>
+          <label className={theme.label}>Email *</label>
           <Input
             type="email"
             placeholder="user@example.com"
@@ -278,17 +268,17 @@ function AddUserForm({
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-foreground mb-1">Full name *</label>
+          <label className={theme.label}>Full name *</label>
           <Input placeholder="Full name" value={form.username} onChange={(e) => onFieldChange("username", e.target.value)} />
         </div>
       </div>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className={theme.grid.formTwoCol}>
         <div>
-          <label className="block text-sm font-medium text-foreground mb-1">Role *</label>
+          <label className={theme.label}>Role *</label>
           <Select value={form.role} onChange={(e) => onFieldChange("role", e.target.value)} options={[...ROLE_OPTIONS]} />
         </div>
         <div>
-          <label className="block text-sm font-medium text-foreground mb-1">Password *</label>
+          <label className={theme.label}>Password *</label>
           <Input
             type="password"
             placeholder="Min 6 characters"
@@ -297,14 +287,14 @@ function AddUserForm({
           />
         </div>
       </div>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className={theme.grid.formTwoCol}>
         <div>
-          <label className="block text-sm font-medium text-foreground mb-1">Phone</label>
+          <label className={theme.label}>Phone</label>
           <Input placeholder="10-digit phone" value={form.phone} onChange={(e) => onFieldChange("phone", e.target.value)} />
         </div>
         {shouldShowFlatForRole(form.role) && (
           <div>
-            <label className="block text-sm font-medium text-foreground mb-1">Flat / Unit</label>
+            <label className={theme.label}>Flat / Unit</label>
             <Input placeholder="e.g., 101, A-201" value={form.flat_number} onChange={(e) => onFieldChange("flat_number", e.target.value)} />
           </div>
         )}
@@ -351,21 +341,21 @@ function EditUserForm({
   };
 
   return (
-    <div className="space-y-4">
-      {error && <p className="text-sm text-error bg-error/10 px-3 py-2 rounded-lg">{error}</p>}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <div className={theme.space.formStack}>
+      {error && <p className={theme.auth.alertError}>{error}</p>}
+      <div className={theme.grid.formTwoCol}>
         <div>
-          <label className="block text-sm font-medium text-foreground mb-1">Email</label>
+          <label className={theme.label}>Email</label>
           <Input type="email" value={user.email} readOnly className="bg-muted-bg" />
         </div>
         <div>
-          <label className="block text-sm font-medium text-foreground mb-1">Full name</label>
+          <label className={theme.label}>Full name</label>
           <Input value={user.username} onChange={(e) => onUserChange({ username: e.target.value })} />
         </div>
       </div>
       <div>
-        <label className="block text-sm font-medium text-foreground mb-2">Assign committee roles</label>
-        <p className="text-xs text-muted-foreground mb-2">One user can have multiple roles. Resident and Guard are assigned only through signup.</p>
+        <label className={`${theme.label} mb-2`}>Assign committee roles</label>
+        <p className={`${theme.text.mutedSmall} mb-2`}>One user can have multiple roles. Resident and Guard are assigned only through signup.</p>
         <div className="flex flex-wrap gap-4">
           {COMMITTEE_ROLE_OPTIONS.map((opt) => (
             <label key={opt.value} className="flex items-center gap-2 cursor-pointer">
@@ -380,18 +370,18 @@ function EditUserForm({
           ))}
         </div>
         {signupRoles.length > 0 && (
-          <p className="text-xs text-muted-foreground mt-2">
+          <p className={`${theme.text.mutedSmall} mt-2`}>
             Also has: {signupRoles.map((r) => (r === "resident" ? "Resident" : "Guard")).join(", ")} (assigned via signup)
           </p>
         )}
       </div>
       <div>
-        <label className="block text-sm font-medium text-foreground mb-1">Phone</label>
+        <label className={theme.label}>Phone</label>
         <Input value={user.phone ?? ""} onChange={(e) => onUserChange({ phone: e.target.value })} />
       </div>
       {shouldShowFlatForRole(user.role) && (
         <div>
-          <label className="block text-sm font-medium text-foreground mb-1">Flat / Unit</label>
+          <label className={theme.label}>Flat / Unit</label>
           <Input value={user.flat_number ?? ""} onChange={(e) => onUserChange({ flat_number: e.target.value })} />
         </div>
       )}
