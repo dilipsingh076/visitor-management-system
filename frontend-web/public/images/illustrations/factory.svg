@@ -1,0 +1,60 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" fill="none">
+  <!-- Sky -->
+  <rect width="400" height="200" fill="#f8fafc"/>
+  
+  <!-- Ground -->
+  <rect y="200" width="400" height="100" fill="#94a3b8" opacity="0.3"/>
+  
+  <!-- Main factory building -->
+  <rect x="100" y="100" width="200" height="130" rx="4" fill="#334155"/>
+  
+  <!-- Roof with saw-tooth pattern -->
+  <path d="M100 100 L150 60 L150 100 L200 60 L200 100 L250 60 L250 100 L300 60 L300 100" fill="#1e293b"/>
+  
+  <!-- Windows -->
+  <rect x="120" y="120" width="40" height="30" rx="2" fill="#0ea5e9" opacity="0.5"/>
+  <rect x="180" y="120" width="40" height="30" rx="2" fill="#0ea5e9" opacity="0.5"/>
+  <rect x="240" y="120" width="40" height="30" rx="2" fill="#0ea5e9" opacity="0.5"/>
+  
+  <!-- Large door -->
+  <rect x="165" y="170" width="70" height="60" rx="4" fill="#0f172a"/>
+  <rect x="175" y="180" width="20" height="45" rx="2" fill="#334155"/>
+  <rect x="205" y="180" width="20" height="45" rx="2" fill="#334155"/>
+  
+  <!-- Chimney -->
+  <rect x="280" y="40" width="25" height="60" rx="2" fill="#1e293b"/>
+  <ellipse cx="292" cy="35" rx="15" ry="8" fill="#94a3b8" opacity="0.5"/>
+  
+  <!-- Guard booth -->
+  <rect x="50" y="210" width="45" height="40" rx="4" fill="#10b981"/>
+  <rect x="58" y="218" width="20" height="15" rx="2" fill="white"/>
+  <circle cx="85" cy="230" r="6" fill="#fbbf24"/>
+  
+  <!-- Gate barrier -->
+  <rect x="95" y="230" width="60" height="4" rx="2" fill="#ef4444"/>
+  <rect x="92" y="220" width="8" height="30" fill="#334155"/>
+  
+  <!-- Truck -->
+  <rect x="320" y="220" width="60" height="35" rx="4" fill="#1e293b"/>
+  <rect x="330" y="228" width="25" height="20" rx="2" fill="#334155"/>
+  <circle cx="335" cy="260" r="8" fill="#0f172a"/>
+  <circle cx="365" cy="260" r="8" fill="#0f172a"/>
+  
+  <!-- Worker with hard hat -->
+  <circle cx="270" cy="245" r="12" fill="#fbbf24"/>
+  <circle cx="270" cy="248" r="10" fill="#fef3c7"/>
+  <rect x="258" y="260" width="24" height="20" rx="3" fill="#3b82f6"/>
+  
+  <!-- Clipboard -->
+  <rect x="285" y="255" width="15" height="20" rx="2" fill="white"/>
+  <rect x="288" y="260" width="9" height="2" fill="#94a3b8"/>
+  <rect x="288" y="265" width="9" height="2" fill="#94a3b8"/>
+  
+  <!-- Safety signs -->
+  <rect x="140" y="235" width="20" height="20" rx="2" fill="#fbbf24"/>
+  <text x="150" y="250" font-size="12" fill="#0f172a" text-anchor="middle" font-weight="bold">!</text>
+  
+  <!-- Parking lines -->
+  <rect x="200" y="270" width="40" height="4" fill="white"/>
+  <rect x="250" y="270" width="40" height="4" fill="white"/>
+</svg>

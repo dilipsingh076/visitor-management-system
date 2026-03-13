@@ -1,7 +1,6 @@
 "use client";
 
 import { theme } from "@/lib/theme";
-import type { ReactNode } from "react";
 
 export interface NotificationBannerItem {
   id: string;

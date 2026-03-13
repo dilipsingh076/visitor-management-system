@@ -62,3 +62,12 @@ backend/
 - Follow async/await patterns
 - Use Pydantic v2 for validation
 - SQLAlchemy 2.0+ async patterns
+
+## Demo / Super Admin (Platform)
+
+For local testing, you can log in as a **platform admin (super admin)** user to view and manage all societies:
+
+- **Email**: `superadmin@example.com`
+- **Password**: `SuperAdmin@123` or `Admin@123`
+
+This user has the `platform_admin` role and is not tied to any specific society. Use it from the web frontend login page to access the Platform → Societies UI and global views.

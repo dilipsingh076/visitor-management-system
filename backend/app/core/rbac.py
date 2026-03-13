@@ -50,6 +50,10 @@ def require_roles(allowed_roles: List[str]):
     return _require_roles
 
 
+# Pre-built committee dependency (chairman, secretary, treasurer)
+require_committee = require_roles(["chairman", "secretary", "treasurer", "platform_admin"])
+
+
 async def log_admin_action(
     db: AsyncSession,
     user_id: UUID,

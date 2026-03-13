@@ -62,3 +62,46 @@ class Building(Base):
 
     def __repr__(self):
         return f"<Building(id={self.id}, name={self.name}, society_id={self.society_id})>"
+
+
+class Amenity(Base):
+    """
+    Society amenity (pool, gym, clubhouse, playground, etc.).
+    """
+    __tablename__ = "amenities"
+
+    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
+    society_id = Column(GUID(), ForeignKey("societies.id", ondelete="CASCADE"), nullable=False, index=True)
+    name = Column(String(255), nullable=False, index=True)
+    code = Column(String(50), nullable=True)
+    description = Column(String(500), nullable=True)
+    status = Column(String(50), nullable=False, default="operational")  # operational, maintenance, closed
+    sort_order = Column(Integer, nullable=True, default=0)
+    is_active = Column(Boolean, default=True, nullable=False)
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
+
+    def __repr__(self):
+        return f"<Amenity(id={self.id}, name={self.name}, society_id={self.society_id})>"
+
+
+class MaintenanceStaff(Base):
+    """
+    Society maintenance staff (plumber, electrician, housekeeping, etc.).
+    """
+    __tablename__ = "maintenance_staff"
+
+    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
+    society_id = Column(GUID(), ForeignKey("societies.id", ondelete="CASCADE"), nullable=False, index=True)
+    full_name = Column(String(255), nullable=False)
+    role = Column(String(100), nullable=False)  # plumber, electrician, housekeeping, security, etc.
+    phone = Column(String(20), nullable=True)
+    email = Column(String(255), nullable=True)
+    building_id = Column(GUID(), ForeignKey("buildings.id", ondelete="SET NULL"), nullable=True, index=True)
+    notes = Column(String(500), nullable=True)
+    is_active = Column(Boolean, default=True, nullable=False)
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
+
+    def __repr__(self):
+        return f"<MaintenanceStaff(id={self.id}, full_name={self.full_name}, role={self.role})>"

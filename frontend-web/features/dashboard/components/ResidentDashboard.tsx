@@ -72,8 +72,6 @@ export function ResidentDashboard({ user }: ResidentDashboardProps) {
         <h2 className={`${theme.text.muted} mb-3`}>Quick actions</h2>
         <div className="flex flex-wrap gap-2">
           <Link href="/visitors/invite"><Button size="sm">Invite visitor</Button></Link>
-          <Link href="/visitors"><Button size="sm" variant="secondary">My visitors</Button></Link>
-          <Link href="/visitors/frequent"><Button size="sm" variant="secondary">Frequent</Button></Link>
         </div>
       </section>
 
@@ -82,7 +80,6 @@ export function ResidentDashboard({ user }: ResidentDashboardProps) {
           <Card variant="outlined" className="overflow-hidden border-primary/30 bg-primary/5">
             <CardHeader className={`${theme.surface.cardHeader} py-2.5 flex flex-row items-center justify-between`}>
               <span className={theme.sectionTitle}>Visitor alerts</span>
-              <Link href="/visitors" className={`${theme.text.mutedSmall} font-medium text-primary hover:underline`}>View & act</Link>
             </CardHeader>
             <CardContent className="p-0">
               <ul className="divide-y divide-border">

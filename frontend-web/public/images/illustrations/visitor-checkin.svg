@@ -1,0 +1,59 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" fill="none">
+  <!-- Background -->
+  <rect width="400" height="300" fill="#f8fafc"/>
+  
+  <!-- Tablet/Kiosk -->
+  <rect x="120" y="40" width="160" height="220" rx="12" fill="#1e293b"/>
+  <rect x="130" y="55" width="140" height="180" rx="8" fill="#0f172a"/>
+  
+  <!-- Screen content -->
+  <rect x="145" y="70" width="110" height="30" rx="4" fill="#334155"/>
+  <text x="200" y="92" font-size="12" fill="#94a3b8" text-anchor="middle" font-family="system-ui">Enter OTP</text>
+  
+  <!-- OTP boxes -->
+  <rect x="150" y="115" width="25" height="30" rx="4" fill="#334155"/>
+  <rect x="180" y="115" width="25" height="30" rx="4" fill="#334155"/>
+  <rect x="210" y="115" width="25" height="30" rx="4" fill="#334155"/>
+  <rect x="240" y="115" width="25" height="30" rx="4" fill="#334155"/>
+  <text x="162" y="138" font-size="16" fill="#10b981" font-family="system-ui" font-weight="bold">5</text>
+  <text x="192" y="138" font-size="16" fill="#10b981" font-family="system-ui" font-weight="bold">2</text>
+  <text x="222" y="138" font-size="16" fill="#10b981" font-family="system-ui" font-weight="bold">8</text>
+  <text x="252" y="138" font-size="16" fill="#10b981" font-family="system-ui" font-weight="bold">4</text>
+  
+  <!-- Check button -->
+  <rect x="150" y="160" width="100" height="35" rx="6" fill="#10b981"/>
+  <text x="200" y="183" font-size="12" fill="white" text-anchor="middle" font-family="system-ui" font-weight="bold">CHECK IN</text>
+  
+  <!-- QR icon -->
+  <rect x="175" y="205" width="50" height="50" rx="4" fill="#334155"/>
+  <rect x="182" y="212" width="10" height="10" fill="white"/>
+  <rect x="195" y="212" width="5" height="5" fill="white"/>
+  <rect x="205" y="212" width="10" height="10" fill="white"/>
+  <rect x="182" y="225" width="5" height="5" fill="white"/>
+  <rect x="195" y="225" width="5" height="5" fill="white"/>
+  <rect x="207" y="225" width="5" height="5" fill="white"/>
+  <rect x="182" y="235" width="10" height="10" fill="white"/>
+  <rect x="197" y="237" width="5" height="5" fill="white"/>
+  <rect x="205" y="235" width="10" height="10" fill="white"/>
+  
+  <!-- Person -->
+  <circle cx="60" cy="140" r="25" fill="#e0f2fe"/>
+  <circle cx="60" cy="135" r="15" fill="#fef3c7"/>
+  <ellipse cx="60" cy="190" rx="20" ry="30" fill="#3b82f6"/>
+  
+  <!-- Hand with phone -->
+  <rect x="75" y="160" width="30" height="50" rx="4" fill="#1e293b"/>
+  <rect x="78" y="165" width="24" height="35" rx="2" fill="#10b981"/>
+  
+  <!-- Success indicators -->
+  <circle cx="340" cy="100" r="30" fill="#10b981" opacity="0.2"/>
+  <circle cx="340" cy="100" r="20" fill="#10b981"/>
+  <path d="M330 100 L337 107 L352 92" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+  
+  <!-- Notification -->
+  <rect x="300" y="150" width="80" height="60" rx="8" fill="white" stroke="#e2e8f0" stroke-width="2"/>
+  <circle cx="320" cy="170" r="8" fill="#10b981"/>
+  <rect x="335" y="165" width="35" height="6" rx="2" fill="#cbd5e1"/>
+  <rect x="335" y="176" width="25" height="4" rx="2" fill="#e2e8f0"/>
+  <text x="340" y="200" font-size="8" fill="#64748b" font-family="system-ui">Visitor arrived</text>
+</svg>

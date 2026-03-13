@@ -3,10 +3,7 @@
 import Link from "next/link";
 import { useAuth } from "@/features/auth";
 import { PageHeader, LinkButton, Card, Button } from "@/components/ui";
-import {
-  useVisitorsPage,
-  useApproveVisit,
-} from "@/features/visitors";
+import { useVisitorsPage } from "@/features/visitors";
 import { PageWrapper, FilterPills, NotificationBanner, StatusBadge } from "@/components/common";
 import { theme } from "@/lib/theme";
 

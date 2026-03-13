@@ -1,7 +1,6 @@
 "use client";
 
 import { Input } from "@/components/ui";
-import { theme } from "@/lib/theme";
 
 export interface SearchInputProps {
   value: string;

@@ -103,7 +103,6 @@ export function SecretaryDashboard({ user }: SecretaryDashboardProps) {
           <Card variant="outlined" className="overflow-hidden border-primary/30 bg-primary/5">
             <CardHeader className={`${theme.surface.cardHeader} py-2.5 flex flex-row items-center justify-between`}>
               <span className={theme.sectionTitle}>Visitor alerts</span>
-              <Link href="/visitors" className={`${theme.text.mutedSmall} font-medium text-primary hover:underline`}>View & act</Link>
             </CardHeader>
             <CardContent className="p-0">
               <ul className="divide-y divide-border">
@@ -128,11 +127,6 @@ export function SecretaryDashboard({ user }: SecretaryDashboardProps) {
         <h2 className={`${theme.text.muted} mb-3`}>Quick actions</h2>
         <div className="flex flex-wrap gap-2">
           <Link href="/visitors/invite"><Button size="sm" variant="primary">Invite visitor</Button></Link>
-          <Link href="/visitors"><Button size="sm" variant="secondary">All visitors</Button></Link>
-          <Link href="/checkin"><Button size="sm" variant="secondary">Check-in</Button></Link>
-          <Link href="/checkin/walkin"><Button size="sm" variant="secondary">Walk-in</Button></Link>
-          <Link href="/guard"><Button size="sm" variant="secondary">Guard view</Button></Link>
-          <Link href="/blacklist"><Button size="sm" variant="secondary">Blacklist</Button></Link>
           <Button variant="outline" size="sm" onClick={() => handleExportMuster("daily")}>
             Export muster
           </Button>
@@ -152,7 +146,6 @@ export function SecretaryDashboard({ user }: SecretaryDashboardProps) {
         <Card variant="outlined" className="overflow-hidden">
           <CardHeader className={`${theme.surface.cardHeader} py-3 flex flex-row items-center justify-between`}>
             <span className={theme.sectionTitle}>Pending approvals ({pendingList.length})</span>
-            <Link href="/visitors?status=pending" className={`${theme.text.mutedSmall} text-primary hover:underline`}>View all</Link>
           </CardHeader>
           <CardContent className="p-0">
             {pendingList.length === 0 ? (

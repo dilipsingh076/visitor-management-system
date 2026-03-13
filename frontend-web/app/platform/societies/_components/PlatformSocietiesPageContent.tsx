@@ -100,15 +100,16 @@ export function PlatformSocietiesPageContent() {
             <thead className={theme.table.thead}>
               <tr>
                 <th className={theme.table.th}>Name</th>
+                <th className={theme.table.th}>City</th>
                 <th className={theme.table.th}>Slug</th>
-                <th className={theme.table.th}>Contact</th>
+                <th className={theme.table.th}>Plan</th>
                 <th className={theme.table.th}>Status</th>
               </tr>
             </thead>
             <tbody className={theme.table.tbody}>
               {societies.length === 0 ? (
                 <tr>
-                  <td colSpan={4} className={`${theme.table.td} text-center py-6 ${theme.text.mutedSmall}`}>
+                  <td colSpan={5} className={`${theme.table.td} text-center py-6 ${theme.text.mutedSmall}`}>
                     No societies yet. Create one to get started.
                   </td>
                 </tr>
@@ -116,8 +117,9 @@ export function PlatformSocietiesPageContent() {
                 societies.map((s) => (
                   <tr key={s.id} className={theme.list.rowHoverLight}>
                     <td className={`${theme.table.td} ${theme.text.body} font-medium text-foreground`}>{s.name}</td>
+                    <td className={`${theme.table.td} ${theme.text.mutedSmall}`}>{s.city || "—"}</td>
                     <td className={`${theme.table.td} ${theme.text.mutedSmall} font-mono`}>{s.slug}</td>
-                    <td className={`${theme.table.td} ${theme.text.mutedSmall}`}>{s.contact_email}</td>
+                    <td className={`${theme.table.td} ${theme.text.mutedSmall}`}>{s.plan || "basic"}</td>
                     <td className={theme.table.td}>
                       <StatusBadge status={s.status === "active" ? "checked_in" : "default"} label={s.status} />
                     </td>

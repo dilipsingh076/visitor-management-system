@@ -51,6 +51,11 @@ def is_platform_admin(role: str) -> bool:
     return role == ROLE_PLATFORM_ADMIN
 
 
+def roles_include_platform_admin(roles: List[str]) -> bool:
+    """True if any role in the list is platform_admin."""
+    return ROLE_PLATFORM_ADMIN in roles
+
+
 def is_any_admin(role: str) -> bool:
     """True if role has admin-level access (committee or platform)."""
     return role in ALL_ADMIN_ROLES

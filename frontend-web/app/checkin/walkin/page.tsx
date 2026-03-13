@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { apiClient } from "@/lib/api";
 import { canAccessWalkin } from "@/lib/auth";
@@ -27,7 +27,7 @@ function residentToOption(r: Resident) {
 }
 
 export default function WalkInPage() {
-  const { user, loading: authLoading } = useAuth({
+  const { user } = useAuth({
     requireAuth: true,
     requireRole: canAccessWalkin,
     redirectTo: "/dashboard?message=Guard+or+committee+only",
@@ -35,11 +35,14 @@ export default function WalkInPage() {
   const { data: residents = [], isLoading: residentsLoading } = useResidents();
 
   const [hostId, setHostId] = useState("");
+  const initializedRef = useRef(false);
+  
   useEffect(() => {
-    if (residents.length > 0) {
-      setHostId((prev) => (prev ? prev : residents[0].id));
+    if (residents.length > 0 && !initializedRef.current && !hostId) {
+      initializedRef.current = true;
+      setHostId(residents[0].id);
     }
-  }, [residents]);
+  }, [residents, hostId]);
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [purpose, setPurpose] = useState("");
@@ -135,12 +138,6 @@ export default function WalkInPage() {
             <Button size="sm" onClick={handleRegisterAnother} variant="secondary">
               Register another
             </Button>
-            <Link
-              href="/visitors?status=pending"
-              className={`${theme.text.mutedSmall} text-warning font-medium hover:underline`}
-            >
-              View pending approvals →
-            </Link>
           </div>
         </div>
       ) : (

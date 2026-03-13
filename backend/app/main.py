@@ -13,6 +13,7 @@ import structlog
 
 from app.core.config import settings
 from app.api import auth, visitors, checkin, health, dashboard, residents, blacklist, notifications, societies, buildings, users
+from app.api import admin, admin_subscriptions, admin_complaints, admin_support, admin_settings, society_complaints, society_amenities, society_staff
 
 # Configure structured logging
 logger = structlog.get_logger()
@@ -191,6 +192,16 @@ app.include_router(notifications.router, prefix="/api/v1/notifications", tags=["
 app.include_router(societies.router, prefix="/api/v1/societies", tags=["societies"])
 app.include_router(buildings.router, prefix="/api/v1/buildings", tags=["buildings"])
 app.include_router(users.router, prefix="/api/v1/users", tags=["users"])
+
+# Platform Admin routes
+app.include_router(admin.router, prefix="/api/v1/admin", tags=["platform-admin"])
+app.include_router(admin_subscriptions.router, prefix="/api/v1/admin/subscriptions", tags=["platform-admin-subscriptions"])
+app.include_router(admin_complaints.router, prefix="/api/v1/admin/complaints", tags=["platform-admin-complaints"])
+app.include_router(admin_support.router, prefix="/api/v1/admin/support", tags=["platform-admin-support"])
+app.include_router(society_complaints.router, prefix="/api/v1/society/complaints", tags=["society-complaints"])
+app.include_router(society_amenities.router, prefix="/api/v1/society/amenities", tags=["society-amenities"])
+app.include_router(society_staff.router, prefix="/api/v1/society/staff", tags=["society-staff"])
+app.include_router(admin_settings.router, prefix="/api/v1/admin", tags=["platform-admin-settings"])
 
 
 @app.get("/")

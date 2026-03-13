@@ -80,15 +80,10 @@ export function TreasurerDashboard({ user }: TreasurerDashboardProps) {
         <h2 className={`${theme.text.muted} mb-3`}>Oversight &amp; reports</h2>
         <div className="flex flex-wrap gap-2">
           {showManagement && (
-            <Link href="/admin/users">
-              <Button size="sm" variant="secondary">Manage users</Button>
-            </Link>
+            <Button variant="outline" size="sm" onClick={() => handleExportMuster("daily")}>
+              Export daily muster (CSV)
+            </Button>
           )}
-          <Link href="/visitors"><Button size="sm" variant="secondary">Visitors</Button></Link>
-          <Link href="/blacklist"><Button size="sm" variant="primary">Blacklist</Button></Link>
-          <Button variant="outline" size="sm" onClick={() => handleExportMuster("daily")}>
-            Export muster
-          </Button>
         </div>
       </section>
 
@@ -106,7 +101,6 @@ export function TreasurerDashboard({ user }: TreasurerDashboardProps) {
         <Card variant="outlined" className="overflow-hidden">
           <CardHeader className={`${theme.surface.cardHeader} py-3 flex flex-row items-center justify-between`}>
             <span className={theme.sectionTitle}>Blacklist ({blacklist.length})</span>
-            <Link href="/blacklist" className={`${theme.text.mutedSmall} text-primary hover:underline`}>Manage</Link>
           </CardHeader>
           <CardContent className="p-0">
             {blacklist.length === 0 ? (

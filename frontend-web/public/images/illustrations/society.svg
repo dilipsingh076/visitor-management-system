@@ -1,0 +1,71 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" fill="none">
+  <!-- Sky gradient -->
+  <rect width="400" height="200" fill="url(#skyGrad)"/>
+  
+  <!-- Ground -->
+  <rect y="200" width="400" height="100" fill="#10b981" opacity="0.2"/>
+  
+  <!-- Building 1 (Left) -->
+  <rect x="30" y="80" width="100" height="150" rx="4" fill="#1e293b"/>
+  <rect x="40" y="95" width="25" height="20" rx="2" fill="#fef3c7"/>
+  <rect x="75" y="95" width="25" height="20" rx="2" fill="#334155"/>
+  <rect x="40" y="125" width="25" height="20" rx="2" fill="#334155"/>
+  <rect x="75" y="125" width="25" height="20" rx="2" fill="#fef3c7"/>
+  <rect x="40" y="155" width="25" height="20" rx="2" fill="#fef3c7"/>
+  <rect x="75" y="155" width="25" height="20" rx="2" fill="#334155"/>
+  <rect x="40" y="185" width="25" height="20" rx="2" fill="#334155"/>
+  <rect x="75" y="185" width="25" height="20" rx="2" fill="#fef3c7"/>
+  <rect x="60" y="210" width="40" height="20" rx="2" fill="#0f172a"/>
+  
+  <!-- Building 2 (Center - Main) -->
+  <rect x="150" y="50" width="120" height="180" rx="4" fill="#0f172a"/>
+  <rect x="165" y="65" width="30" height="25" rx="2" fill="#10b981"/>
+  <rect x="205" y="65" width="30" height="25" rx="2" fill="#334155"/>
+  <rect x="165" y="100" width="30" height="25" rx="2" fill="#334155"/>
+  <rect x="205" y="100" width="30" height="25" rx="2" fill="#10b981"/>
+  <rect x="165" y="135" width="30" height="25" rx="2" fill="#10b981"/>
+  <rect x="205" y="135" width="30" height="25" rx="2" fill="#334155"/>
+  <rect x="165" y="170" width="30" height="25" rx="2" fill="#334155"/>
+  <rect x="205" y="170" width="30" height="25" rx="2" fill="#10b981"/>
+  <rect x="190" y="205" width="40" height="25" rx="2" fill="#10b981"/>
+  
+  <!-- Building 3 (Right) -->
+  <rect x="290" y="100" width="80" height="130" rx="4" fill="#1e293b"/>
+  <rect x="300" y="115" width="20" height="15" rx="2" fill="#334155"/>
+  <rect x="330" y="115" width="20" height="15" rx="2" fill="#fef3c7"/>
+  <rect x="300" y="140" width="20" height="15" rx="2" fill="#fef3c7"/>
+  <rect x="330" y="140" width="20" height="15" rx="2" fill="#334155"/>
+  <rect x="300" y="165" width="20" height="15" rx="2" fill="#334155"/>
+  <rect x="330" y="165" width="20" height="15" rx="2" fill="#fef3c7"/>
+  <rect x="300" y="190" width="20" height="15" rx="2" fill="#fef3c7"/>
+  <rect x="330" y="190" width="20" height="15" rx="2" fill="#334155"/>
+  <rect x="315" y="215" width="30" height="15" rx="2" fill="#0f172a"/>
+  
+  <!-- Gate -->
+  <rect x="170" y="250" width="80" height="50" rx="4" fill="#1e293b"/>
+  <rect x="180" y="255" width="25" height="40" rx="2" fill="#334155"/>
+  <rect x="215" y="255" width="25" height="40" rx="2" fill="#334155"/>
+  
+  <!-- Trees -->
+  <circle cx="50" cy="250" r="20" fill="#10b981"/>
+  <rect x="47" y="260" width="6" height="20" fill="#92400e"/>
+  
+  <circle cx="370" cy="250" r="15" fill="#10b981"/>
+  <rect x="368" y="258" width="4" height="15" fill="#92400e"/>
+  
+  <!-- Security booth -->
+  <rect x="255" y="260" width="40" height="30" rx="4" fill="#10b981"/>
+  <rect x="262" y="265" width="15" height="12" rx="2" fill="white"/>
+  <circle cx="287" cy="275" r="5" fill="#fbbf24"/>
+  
+  <!-- Welcome sign -->
+  <rect x="115" y="255" width="50" height="25" rx="4" fill="white"/>
+  <text x="140" y="272" font-size="8" fill="#0f172a" text-anchor="middle" font-weight="bold">WELCOME</text>
+  
+  <defs>
+    <linearGradient id="skyGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#bae6fd"/>
+      <stop offset="100%" stop-color="#e0f2fe"/>
+    </linearGradient>
+  </defs>
+</svg>

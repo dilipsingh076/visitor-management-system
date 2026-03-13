@@ -1,72 +1,131 @@
 /**
- * Download application-relevant placeholder images into public/images.
- * Tries Unsplash Source (keyword-based) first; falls back to Picsum.
- * Run from frontend-web: node scripts/download-images.js
- * See docs/CONTENT-AND-IMAGES-PROMPT.md for image brief and manual/AI alternatives.
+ * Script to download professional images from Unsplash
+ * Run: node scripts/download-images.js
  */
-const fs = require("fs");
-const path = require("path");
-const https = require("https");
-const http = require("http");
+const https = require('https');
+const fs = require('fs');
+const path = require('path');
 
-const PUBLIC_IMAGES = path.join(__dirname, "..", "public", "images");
+const IMAGES_DIR = path.join(__dirname, '..', 'public', 'images', 'website');
 
-const IMAGES = [
-  { file: "hero.jpg", width: 1200, height: 600, keywords: "office,building,reception,lobby,entrance", seed: "vms-hero" },
-  { file: "banner.jpg", width: 1200, height: 400, keywords: "security,gate,guard,reception", seed: "vms-banner" },
-  { file: "building.jpg", width: 800, height: 600, keywords: "corporate,building,office,tower", seed: "vms-building" },
-  { file: "security.jpg", width: 800, height: 500, keywords: "security,guard,reception,desk", seed: "vms-security" },
-  { file: "office.jpg", width: 800, height: 600, keywords: "office,lobby,reception,visitor", seed: "vms-office" },
-  { file: "placeholder-card.jpg", width: 400, height: 300, keywords: "tablet,reception,check-in,visitor", seed: "vms-card" },
+// Ensure directory exists
+if (!fs.existsSync(IMAGES_DIR)) {
+  fs.mkdirSync(IMAGES_DIR, { recursive: true });
+}
+
+// Professional images from Unsplash (direct URLs)
+const images = [
+  {
+    name: 'hero-bg.jpg',
+    // Modern office building with glass facade
+    url: 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=1920&q=80'
+  },
+  {
+    name: 'society.jpg',
+    // Gated residential community
+    url: 'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=1200&q=80'
+  },
+  {
+    name: 'office-lobby.jpg',
+    // Corporate office reception
+    url: 'https://images.unsplash.com/photo-1497366216548-37526070297c?w=1200&q=80'
+  },
+  {
+    name: 'factory.jpg',
+    // Industrial facility
+    url: 'https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?w=1200&q=80'
+  },
+  {
+    name: 'security.jpg',
+    // Security professional
+    url: 'https://images.unsplash.com/photo-1521791055366-0d553872125f?w=1200&q=80'
+  },
+  {
+    name: 'mobile-app.jpg',
+    // Person using smartphone
+    url: 'https://images.unsplash.com/photo-1512941937669-90a1b58e7e9c?w=1200&q=80'
+  },
+  {
+    name: 'dashboard.jpg',
+    // Modern dashboard/analytics
+    url: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=1200&q=80'
+  },
+  {
+    name: 'team-office.jpg',
+    // Team collaboration
+    url: 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=1200&q=80'
+  },
+  {
+    name: 'building-modern.jpg',
+    // Modern architecture
+    url: 'https://images.unsplash.com/photo-1464938050520-ef2571a5d2b9?w=1200&q=80'
+  },
+  {
+    name: 'reception.jpg',
+    // Office reception desk
+    url: 'https://images.unsplash.com/photo-1497366811353-6870744d04b2?w=1200&q=80'
+  },
+  {
+    name: 'qr-scan.jpg',
+    // QR code scanning
+    url: 'https://images.unsplash.com/photo-1595079676339-1534801ad6cf?w=1200&q=80'
+  },
+  {
+    name: 'apartment-building.jpg',
+    // Residential apartment
+    url: 'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=1200&q=80'
+  }
 ];
 
-function download(url, redirectCount = 0) {
-  const maxRedirects = 5;
-  const lib = url.startsWith("https") ? https : http;
+function downloadImage(url, filepath) {
   return new Promise((resolve, reject) => {
-    lib.get(url, (res) => {
-      if (res.statusCode >= 301 && res.statusCode <= 308 && res.headers.location) {
-        if (redirectCount >= maxRedirects) return reject(new Error("Too many redirects"));
-        const next = res.headers.location.startsWith("http") ? res.headers.location : new URL(res.headers.location, url).href;
-        return download(next, redirectCount + 1).then(resolve).catch(reject);
+    const file = fs.createWriteStream(filepath);
+    
+    https.get(url, (response) => {
+      // Handle redirect
+      if (response.statusCode === 301 || response.statusCode === 302) {
+        https.get(response.headers.location, (redirectResponse) => {
+          redirectResponse.pipe(file);
+          file.on('finish', () => {
+            file.close();
+            resolve();
+          });
+        }).on('error', reject);
+      } else {
+        response.pipe(file);
+        file.on('finish', () => {
+          file.close();
+          resolve();
+        });
       }
-      const chunks = [];
-      res.on("data", (chunk) => chunks.push(chunk));
-      res.on("end", () => resolve(Buffer.concat(chunks)));
-      res.on("error", reject);
-    }).on("error", reject);
+    }).on('error', (err) => {
+      fs.unlink(filepath, () => {});
+      reject(err);
+    });
   });
 }
 
-async function main() {
-  if (!fs.existsSync(PUBLIC_IMAGES)) {
-    fs.mkdirSync(PUBLIC_IMAGES, { recursive: true });
-  }
-
-  for (const img of IMAGES) {
-    const filePath = path.join(PUBLIC_IMAGES, img.file);
-    const unsplashUrl = `https://source.unsplash.com/random/${img.width}x${img.height}/?${img.keywords}`;
-    const picsumUrl = `https://picsum.photos/seed/${img.seed}/${img.width}/${img.height}`;
+async function downloadAll() {
+  console.log('Downloading professional images from Unsplash...\n');
+  
+  for (const img of images) {
+    const filepath = path.join(IMAGES_DIR, img.name);
+    
+    if (fs.existsSync(filepath)) {
+      console.log(`✓ ${img.name} (already exists)`);
+      continue;
+    }
+    
     try {
-      let buf = await download(unsplashUrl);
-      if (buf && buf.length > 1000) {
-        fs.writeFileSync(filePath, buf);
-        console.log("Saved (Unsplash):", img.file);
-      } else {
-        throw new Error("Empty or tiny response");
-      }
-    } catch (e) {
-      try {
-        const buf = await download(picsumUrl);
-        fs.writeFileSync(filePath, buf);
-        console.log("Saved (Picsum fallback):", img.file);
-      } catch (e2) {
-        console.warn("Skip", img.file, e.message, "| fallback:", e2.message);
-      }
+      process.stdout.write(`Downloading ${img.name}...`);
+      await downloadImage(img.url, filepath);
+      console.log(' ✓');
+    } catch (err) {
+      console.log(` ✗ Error: ${err.message}`);
     }
   }
-
-  console.log("Done. Images are in public/images/. See docs/CONTENT-AND-IMAGES-PROMPT.md for custom/AI images.");
+  
+  console.log('\nDone! Images saved to public/images/website/');
 }
 
-main();
+downloadAll();

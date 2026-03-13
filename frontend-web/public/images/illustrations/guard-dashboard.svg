@@ -1,0 +1,48 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" fill="none">
+  <!-- Monitor -->
+  <rect x="50" y="30" width="300" height="200" rx="8" fill="#1e293b"/>
+  <rect x="60" y="40" width="280" height="170" rx="4" fill="#0f172a"/>
+  
+  <!-- Stand -->
+  <rect x="175" y="230" width="50" height="20" fill="#334155"/>
+  <rect x="150" y="250" width="100" height="10" rx="4" fill="#334155"/>
+  
+  <!-- Dashboard header -->
+  <rect x="70" y="50" width="260" height="25" rx="4" fill="#1e293b"/>
+  <circle cx="85" cy="62" r="6" fill="#10b981"/>
+  <rect x="100" y="57" width="60" height="10" rx="2" fill="#334155"/>
+  <rect x="280" y="55" width="40" height="15" rx="3" fill="#10b981"/>
+  
+  <!-- Stats cards -->
+  <rect x="70" y="85" width="80" height="50" rx="6" fill="#334155"/>
+  <text x="110" y="105" font-size="18" fill="#10b981" text-anchor="middle" font-weight="bold">24</text>
+  <text x="110" y="125" font-size="8" fill="#94a3b8" text-anchor="middle">Inside</text>
+  
+  <rect x="160" y="85" width="80" height="50" rx="6" fill="#334155"/>
+  <text x="200" y="105" font-size="18" fill="#f59e0b" text-anchor="middle" font-weight="bold">5</text>
+  <text x="200" y="125" font-size="8" fill="#94a3b8" text-anchor="middle">Pending</text>
+  
+  <rect x="250" y="85" width="80" height="50" rx="6" fill="#334155"/>
+  <text x="290" y="105" font-size="18" fill="#3b82f6" text-anchor="middle" font-weight="bold">142</text>
+  <text x="290" y="125" font-size="8" fill="#94a3b8" text-anchor="middle">Today</text>
+  
+  <!-- Visitor list -->
+  <rect x="70" y="145" width="260" height="25" rx="4" fill="#10b981" opacity="0.2"/>
+  <circle cx="85" cy="157" r="8" fill="#10b981"/>
+  <rect x="100" y="152" width="80" height="8" rx="2" fill="#cbd5e1"/>
+  <rect x="280" y="150" width="40" height="15" rx="3" fill="#10b981"/>
+  
+  <rect x="70" y="175" width="260" height="25" rx="4" fill="#334155"/>
+  <circle cx="85" cy="187" r="8" fill="#f59e0b"/>
+  <rect x="100" y="182" width="70" height="8" rx="2" fill="#64748b"/>
+  <rect x="280" y="180" width="40" height="15" rx="3" fill="#f59e0b"/>
+  
+  <!-- Guard character -->
+  <circle cx="370" cy="200" r="25" fill="#1e293b"/>
+  <circle cx="370" cy="195" r="15" fill="#fef3c7"/>
+  <ellipse cx="370" cy="250" rx="20" ry="25" fill="#10b981"/>
+  
+  <!-- Security badge -->
+  <rect x="355" y="238" width="30" height="20" rx="3" fill="#fbbf24"/>
+  <text x="370" y="253" font-size="8" fill="#1e293b" text-anchor="middle" font-weight="bold">ID</text>
+</svg>

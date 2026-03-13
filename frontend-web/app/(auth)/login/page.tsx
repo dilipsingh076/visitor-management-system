@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Alert } from "@/components/ui";
 import { theme } from "@/lib/theme";
-import { login } from "@/lib/auth";
+import { login, getLandingPage } from "@/lib/auth";
 import { useAuthContext } from "@/features/auth";
 import { AuthLayout, LoginForm } from "../_components";
 
@@ -39,7 +39,7 @@ export default function LoginPage() {
     if (result.user) {
       setUser(result.user);
       setLoading(false);
-      router.push("/dashboard");
+      router.push(getLandingPage(result.user));
       return;
     }
     setError("Sign in failed. Please try again.");

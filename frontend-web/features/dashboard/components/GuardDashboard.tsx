@@ -72,17 +72,9 @@ export function GuardDashboard({ user }: GuardDashboardProps) {
         </p>
       </div>
 
-      {/* Quick actions — balanced, not only check-in/walk-in */}
       <section>
-        <h2 className="text-sm font-medium text-muted-foreground mb-3">Quick actions</h2>
+        <h2 className={`${theme.text.muted} mb-3`}>Quick tools</h2>
         <div className="flex flex-wrap gap-2">
-          {QUICK_ACTIONS.map(({ href, label, primary }) => (
-            <Link key={href} href={href}>
-              <Button size="sm" variant={primary ? "primary" : "secondary"}>
-                {label}
-              </Button>
-            </Link>
-          ))}
           <Button variant="outline" size="sm" onClick={() => exportMuster()}>
             Export muster
           </Button>

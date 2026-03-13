@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { canAccessGuardPage } from "@/lib/auth";
 import { useAuth } from "@/features/auth";
 import {
@@ -111,11 +110,6 @@ export function GuardPageContent() {
           >
             Export Muster (CSV)
           </Button>
-          <Link href="/checkin/walkin">
-            <Button variant="primary" size="sm" className="bg-warning hover:bg-warning/90">
-              + Register Walk-in
-            </Button>
-          </Link>
         </div>
       </header>
 
@@ -214,14 +208,7 @@ export function GuardPageContent() {
         </div>
       )}
 
-      <footer className={`mt-5 flex flex-wrap gap-3 text-xs`}>
-        <Link href="/visitors" className={theme.button.link}>
-          View all visitors →
-        </Link>
-        <Link href="/checkin" className={theme.button.link}>
-          Check-in (OTP/QR) →
-        </Link>
-      </footer>
+      {/* Footer navigation is handled by the global header navbar */}
     </PageWrapper>
   );
 }

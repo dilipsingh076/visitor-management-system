@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Alert } from "@/components/ui";
 import { theme } from "@/lib/theme";
-import { registerSociety } from "@/lib/auth";
+import { registerSociety, getLandingPage } from "@/lib/auth";
 import { useAuthContext } from "@/features/auth";
 import {
   AuthLayout,
@@ -121,7 +121,7 @@ export default function RegisterSocietyPage() {
     if (result.user) {
       setUser(result.user);
       setLoading(false);
-      router.push("/dashboard");
+      router.push(getLandingPage(result.user));
       return;
     }
     setError("Registration failed. Please try again.");

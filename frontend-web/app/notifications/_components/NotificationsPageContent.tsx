@@ -73,7 +73,6 @@ export function NotificationsPageContent() {
       <PageHeader
         title="Notifications"
         description="Visitor alerts and society notices."
-        action={<Link href="/dashboard"><Button size="sm" variant="secondary">Back to dashboard</Button></Link>}
       />
 
       {canPostNotice && (

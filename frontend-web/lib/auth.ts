@@ -81,23 +81,38 @@ export function canAccessPlatform(user: User | null): boolean {
   return getPrimaryRole(user) === "platform_admin";
 }
 
+/**
+ * Get the appropriate landing page for a user based on their role.
+ * Platform admins go to /platform, guards to /guard, others to /dashboard.
+ */
+export function getLandingPage(user: User | null): string {
+  const role = getPrimaryRole(user);
+  if (role === "platform_admin") return "/platform";
+  if (role === "guard") return "/guard";
+  return "/dashboard";
+}
+
 export function canInviteVisitor(user: User | null): boolean {
   const role = getPrimaryRole(user);
+  if (role === "platform_admin") return false;
   return role === "resident" || isSocietyAdmin(role);
 }
 
 export function canAccessGuardPage(user: User | null): boolean {
   const role = getPrimaryRole(user);
+  if (role === "platform_admin") return false;
   return role === "guard" || isSocietyAdmin(role);
 }
 
 export function canAccessCheckin(user: User | null): boolean {
   const role = getPrimaryRole(user);
+  if (role === "platform_admin") return false;
   return role === "guard" || isSocietyAdmin(role);
 }
 
 export function canAccessWalkin(user: User | null): boolean {
   const role = getPrimaryRole(user);
+  if (role === "platform_admin") return false;
   return role === "guard" || isSocietyAdmin(role);
 }
 

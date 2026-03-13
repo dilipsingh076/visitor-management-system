@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
 import { canAccessGuardPage } from "@/lib/auth";
 import { useAuth } from "@/features/auth";
 import {
@@ -67,11 +66,6 @@ export function BlacklistPageContent() {
       <PageHeader
         title="Blacklist"
         description="Denied visitors cannot check in or be invited. Add or remove entries (Guard & Committee)."
-        action={
-          <Link href="/dashboard">
-            <Button variant="secondary" size="sm">← Dashboard</Button>
-          </Link>
-        }
       />
       <div className={`mt-4 ${theme.list.card}`}>
         <div className={`p-3 border-b border-border flex items-center justify-between`}>
@@ -113,11 +107,6 @@ export function BlacklistPageContent() {
           )}
         </div>
       </div>
-      <p className={`mt-3 ${theme.text.mutedSmall}`}>
-        <Link href="/guard" className={theme.button.link}>Guard desk</Link>
-        {" · "}
-        <Link href="/visitors" className={theme.button.link}>Visitors</Link>
-      </p>
     </PageWrapper>
   );
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useEffect, useState } from "react";
+import { Suspense, useRef, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { canInviteVisitor } from "@/lib/auth";
 import { useAuth } from "@/features/auth";
@@ -34,16 +34,22 @@ function InviteContent() {
   const inviteMutation = useInviteVisitor();
   const loading = inviteMutation.isPending;
 
+  const initializedRef = useRef(false);
+  
   useEffect(() => {
-    // Prefill from quick-invite (frequent visitors)
+    if (initializedRef.current) return;
+    
     const qpName = searchParams.get("name") ?? "";
     const qpPhone = searchParams.get("phone") ?? "";
     const qpPurpose = searchParams.get("purpose") ?? "";
 
-    setName((prev) => (prev ? prev : qpName));
-    setPhone((prev) => (prev ? prev : qpPhone.replace(/\D/g, "").slice(0, 10)));
-    setPurpose((prev) => (prev ? prev : qpPurpose));
-  }, [searchParams]);
+    if (qpName || qpPhone || qpPurpose) {
+      initializedRef.current = true;
+      if (qpName && !name) setName(qpName);
+      if (qpPhone && !phone) setPhone(qpPhone.replace(/\D/g, "").slice(0, 10));
+      if (qpPurpose && !purpose) setPurpose(qpPurpose);
+    }
+  }, [searchParams, name, phone, purpose]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

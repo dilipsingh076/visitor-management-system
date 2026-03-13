@@ -1,7 +1,32 @@
-export { useAdminUsers, useCreateAdminUser, useUpdateAdminUser } from "./hooks/useAdminUsers";
-export { useUserManagement } from "./hooks/useUserManagement";
-export { adminKeys } from "./hooks/keys";
-export type { UserData } from "./types";
-export type { UseUserManagementReturn } from "./hooks/useUserManagement";
-export { mapUserListItemToUserData, ROLE_OPTIONS } from "./types";
-export { ROLE_BADGE_VARIANTS, COMMITTEE_ROLES, shouldShowFlatForRole } from "./constants";
+/**
+ * Admin feature exports - both society admin and platform admin
+ */
+
+// Types
+export * from "./types";
+
+// Constants
+export * from "./constants";
+
+// Society admin hooks (existing)
+export * from "./hooks/useAdminUsers";
+export * from "./hooks/useUserManagement";
+
+// Platform admin hooks (new)
+export * from "./hooks/usePlatformDashboard";
+export * from "./hooks/usePlatformSocieties";
+export * from "./hooks/usePlatformUsers";
+export * from "./hooks/usePlatformSubscriptions";
+export * from "./hooks/usePlatformComplaints";
+export * from "./hooks/usePlatformSupport";
+export * from "./hooks/usePlatformAuditLogs";
+export * from "./hooks/usePlatformSettings";
+
+// Role options for select dropdowns
+export const ROLE_OPTIONS = [
+  { value: "resident", label: "Resident" },
+  { value: "guard", label: "Security Guard" },
+  { value: "chairman", label: "Chairman" },
+  { value: "secretary", label: "Secretary" },
+  { value: "treasurer", label: "Treasurer" },
+] as const;
