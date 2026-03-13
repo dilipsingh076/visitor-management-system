@@ -27,6 +27,9 @@ export function useCreateSocietyAmenity() {
   return useMutation({
     mutationFn: async (input: AmenityCreateInput): Promise<Amenity> => {
       const res = await apiClient.post<Amenity>(API.societyAmenities.create, input);
+      if (!res.data) {
+        throw new Error("Failed to create amenity");
+      }
       return res.data;
     },
     onSuccess: () => {
@@ -40,6 +43,9 @@ export function useUpdateSocietyAmenity() {
   return useMutation({
     mutationFn: async ({ id, data }: { id: string; data: AmenityUpdateInput }): Promise<Amenity> => {
       const res = await apiClient.patch<Amenity>(API.societyAmenities.update(id), data);
+      if (!res.data) {
+        throw new Error("Failed to update amenity");
+      }
       return res.data;
     },
     onSuccess: () => {

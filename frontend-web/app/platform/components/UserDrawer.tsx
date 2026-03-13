@@ -85,8 +85,8 @@ export function UserDrawer({
     }
     try {
       await resetPasswordMutation.mutateAsync({
-        userId: user.id,
-        newPassword: newPassword.trim(),
+        id: user.id,
+        new_password: newPassword.trim(),
       });
       setShowResetPassword(false);
       setNewPassword("");

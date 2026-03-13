@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api";
 import { Button, Card, CardContent, CardHeader, Badge } from "@/components/ui";
-import { PageWrapper } from "@/components/layout/PageWrapper";
+import { PageWrapper } from "@/components/common/PageWrapper";
 import { useAuthContext } from "@/features/auth";
 import { theme } from "@/lib/theme";
 import {

@@ -11,7 +11,7 @@ import {
   TextareaField,
 } from "../../components";
 import { Building2, Save, X } from "lucide-react";
-import { api } from "@/lib/api";
+import { createSociety } from "@/lib/api";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { adminKeys } from "@/features/admin/hooks/keys";
 
@@ -102,8 +102,20 @@ export default function NewSocietyPage() {
 
   const createMutation = useMutation({
     mutationFn: async (data: SocietyFormData) => {
-      const response = await api.post("/api/v1/societies", data);
-      return response.data;
+      const result = await createSociety({
+        name: data.name,
+        slug: data.slug,
+        address: data.address || undefined,
+        city: data.city,
+        state: data.state,
+        pincode: data.pincode || undefined,
+        country: data.country || undefined,
+        contact_email: data.contact_email,
+        contact_phone: data.contact_phone || undefined,
+        plan: data.plan,
+        status: "active",
+      });
+      return result;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: adminKeys.societies() });

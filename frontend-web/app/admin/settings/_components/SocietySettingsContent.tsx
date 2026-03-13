@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Button, Card, CardContent, CardHeader } from "@/components/ui";
-import { PageWrapper } from "@/components/layout/PageWrapper";
+import { PageWrapper } from "@/components/common/PageWrapper";
 import { theme } from "@/lib/theme";
 import { useAuthContext } from "@/features/auth";
 import {
@@ -116,11 +116,6 @@ export function SocietySettingsContent() {
   const [enableBlacklist, setEnableBlacklist] = useState(true);
   const [logAllActivity, setLogAllActivity] = useState(true);
 
-  const handleChange = (setter: (v: boolean | string) => void, value: boolean | string) => {
-    setter(value);
-    setHasChanges(true);
-  };
-
   const handleSave = async () => {
     setSaving(true);
     // Simulate API call
@@ -136,7 +131,7 @@ export function SocietySettingsContent() {
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
             <h1 className={theme.text.heading2}>Society Settings</h1>
-            <p className={theme.text.subtitle}>Configure your society's visitor management preferences</p>
+            <p className={theme.text.subtitle}>Configure your society&apos;s visitor management preferences</p>
           </div>
           <Button
             size="sm"
@@ -161,7 +156,7 @@ export function SocietySettingsContent() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className={theme.label}>Society Name</label>
-                <p className="text-foreground font-medium">{user?.society_name || "—"}</p>
+                <p className="text-foreground font-medium">{user?.society?.name || "—"}</p>
               </div>
               <div>
                 <label className={theme.label}>Your Role</label>
@@ -186,28 +181,40 @@ export function SocietySettingsContent() {
               label="Walk-in Notifications"
               description="Notify residents when a walk-in visitor arrives for them"
               checked={notifyOnWalkin}
-              onChange={(v) => handleChange(setNotifyOnWalkin, v)}
+              onChange={(v) => {
+                setNotifyOnWalkin(v);
+                setHasChanges(true);
+              }}
               icon={<Bell className="w-4 h-4 text-muted-foreground" />}
             />
             <SettingToggle
               label="Invite Confirmations"
               description="Send confirmation when an invite is created"
               checked={notifyOnInvite}
-              onChange={(v) => handleChange(setNotifyOnInvite, v)}
+              onChange={(v) => {
+                setNotifyOnInvite(v);
+                setHasChanges(true);
+              }}
               icon={<Bell className="w-4 h-4 text-muted-foreground" />}
             />
             <SettingToggle
               label="Checkout Notifications"
               description="Notify when visitors check out"
               checked={notifyOnCheckout}
-              onChange={(v) => handleChange(setNotifyOnCheckout, v)}
+              onChange={(v) => {
+                setNotifyOnCheckout(v);
+                setHasChanges(true);
+              }}
               icon={<Bell className="w-4 h-4 text-muted-foreground" />}
             />
             <SettingToggle
               label="Committee Alerts"
               description="Send alerts to committee members for important events"
               checked={notifyCommittee}
-              onChange={(v) => handleChange(setNotifyCommittee, v)}
+              onChange={(v) => {
+                setNotifyCommittee(v);
+                setHasChanges(true);
+              }}
               icon={<Users className="w-4 h-4 text-muted-foreground" />}
             />
           </CardContent>
@@ -226,21 +233,30 @@ export function SocietySettingsContent() {
               label="Require Approval"
               description="All walk-in visitors require resident/committee approval"
               checked={requireApproval}
-              onChange={(v) => handleChange(setRequireApproval, v)}
+              onChange={(v) => {
+                setRequireApproval(v);
+                setHasChanges(true);
+              }}
               icon={<Shield className="w-4 h-4 text-muted-foreground" />}
             />
             <SettingToggle
               label="Auto-approve Pre-approved Visitors"
               description="Visitors with valid invites are automatically approved"
               checked={autoApprovePreapproved}
-              onChange={(v) => handleChange(setAutoApprovePreapproved, v)}
+              onChange={(v) => {
+                setAutoApprovePreapproved(v);
+                setHasChanges(true);
+              }}
               icon={<Shield className="w-4 h-4 text-muted-foreground" />}
             />
             <SettingToggle
               label="Allow Walk-ins"
               description="Allow visitors without prior invitation"
               checked={allowWalkins}
-              onChange={(v) => handleChange(setAllowWalkins, v)}
+              onChange={(v) => {
+                setAllowWalkins(v);
+                setHasChanges(true);
+              }}
               icon={<Users className="w-4 h-4 text-muted-foreground" />}
             />
             <SettingSelect
@@ -253,7 +269,10 @@ export function SocietySettingsContent() {
                 { value: "12", label: "12 hours" },
                 { value: "24", label: "24 hours" },
               ]}
-              onChange={(v) => handleChange(setVisitorTimeout, v)}
+              onChange={(v) => {
+                setVisitorTimeout(v);
+                setHasChanges(true);
+              }}
               icon={<Clock className="w-4 h-4 text-muted-foreground" />}
             />
           </CardContent>
@@ -272,21 +291,30 @@ export function SocietySettingsContent() {
               label="Require OTP Verification"
               description="Visitors must verify their phone number via OTP"
               checked={requireOTP}
-              onChange={(v) => handleChange(setRequireOTP, v)}
+              onChange={(v) => {
+                setRequireOTP(v);
+                setHasChanges(true);
+              }}
               icon={<Shield className="w-4 h-4 text-muted-foreground" />}
             />
             <SettingToggle
               label="Enable Blacklist"
               description="Block blacklisted visitors from entry"
               checked={enableBlacklist}
-              onChange={(v) => handleChange(setEnableBlacklist, v)}
+              onChange={(v) => {
+                setEnableBlacklist(v);
+                setHasChanges(true);
+              }}
               icon={enableBlacklist ? <Eye className="w-4 h-4 text-muted-foreground" /> : <EyeOff className="w-4 h-4 text-muted-foreground" />}
             />
             <SettingToggle
               label="Log All Activity"
               description="Keep detailed logs of all visitor activity"
               checked={logAllActivity}
-              onChange={(v) => handleChange(setLogAllActivity, v)}
+              onChange={(v) => {
+                setLogAllActivity(v);
+                setHasChanges(true);
+              }}
               icon={<Settings className="w-4 h-4 text-muted-foreground" />}
             />
           </CardContent>

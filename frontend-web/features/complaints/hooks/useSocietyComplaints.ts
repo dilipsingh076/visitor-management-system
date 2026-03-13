@@ -46,7 +46,15 @@ export function useSocietyComplaintsList(params: UseComplaintsListParams = {}) {
 
       const url = `${API.societyComplaints.list}?${queryParams.toString()}`;
       const res = await apiClient.get<ComplaintListResponse>(url);
-      return res.data;
+      return (
+        res.data ?? {
+          items: [],
+          total: 0,
+          page: filters.page ?? 1,
+          page_size: filters.page_size ?? 20,
+          total_pages: 0,
+        }
+      );
     },
     enabled,
   });
@@ -57,7 +65,17 @@ export function useSocietyComplaintStats() {
     queryKey: societyComplaintsKeys.stats(),
     queryFn: async (): Promise<ComplaintStats> => {
       const res = await apiClient.get<ComplaintStats>(API.societyComplaints.stats);
-      return res.data;
+      return (
+        res.data ?? {
+          total: 0,
+          open: 0,
+          in_progress: 0,
+          resolved: 0,
+          escalated: 0,
+          by_category: {},
+          by_priority: {},
+        }
+      );
     },
   });
 }
@@ -67,6 +85,9 @@ export function useSocietyComplaint(id: string | null | undefined) {
     queryKey: societyComplaintsKeys.detail(id ?? ""),
     queryFn: async (): Promise<Complaint> => {
       const res = await apiClient.get<Complaint>(API.societyComplaints.get(id!));
+      if (!res.data) {
+        throw new Error("Complaint not found");
+      }
       return res.data;
     },
     enabled: !!id,
@@ -78,6 +99,9 @@ export function useCreateSocietyComplaint() {
   return useMutation({
     mutationFn: async (input: ComplaintCreateInput): Promise<Complaint> => {
       const res = await apiClient.post<Complaint>(API.societyComplaints.create, input);
+      if (!res.data) {
+        throw new Error("Failed to create complaint");
+      }
       return res.data;
     },
     onSuccess: () => {
@@ -97,6 +121,9 @@ export function useUpdateSocietyComplaint() {
       data: ComplaintUpdateInput;
     }): Promise<Complaint> => {
       const res = await apiClient.patch<Complaint>(API.societyComplaints.update(id), data);
+      if (!res.data) {
+        throw new Error("Failed to update complaint");
+      }
       return res.data;
     },
     onSuccess: () => {
@@ -112,7 +139,7 @@ export function useSocietyComplaintComments(id: string | null | undefined) {
       const res = await apiClient.get<{ items: ComplaintComment[] }>(
         API.societyComplaints.comments(id!)
       );
-      return res.data;
+      return res.data ?? { items: [] };
     },
     enabled: !!id,
   });
@@ -132,6 +159,9 @@ export function useAddSocietyComplaintComment() {
         API.societyComplaints.comments(complaintId),
         { comment }
       );
+      if (!res.data) {
+        throw new Error("Failed to add comment");
+      }
       return res.data;
     },
     onSuccess: (_, variables) => {

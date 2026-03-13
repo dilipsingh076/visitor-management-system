@@ -31,6 +31,9 @@ export function useCreateSocietyStaff() {
   return useMutation({
     mutationFn: async (input: MaintenanceStaffCreateInput): Promise<MaintenanceStaff> => {
       const res = await apiClient.post<MaintenanceStaff>(API.societyStaff.create, input);
+      if (!res.data) {
+        throw new Error("Failed to create staff");
+      }
       return res.data;
     },
     onSuccess: () => {
@@ -50,6 +53,9 @@ export function useUpdateSocietyStaff() {
       data: MaintenanceStaffUpdateInput;
     }): Promise<MaintenanceStaff> => {
       const res = await apiClient.patch<MaintenanceStaff>(API.societyStaff.update(id), data);
+      if (!res.data) {
+        throw new Error("Failed to update staff");
+      }
       return res.data;
     },
     onSuccess: () => {

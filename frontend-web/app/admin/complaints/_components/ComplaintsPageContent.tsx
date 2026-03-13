@@ -9,7 +9,7 @@ import {
 } from "@/features/complaints";
 import { Avatar, Badge, Button, Card, CardContent, CardHeader, StatCard, StatCardSkeleton } from "@/components/ui";
 import { SearchInput } from "@/components/common/SearchInput";
-import { PageWrapper } from "@/components/layout/PageWrapper";
+import { PageWrapper } from "@/components/common/PageWrapper";
 import { theme } from "@/lib/theme";
 import {
   MessageSquare,
@@ -17,7 +17,6 @@ import {
   CheckCircle,
   Clock,
   Plus,
-  X,
   Filter,
   ArrowUp,
 } from "lucide-react";
@@ -157,10 +156,29 @@ export function ComplaintsPageContent() {
             </>
           ) : (
             <>
-              <StatCard label="Total" value={stats?.total ?? 0} icon={() => <MessageSquare className="w-4 h-4" />} />
-              <StatCard label="Open" value={stats?.open ?? 0} variant="warning" icon={() => <Clock className="w-4 h-4" />} />
-              <StatCard label="Escalated" value={stats?.escalated ?? 0} variant="error" icon={() => <AlertTriangle className="w-4 h-4" />} />
-              <StatCard label="Resolved" value={stats?.resolved ?? 0} variant="success" icon={() => <CheckCircle className="w-4 h-4" />} />
+              <StatCard
+                label="Total"
+                value={stats?.total ?? 0}
+                icon={<MessageSquare className="w-4 h-4" />}
+              />
+              <StatCard
+                label="Open"
+                value={stats?.open ?? 0}
+                variant="warning"
+                icon={<Clock className="w-4 h-4" />}
+              />
+              <StatCard
+                label="Escalated"
+                value={stats?.escalated ?? 0}
+                variant="warning"
+                icon={<AlertTriangle className="w-4 h-4" />}
+              />
+              <StatCard
+                label="Resolved"
+                value={stats?.resolved ?? 0}
+                variant="success"
+                icon={<CheckCircle className="w-4 h-4" />}
+              />
             </>
           )}
         </div>
@@ -317,7 +335,7 @@ export function ComplaintsPageContent() {
                       </div>
                       <div className="flex items-center gap-4 mt-3 flex-wrap">
                         <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                          <Avatar name={complaint.filed_by_name || "Unknown"} size="xs" />
+                          <Avatar name={complaint.filed_by_name || "Unknown"} size="sm" />
                           <span>{complaint.filed_by_name || "Unknown"}</span>
                         </div>
                         <span className="text-xs text-muted-foreground">

@@ -205,11 +205,11 @@ export default function PlatformUsersPage() {
                 </TableTd>
                 <TableTd>
                   <div className="flex items-center gap-2">
-                    <Badge variant={user.is_active ? "success" : "error"} dot>
+                    <Badge variant={user.is_active ? "success" : "error"}>
                       {user.is_active ? "Active" : "Blocked"}
                     </Badge>
                     {user.is_verified && (
-                      <Shield className="w-3.5 h-3.5 text-primary" title="Verified" />
+                      <Shield className="w-3.5 h-3.5 text-primary" />
                     )}
                   </div>
                 </TableTd>

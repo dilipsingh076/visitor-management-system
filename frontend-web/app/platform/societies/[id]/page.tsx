@@ -246,11 +246,11 @@ export default function SocietyDetailPage() {
 
       {/* Status Badges */}
       <div className="flex items-center gap-3 flex-wrap">
-        <Badge variant={society.is_active ? "success" : "error"} dot size="lg">
+        <Badge variant={society.is_active ? "success" : "error"}>
           {society.is_active ? "Active" : "Inactive"}
         </Badge>
         {society.plan && (
-          <Badge variant="primary" size="lg">
+          <Badge variant="primary">
             <Shield className="w-3.5 h-3.5 mr-1.5" />
             {society.plan} Plan
           </Badge>
