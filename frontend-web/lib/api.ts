@@ -3,6 +3,7 @@
  * Supports both httpOnly cookie auth and Bearer token fallback.
  */
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api/v1";
+import { refreshAccessToken } from "@/lib/auth";
 
 export interface ApiResponse<T> {
   data?: T;
@@ -44,7 +45,7 @@ class ApiClient {
     const timeoutId = setTimeout(() => controller.abort(), this.defaultTimeout);
 
     try {
-      const response = await fetch(`${this.baseURL}${endpoint}`, {
+      let response = await fetch(`${this.baseURL}${endpoint}`, {
         ...options,
         headers,
         credentials: "include",
@@ -54,14 +55,35 @@ class ApiClient {
       clearTimeout(timeoutId);
 
       if (response.status === 401) {
+        let refreshed = false;
         if (typeof window !== "undefined") {
-          sessionStorage.removeItem("vms_user");
-          localStorage.removeItem("access_token");
+          refreshed = await refreshAccessToken();
         }
-        return { 
-          error: "Session expired. Please login again.",
-          status: 401,
-        };
+        if (refreshed) {
+          const retryToken = typeof window !== "undefined" ? localStorage.getItem("access_token") : null;
+          if (retryToken) {
+            headers["Authorization"] = `Bearer ${retryToken}`;
+          } else {
+            delete headers["Authorization"];
+          }
+          response = await fetch(`${this.baseURL}${endpoint}`, {
+            ...options,
+            headers,
+            credentials: "include",
+            signal: controller.signal,
+          });
+        }
+        if (!refreshed || response.status === 401) {
+          if (typeof window !== "undefined") {
+            sessionStorage.removeItem("vms_user");
+            localStorage.removeItem("access_token");
+            localStorage.removeItem("refresh_token");
+          }
+          return { 
+            error: "Session expired. Please login again.",
+            status: 401,
+          };
+        }
       }
 
       if (response.status === 429) {

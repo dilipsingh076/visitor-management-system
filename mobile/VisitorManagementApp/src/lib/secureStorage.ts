@@ -7,6 +7,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const SERVICE_NAME = 'com.vms.visitor-management';
 const TOKEN_KEY = 'vms_access_token';
+const REFRESH_TOKEN_KEY = 'vms_refresh_token';
 const USER_KEY = 'vms_user_data';
 
 export interface SecureStorageResult {
@@ -81,6 +82,38 @@ export async function removeSecureToken(): Promise<SecureStorageResult> {
   }
 }
 
+export async function setRefreshToken(token: string): Promise<SecureStorageResult> {
+  try {
+    await AsyncStorage.setItem(REFRESH_TOKEN_KEY, token);
+    return { success: true };
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Storage failed',
+    };
+  }
+}
+
+export async function getRefreshToken(): Promise<string | null> {
+  try {
+    return await AsyncStorage.getItem(REFRESH_TOKEN_KEY);
+  } catch {
+    return null;
+  }
+}
+
+export async function removeRefreshToken(): Promise<SecureStorageResult> {
+  try {
+    await AsyncStorage.removeItem(REFRESH_TOKEN_KEY);
+    return { success: true };
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Remove failed',
+    };
+  }
+}
+
 /**
  * Store user data (non-sensitive) in AsyncStorage.
  */
@@ -128,12 +161,13 @@ export async function removeUserData(): Promise<SecureStorageResult> {
  */
 export async function clearAllAuthData(): Promise<SecureStorageResult> {
   const tokenResult = await removeSecureToken();
+  const refreshResult = await removeRefreshToken();
   const userResult = await removeUserData();
 
-  if (!tokenResult.success || !userResult.success) {
+  if (!tokenResult.success || !refreshResult.success || !userResult.success) {
     return {
       success: false,
-      error: tokenResult.error || userResult.error,
+      error: tokenResult.error || refreshResult.error || userResult.error,
     };
   }
 

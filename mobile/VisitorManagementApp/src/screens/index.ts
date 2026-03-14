@@ -2,8 +2,10 @@
  * Screen exports for the mobile app.
  */
 export {default as LoginScreen} from './LoginScreen';
+export {default as ForgotPasswordScreen} from './ForgotPasswordScreen';
 export {default as ResidentDashboard} from './ResidentDashboard';
 export {default as GuardDashboard} from './GuardDashboard';
+export {default as GuardBlacklistScreen} from './GuardBlacklistScreen';
 export {default as CheckInScreen} from './CheckInScreen';
 export {default as VisitorInviteScreen} from './VisitorInviteScreen';
 export {default as DashboardScreen} from './DashboardScreen';

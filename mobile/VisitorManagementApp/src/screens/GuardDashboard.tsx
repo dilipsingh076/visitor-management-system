@@ -3,19 +3,10 @@
  * Optimized for quick check-in operations.
  */
 import React, {useState, useEffect, useCallback} from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  TouchableOpacity,
-  RefreshControl,
-  TextInput,
-  Alert,
-} from 'react-native';
+import {View, StyleSheet, ScrollView, TouchableOpacity, RefreshControl, TextInput, Alert} from 'react-native';
 import {theme} from '../theme';
 import {colors} from '../theme/colors';
-import {Button, Card} from '../components/ui';
+import {Button, Screen, Text} from '../components/ui';
 import {apiClient} from '../config/api';
 import {getCachedUser, User, logout} from '../config/auth';
 
@@ -87,7 +78,7 @@ export default function GuardDashboard({navigation}: GuardDashboardProps) {
     try {
       await apiClient.post(`/checkin/${visitId}`);
       fetchData();
-    } catch (error) {
+    } catch {
       Alert.alert('Error', 'Failed to check in visitor');
     } finally {
       setCheckingIn(null);
@@ -99,7 +90,7 @@ export default function GuardDashboard({navigation}: GuardDashboardProps) {
     try {
       await apiClient.post(`/checkin/${visitId}/checkout`);
       fetchData();
-    } catch (error) {
+    } catch {
       Alert.alert('Error', 'Failed to check out visitor');
     } finally {
       setCheckingIn(null);
@@ -136,72 +127,83 @@ export default function GuardDashboard({navigation}: GuardDashboardProps) {
 
   if (loading) {
     return (
-      <View style={styles.loadingContainer}>
-        <Text style={styles.loadingText}>Loading...</Text>
-      </View>
+      <Screen>
+        <View style={styles.loadingContainer}>
+          <Text muted>Loading...</Text>
+        </View>
+      </Screen>
     );
   }
 
   return (
-    <ScrollView
-      style={styles.container}
-      contentContainerStyle={styles.contentContainer}
-      refreshControl={
-        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-      }
-      showsVerticalScrollIndicator={false}>
-      {/* Header */}
-      <View style={styles.header}>
-        <View style={styles.headerLeft}>
-          <View style={styles.liveIndicator}>
-            <View style={styles.liveDot} />
-            <Text style={styles.liveText}>Live</Text>
+    <Screen>
+      <ScrollView
+        contentContainerStyle={styles.contentContainer}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+        }
+        showsVerticalScrollIndicator={false}>
+        {/* Header */}
+        <View style={styles.header}>
+          <View style={styles.headerLeft}>
+            <View style={styles.liveIndicator}>
+              <View style={styles.liveDot} />
+              <Text style={styles.liveText}>Live</Text>
+            </View>
+            <Text variant="title" style={styles.headerTitle}>
+              Security Desk
+            </Text>
           </View>
-          <Text style={styles.headerTitle}>Security Desk</Text>
+          <TouchableOpacity style={styles.profileButton} onPress={handleLogout}>
+            <Text style={styles.profileInitials}>{getInitials(user?.username)}</Text>
+          </TouchableOpacity>
         </View>
-        <TouchableOpacity style={styles.profileButton} onPress={handleLogout}>
-          <Text style={styles.profileInitials}>
-            {getInitials(user?.username)}
-          </Text>
-        </TouchableOpacity>
-      </View>
 
-      {/* Search Bar */}
-      <View style={styles.searchContainer}>
-        <Text style={styles.searchIcon}>🔍</Text>
-        <TextInput
-          style={styles.searchInput}
-          placeholder="Search name, phone, or flat..."
-          placeholderTextColor={colors.textSecondary}
-          value={searchQuery}
-          onChangeText={setSearchQuery}
-        />
-      </View>
+        {/* Search Bar */}
+        <View style={styles.searchContainer}>
+          <Text style={styles.searchIcon}>🔍</Text>
+          <TextInput
+            style={styles.searchInput}
+            placeholder="Search name, phone, or flat..."
+            placeholderTextColor={colors.textSecondary}
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+          />
+        </View>
 
-      {/* Quick Actions */}
-      <View style={styles.quickActions}>
-        <TouchableOpacity
-          style={styles.actionCard}
-          onPress={() => navigation.navigate('CheckIn')}
-          activeOpacity={0.8}>
-          <View style={[styles.actionIconBg, {backgroundColor: colors.primary}]}>
-            <Text style={styles.actionIcon}>📷</Text>
-          </View>
-          <Text style={styles.actionLabel}>Scan QR / OTP</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={styles.actionCard}
-          onPress={() => navigation.navigate('WalkIn')}
-          activeOpacity={0.8}>
-          <View style={[styles.actionIconBg, {backgroundColor: colors.warning}]}>
-            <Text style={styles.actionIcon}>➕</Text>
-          </View>
-          <Text style={styles.actionLabel}>Walk-in Entry</Text>
-        </TouchableOpacity>
-      </View>
+        {/* Quick Actions */}
+        <View style={styles.quickActions}>
+          <TouchableOpacity
+            style={styles.actionCard}
+            onPress={() => navigation.navigate('QRScanner')}
+            activeOpacity={0.8}>
+            <View style={[styles.actionIconBg, {backgroundColor: colors.primary}]}>
+              <Text style={styles.actionIcon}>📷</Text>
+            </View>
+            <Text style={styles.actionLabel}>Scan QR / OTP</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.actionCard}
+            onPress={() => navigation.navigate('WalkIn')}
+            activeOpacity={0.8}>
+            <View style={[styles.actionIconBg, {backgroundColor: colors.warning}]}>
+              <Text style={styles.actionIcon}>➕</Text>
+            </View>
+            <Text style={styles.actionLabel}>Walk-in Entry</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.actionCard}
+            onPress={() => navigation.navigate('GuardBlacklist')}
+            activeOpacity={0.8}>
+            <View style={[styles.actionIconBg, {backgroundColor: colors.error}]}>
+              <Text style={styles.actionIcon}>🚫</Text>
+            </View>
+            <Text style={styles.actionLabel}>Blacklist</Text>
+          </TouchableOpacity>
+        </View>
 
-      {/* Stats Row */}
-      <View style={styles.statsRow}>
+        {/* Stats Row */}
+        <View style={styles.statsRow}>
         <View style={styles.statItem}>
           <Text style={styles.statValue}>{expectedVisitors.length}</Text>
           <Text style={styles.statLabel}>Expected</Text>
@@ -225,10 +227,10 @@ export default function GuardDashboard({navigation}: GuardDashboardProps) {
           <Text style={styles.statValue}>{stats?.visitors_today ?? 0}</Text>
           <Text style={styles.statLabel}>Total</Text>
         </View>
-      </View>
+        </View>
 
-      {/* Expected Visitors */}
-      <View style={styles.section}>
+        {/* Expected Visitors */}
+        <View style={styles.section}>
         <View style={styles.sectionHeader}>
           <Text style={styles.sectionTitle}>
             Expected Today ({filteredExpected.length})
@@ -271,10 +273,10 @@ export default function GuardDashboard({navigation}: GuardDashboardProps) {
             </Text>
           </View>
         )}
-      </View>
+        </View>
 
-      {/* Currently Inside */}
-      <View style={styles.section}>
+        {/* Currently Inside */}
+        <View style={styles.section}>
         <View style={styles.sectionHeader}>
           <View style={styles.sectionTitleRow}>
             <View style={styles.insideDot} />
@@ -315,18 +317,16 @@ export default function GuardDashboard({navigation}: GuardDashboardProps) {
             <Text style={styles.emptyText}>No visitors inside</Text>
           </View>
         )}
-      </View>
-    </ScrollView>
+        </View>
+      </ScrollView>
+    </Screen>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
   contentContainer: {
-    padding: theme.spacing.lg,
+    paddingHorizontal: theme.spacing.lg,
+    paddingTop: theme.spacing.lg,
     paddingBottom: theme.spacing.xxl,
   },
   loadingContainer: {

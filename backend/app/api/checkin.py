@@ -51,11 +51,24 @@ async def checkin_otp(
         "checkin_otp", request.url.path, request.method,
         {"visit_id": str(visit.id)},
     )
+    await db.refresh(visit, ["visitor", "host"])
+    building_name = None
+    try:
+        if visit.host and getattr(visit.host, "building", None):
+            building_name = getattr(visit.host.building, "name", None)
+    except Exception:
+        building_name = None
     return CheckInResponse(
         visit_id=visit.id,
         status="checked_in",
         checkin_time=visit.actual_arrival or datetime.utcnow(),
         message="Check-in successful",
+        visitor_name=getattr(visit.visitor, "full_name", None) if visit.visitor else None,
+        visitor_phone=getattr(visit.visitor, "phone", None) if visit.visitor else None,
+        purpose=getattr(visit, "purpose", None),
+        host_name=getattr(visit.host, "full_name", None) if visit.host else None,
+        host_flat_number=getattr(visit.host, "flat_number", None) if visit.host else None,
+        building_name=building_name,
     )
 
 
@@ -92,11 +105,24 @@ async def checkin_qr(
         "checkin_qr", request.url.path, request.method,
         {"visit_id": str(visit.id)},
     )
+    await db.refresh(visit, ["visitor", "host"])
+    building_name = None
+    try:
+        if visit.host and getattr(visit.host, "building", None):
+            building_name = getattr(visit.host.building, "name", None)
+    except Exception:
+        building_name = None
     return CheckInResponse(
         visit_id=visit.id,
         status="checked_in",
         checkin_time=visit.actual_arrival or datetime.utcnow(),
         message="Check-in successful",
+        visitor_name=getattr(visit.visitor, "full_name", None) if visit.visitor else None,
+        visitor_phone=getattr(visit.visitor, "phone", None) if visit.visitor else None,
+        purpose=getattr(visit, "purpose", None),
+        host_name=getattr(visit.host, "full_name", None) if visit.host else None,
+        host_flat_number=getattr(visit.host, "flat_number", None) if visit.host else None,
+        building_name=building_name,
     )
 
 

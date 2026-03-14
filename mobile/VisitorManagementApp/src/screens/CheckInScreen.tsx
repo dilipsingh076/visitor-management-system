@@ -20,7 +20,7 @@ import { theme } from '../theme';
 
 const { colors, spacing, borderRadius, shadow, fontSize } = theme;
 
-export default function CheckInScreen() {
+export default function CheckInScreen({navigation}: {navigation: any}) {
   const [otp, setOtp] = useState('');
   const [consent, setConsent] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -51,7 +51,7 @@ export default function CheckInScreen() {
   };
 
   const handleQR = () => {
-    Alert.alert('Coming Soon', 'QR scanner will be available in the next update.');
+    navigation.navigate('QRScanner');
   };
 
   const isValid = otp.length === 6 && consent;
@@ -76,7 +76,7 @@ export default function CheckInScreen() {
                 <Text style={styles.qrIcon}>📷</Text>
               </View>
               <Text style={styles.qrTitle}>Tap to scan</Text>
-              <Text style={styles.qrHint}>QR scanner coming soon</Text>
+              <Text style={styles.qrHint}>Use camera to scan visitor QR</Text>
             </TouchableOpacity>
           </View>
 

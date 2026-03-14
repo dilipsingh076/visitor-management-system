@@ -3,6 +3,7 @@ Database models.
 """
 from app.models.society import Society, Building, Amenity, MaintenanceStaff
 from app.models.user import User
+from app.models.refresh_token import RefreshToken
 from app.models.visitor import Visitor, Visit, ConsentLog, Blacklist
 from app.models.notification import Notification
 from app.models.audit import AuditLog
@@ -17,6 +18,7 @@ __all__ = [
     "Amenity",
     "MaintenanceStaff",
     "User",
+    "RefreshToken",
     "Visitor",
     "Visit",
     "ConsentLog",

@@ -28,3 +28,10 @@ class CheckInResponse(BaseModel):
     checkin_time: datetime
     photo_url: Optional[str] = None
     message: str
+    # Optional details for UI
+    visitor_name: Optional[str] = None
+    visitor_phone: Optional[str] = None
+    purpose: Optional[str] = None
+    host_name: Optional[str] = None
+    host_flat_number: Optional[str] = None
+    building_name: Optional[str] = None

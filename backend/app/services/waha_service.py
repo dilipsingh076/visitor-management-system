@@ -28,9 +28,22 @@ async def send_invite_whatsapp(phone: str, visitor_name: str, otp: str, qr_code:
         return False
 
     chat_id = _normalize_phone(phone)
-    text = f"Visitor pass: {visitor_name}\nYour OTP: {otp}\nValid for 30 minutes."
+
+    # Prefer QR link that opens our shared QR page in the browser.
+    qr_link: Optional[str] = None
     if qr_code:
-        text += f"\nQR code: {qr_code}"
+        base = (settings.FRONTEND_BASE_URL or "").rstrip("/")
+        if base:
+            qr_link = f"{base}/qr/{qr_code}"
+
+    lines = [f"Visitor pass: {visitor_name}"]
+    if qr_link:
+        lines.append(f"Open your QR pass:\n{qr_link}")
+    if otp:
+        lines.append(f"OTP (fallback): {otp}")
+        lines.append("Share this with security if QR is not working.")
+
+    text = "\n\n".join(lines)
 
     payload = {
         "session": "default",

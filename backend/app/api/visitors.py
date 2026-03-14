@@ -75,7 +75,8 @@ async def invite_visitor(
             purpose=visit_data.purpose,
             expected_arrival=visit_data.expected_arrival,
         )
-        await db.refresh(visit, ["visitor"])
+        # Eager-load host & visitor to avoid async lazy-load (MissingGreenlet)
+        await db.refresh(visit, ["visitor", "host"])
 
         await log_admin_action(
             db, current_user_id, current_user,

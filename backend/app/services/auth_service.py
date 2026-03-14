@@ -14,6 +14,7 @@ from app.core.roles import SOCIETY_ADMIN_ROLES
 from app.models.society import Society, Building
 from app.models.user import User
 from app.core.security import hash_password, verify_password, create_access_token
+from app.services.refresh_token_service import issue_refresh_token
 
 log = structlog.get_logger()
 
@@ -84,7 +85,7 @@ async def register_society(
     full_name: str,
     phone: Optional[str] = None,
     flat_number: Optional[str] = None,
-) -> tuple[User, Society, str]:
+) -> tuple[User, Society, str, str]:
     """
     Create society, optional buildings, and first admin user. Returns (user, society, token).
     """
@@ -177,8 +178,10 @@ async def register_society(
         building_id=str(admin.building_id) if admin.building_id else None,
         full_name=admin.full_name,
     )
+    # Issue refresh token
+    refresh_token, _ = await issue_refresh_token(db, admin)
     log.info("register_society service: done")
-    return admin, society, token
+    return admin, society, token, refresh_token
 
 
 async def signup(
@@ -192,7 +195,7 @@ async def signup(
     building_id: Optional[str] = None,
     phone: Optional[str] = None,
     flat_number: Optional[str] = None,
-) -> tuple[User, Society, str]:
+) -> tuple[User, Society, str, str]:
     """
     Create user (guard or resident) in existing society. Returns (user, society, token).
     Rejects role=admin (400).
@@ -253,10 +256,11 @@ async def signup(
         building_id=str(user.building_id) if user.building_id else None,
         full_name=user.full_name,
     )
-    return user, society, token
+    refresh_token, _ = await issue_refresh_token(db, user)
+    return user, society, token, refresh_token
 
 
-async def login(db: AsyncSession, email: str, password: str) -> tuple[User, Optional[Society], str]:
+async def login(db: AsyncSession, email: str, password: str) -> tuple[User, Optional[Society], str, str]:
     """
     Authenticate by email + password. Returns (user, society, token).
     """
@@ -288,4 +292,5 @@ async def login(db: AsyncSession, email: str, password: str) -> tuple[User, Opti
         building_id=str(user.building_id) if user.building_id else None,
         full_name=user.full_name,
     )
-    return user, society, token
+    refresh_token, _ = await issue_refresh_token(db, user)
+    return user, society, token, refresh_token

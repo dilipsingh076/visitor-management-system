@@ -1,14 +1,13 @@
 /**
  * QR Scanner Screen for check-in via QR code.
  */
-import React, {useState, useEffect} from 'react';
+import React, {useState} from 'react';
 import {
   View,
   Text,
   StyleSheet,
   TouchableOpacity,
   Alert,
-  Dimensions,
   StatusBar,
 } from 'react-native';
 import {theme} from '../theme';
@@ -16,43 +15,109 @@ import {colors} from '../theme/colors';
 import {Button} from '../components/ui';
 import QRScanner from '../components/QRScanner';
 import {apiClient} from '../config/api';
+import {API} from '../lib/api/endpoints';
+import {cacheData, getCached} from '../lib/offlineStorage';
 
 interface QRScannerScreenProps {
   navigation: any;
 }
 
-const {width} = Dimensions.get('window');
-const SCANNER_SIZE = width * 0.7;
-
 export default function QRScannerScreen({navigation}: QRScannerScreenProps) {
   const [scanning, setScanning] = useState(true);
   const [processing, setProcessing] = useState(false);
-  const [result, setResult] = useState<{success: boolean; message: string} | null>(null);
+  const [consent, setConsent] = useState(false);
+  const [result, setResult] = useState<{
+    success: boolean;
+    message: string;
+    details?: any;
+  } | null>(null);
+
+  const extractQrCode = (raw: string): {type: 'qr' | 'otp'; value: string} | null => {
+    const s = (raw || '').trim();
+    if (!s) return null;
+
+    // OTP (6 digits)
+    if (/^\d{6}$/.test(s)) {
+      return {type: 'otp', value: s};
+    }
+
+    // JSON payload
+    try {
+      const parsed = JSON.parse(s);
+      const qr = (parsed.qr_code || parsed.code || parsed.qr || parsed.value || '').toString().trim();
+      const otp = (parsed.otp || '').toString().trim();
+      if (otp && /^\d{6}$/.test(otp)) return {type: 'otp', value: otp};
+      if (qr) return {type: 'qr', value: qr};
+    } catch {
+      // ignore
+    }
+
+    // URL like https://.../qr/<code> or ...?code=<code>
+    if (s.startsWith('http://') || s.startsWith('https://')) {
+      try {
+        const u = new URL(s);
+        const q = (u.searchParams.get('code') || '').trim();
+        if (q) return {type: 'qr', value: q};
+        const parts = u.pathname.split('/').filter(Boolean);
+        const idx = parts.findIndex(p => p === 'qr');
+        if (idx >= 0 && parts[idx + 1]) return {type: 'qr', value: decodeURIComponent(parts[idx + 1])};
+      } catch {
+        // ignore
+      }
+    }
+
+    // Fallback: treat as raw QR code string (e.g. VMS-XXXX...)
+    return {type: 'qr', value: s};
+  };
+
+  const storeScan = async (entry: any) => {
+    const existing = (await getCached<any[]>('visits')) || [];
+    const next = [entry, ...existing].slice(0, 100);
+    await cacheData('visits', next);
+  };
 
   const handleScan = async (data: string) => {
     if (processing) return;
+    if (!consent) {
+      Alert.alert(
+        'Consent required',
+        'Please confirm the visitor consent to data collection (DPDP Act 2023) before checking in.',
+      );
+      return;
+    }
 
     setProcessing(true);
     setScanning(false);
 
     try {
-      // Try to parse QR data
-      let visitId = data;
-      
-      // If QR contains JSON, extract visit_id
-      try {
-        const parsed = JSON.parse(data);
-        visitId = parsed.visit_id || parsed.id || data;
-      } catch {
-        // Not JSON, use as-is (might be OTP)
+      const extracted = extractQrCode(data);
+      if (!extracted) {
+        throw new Error('Invalid QR/OTP');
       }
 
-      // Attempt check-in
-      const response = await apiClient.post(`/checkin/${visitId}`);
-      
+      const startedAt = Date.now();
+      const payload =
+        extracted.type === 'otp'
+          ? {otp: extracted.value, consent_given: true}
+          : {qr_code: extracted.value, consent_given: true};
+
+      const endpoint = extracted.type === 'otp' ? API.checkin.otp : API.checkin.qr;
+      const response = await apiClient.post(endpoint, payload);
+      if (response.error || !response.data) {
+        throw new Error(response.error || 'Check-in failed');
+      }
+
+      await storeScan({
+        kind: extracted.type,
+        value: extracted.value,
+        at: startedAt,
+        response: response.data,
+      });
+
       setResult({
         success: true,
-        message: 'Visitor checked in successfully!',
+        message: (response.data as any).message || 'Visitor checked in successfully!',
+        details: response.data,
       });
     } catch (error: any) {
       setResult({
@@ -89,6 +154,33 @@ export default function QRScannerScreen({navigation}: QRScannerScreenProps) {
         </Text>
         <Text style={styles.resultMessage}>{result.message}</Text>
 
+        {result.success && result.details && (
+          <View style={styles.detailsBox}>
+            <Text style={styles.detailsTitle}>Visitor</Text>
+            <Text style={styles.detailsLine}>
+              {(result.details.visitor_name || 'Unknown') as string}
+              {result.details.visitor_phone ? ` • ${result.details.visitor_phone}` : ''}
+            </Text>
+            {!!result.details.purpose && (
+              <Text style={styles.detailsLine}>Purpose: {String(result.details.purpose)}</Text>
+            )}
+            {(result.details.host_name || result.details.host_flat_number || result.details.building_name) && (
+              <>
+                <Text style={[styles.detailsTitle, styles.detailsTitleSpaced]}>Host</Text>
+                <Text style={styles.detailsLine}>
+                  {result.details.host_name ? String(result.details.host_name) : 'Resident'}
+                </Text>
+                {(result.details.building_name || result.details.host_flat_number) && (
+                  <Text style={styles.detailsLine}>
+                    {result.details.building_name ? String(result.details.building_name) : ''}
+                    {result.details.host_flat_number ? ` ${String(result.details.host_flat_number)}` : ''}
+                  </Text>
+                )}
+              </>
+            )}
+          </View>
+        )}
+
         <View style={styles.resultActions}>
           <Button
             title="Scan Another"
@@ -98,6 +190,12 @@ export default function QRScannerScreen({navigation}: QRScannerScreenProps) {
           <Button
             title="Enter OTP Manually"
             onPress={handleManualEntry}
+            variant="secondary"
+            style={styles.resultButton}
+          />
+          <Button
+            title="View Scan History"
+            onPress={() => navigation.navigate('ScanHistory')}
             variant="secondary"
             style={styles.resultButton}
           />
@@ -117,10 +215,22 @@ export default function QRScannerScreen({navigation}: QRScannerScreenProps) {
       <StatusBar barStyle="light-content" />
       
       {scanning ? (
-        <QRScanner
-          onScan={handleScan}
-          onClose={() => navigation.goBack()}
-        />
+        <>
+          <QRScanner onScan={handleScan} onClose={() => navigation.goBack()} />
+          <View style={styles.consentOverlay}>
+            <TouchableOpacity
+              style={styles.consentRow}
+              onPress={() => setConsent(!consent)}
+              activeOpacity={0.8}>
+              <View style={[styles.checkbox, consent && styles.checkboxChecked]}>
+                {consent && <Text style={styles.checkmark}>✓</Text>}
+              </View>
+              <Text style={styles.consentText}>
+                Visitor consented to data collection (DPDP Act 2023)
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </>
       ) : (
         <View style={styles.processingContainer}>
           <Text style={styles.processingText}>Processing...</Text>
@@ -209,5 +319,65 @@ const styles = StyleSheet.create({
   },
   resultButton: {
     width: '100%',
+  },
+  detailsBox: {
+    width: '100%',
+    backgroundColor: colors.card,
+    borderRadius: theme.borderRadius.md,
+    padding: theme.spacing.lg,
+    borderWidth: 1,
+    borderColor: colors.border,
+    marginBottom: theme.spacing.lg,
+  },
+  detailsTitle: {
+    fontSize: theme.fontSize.md,
+    fontWeight: '700',
+    color: colors.text,
+    marginBottom: 6,
+  },
+  detailsTitleSpaced: {
+    marginTop: 10,
+  },
+  detailsLine: {
+    fontSize: theme.fontSize.md,
+    color: colors.textSecondary,
+    marginBottom: 4,
+  },
+  consentOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    paddingTop: theme.spacing.xl,
+    paddingHorizontal: theme.spacing.lg,
+  },
+  consentRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0,0,0,0.55)',
+    paddingVertical: theme.spacing.sm,
+    paddingHorizontal: theme.spacing.md,
+    borderRadius: theme.borderRadius.md,
+  },
+  checkbox: {
+    width: 22,
+    height: 22,
+    borderRadius: 6,
+    borderWidth: 2,
+    borderColor: 'rgba(255,255,255,0.5)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: theme.spacing.md,
+  },
+  checkboxChecked: {
+    backgroundColor: colors.primary,
+    borderColor: colors.primary,
+  },
+  checkmark: {color: '#fff', fontSize: 14, fontWeight: '700'},
+  consentText: {
+    flex: 1,
+    color: '#FFFFFF',
+    fontSize: theme.fontSize.sm,
+    fontWeight: '600',
   },
 });

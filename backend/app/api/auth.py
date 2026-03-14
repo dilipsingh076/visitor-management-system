@@ -1,22 +1,24 @@
 """
 Authentication endpoints: login, signup, register-society, me, logout.
 """
+import hashlib
 import structlog
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Request
 from fastapi.responses import JSONResponse
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.dependencies import get_current_user, get_db
 from app.models.society import Society
-from app.models.user import User
-from app.schemas.auth import LoginRequest, SignupRequest, RegisterSocietyRequest
+from app.schemas.auth import LoginRequest, SignupRequest, RegisterSocietyRequest, RefreshTokenRequest
 from app.services.auth_service import (
     login as auth_login,
     signup as auth_signup,
     register_society as auth_register_society,
     _user_to_response,
 )
+from app.services.refresh_token_service import rotate_refresh_token, revoke_all_for_user
+from app.core.security import create_access_token
 
 router = APIRouter()
 
@@ -35,9 +37,9 @@ def _primary_role(roles: list) -> str:
 
 @router.post("/login")
 async def login(body: LoginRequest, db: AsyncSession = Depends(get_db)):
-    """Login with email and password. Returns user, society, access_token."""
+    """Login with email and password. Returns user, society, access_token, refresh_token."""
     try:
-        user, society, token = await auth_login(db, body.email, body.password)
+        user, society, token, refresh_token = await auth_login(db, body.email, body.password)
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=str(e))
     user_data = _user_to_response(user, society)
@@ -46,6 +48,7 @@ async def login(body: LoginRequest, db: AsyncSession = Depends(get_db)):
             "user": user_data,
             "society": {"id": str(society.id), "slug": society.slug, "name": society.name} if society else None,
             "access_token": token,
+            "refresh_token": refresh_token,
             "token_type": "bearer",
         }
     )
@@ -55,7 +58,7 @@ async def login(body: LoginRequest, db: AsyncSession = Depends(get_db)):
 async def signup(body: SignupRequest, db: AsyncSession = Depends(get_db)):
     """Sign up as guard or resident in an existing society (by society code/slug)."""
     try:
-        user, society, token = await auth_signup(
+        user, society, token, refresh_token = await auth_signup(
             db,
             email=body.email,
             password=body.password,
@@ -74,6 +77,7 @@ async def signup(body: SignupRequest, db: AsyncSession = Depends(get_db)):
             "user": user_data,
             "society": {"id": str(society.id), "slug": society.slug, "name": society.name},
             "access_token": token,
+            "refresh_token": refresh_token,
             "token_type": "bearer",
         }
     )
@@ -102,7 +106,7 @@ async def register_society(body: RegisterSocietyRequest, db: AsyncSession = Depe
         )
     log.info("register_society: calling auth_register_society", buildings_count=len(buildings))
     try:
-        user, society, token = await auth_register_society(
+        user, society, token, refresh_token = await auth_register_society(
             db,
             society_name=body.society_name,
             society_slug=body.society_slug,
@@ -165,6 +169,7 @@ async def register_society(body: RegisterSocietyRequest, db: AsyncSession = Depe
             "user": user_data,
             "society": {"id": str(society.id), "slug": society.slug, "name": society.name},
             "access_token": token,
+            "refresh_token": refresh_token,
             "token_type": "bearer",
         },
     )
@@ -213,8 +218,61 @@ async def get_current_user_info(current_user: dict = Depends(get_current_user), 
 
 
 @router.post("/logout")
-async def logout(current_user: dict = Depends(get_current_user)):
+async def logout(current_user: dict = Depends(get_current_user), db: AsyncSession = Depends(get_db)):
     """
     Logout endpoint (client should discard token).
     """
+    # Revoke all refresh tokens for this user (local-auth only).
+    user_id = current_user.get("sub") or current_user.get("user_id")
+    if user_id:
+        from uuid import UUID
+        try:
+            result = await db.execute(select(User).where(User.id == UUID(user_id)))
+            user = result.scalar_one_or_none()
+            if user:
+                await revoke_all_for_user(db, user)
+        except Exception:
+            # Best-effort; do not fail logout on DB issues
+            pass
     return JSONResponse(content={"message": "Logged out successfully"})
+
+
+@router.post("/refresh")
+async def refresh_token(body: RefreshTokenRequest, db: AsyncSession = Depends(get_db), request: Request = None):
+    """
+    Exchange a refresh token for a new access token (and rotated refresh token).
+    """
+    token = (body.refresh_token or "").strip()
+    if not token:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="refresh_token is required")
+
+    token_hash = hashlib.sha256(token.encode("utf-8")).hexdigest()
+    user_agent = request.headers.get("user-agent") if request else None
+    ip_address = request.client.host if request and request.client else None
+
+    user, new_refresh = await rotate_refresh_token(
+        db,
+        token_hash,
+        user_agent=user_agent,
+        ip_address=ip_address,
+    )
+    if not user or not new_refresh:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid or expired refresh token")
+
+    # New access token based on current user roles/society
+    roles = _user_to_response(user).get("roles", [])
+    access = create_access_token(
+        user_id=str(user.id),
+        email=user.email,
+        roles=roles,
+        society_id=str(user.society_id) if user.society_id else None,
+        building_id=str(user.building_id) if user.building_id else None,
+        full_name=user.full_name,
+    )
+    return JSONResponse(
+        content={
+            "access_token": access,
+            "refresh_token": new_refresh,
+            "token_type": "bearer",
+        }
+    )

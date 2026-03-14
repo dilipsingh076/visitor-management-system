@@ -12,7 +12,7 @@ import {
 } from 'react-native';
 import { theme } from '../theme';
 
-const { colors, spacing, borderRadius, shadow, fontSize } = theme;
+const { colors, spacing, borderRadius, fontSize } = theme;
 
 interface HomeScreenProps {
   navigation: { navigate: (screen: string) => void };

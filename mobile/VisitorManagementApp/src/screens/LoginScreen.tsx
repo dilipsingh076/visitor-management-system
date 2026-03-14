@@ -3,17 +3,8 @@
  * Supports signup, login, and demo login.
  */
 import React, {useState} from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  KeyboardAvoidingView,
-  Platform,
-  ScrollView,
-  TouchableOpacity,
-  TextInput,
-} from 'react-native';
-import {Input, Button} from '../components/ui';
+import {View, StyleSheet, KeyboardAvoidingView, Platform, ScrollView, TouchableOpacity} from 'react-native';
+import {Input, Button, Screen, Text} from '../components/ui';
 import {theme} from '../theme';
 import {colors} from '../theme/colors';
 import {login, signup, demoLogin, authConfig} from '../config/auth';
@@ -35,6 +26,7 @@ export default function LoginScreen({navigation}: LoginScreenProps) {
   const [fullName, setFullName] = useState('');
   const [phone, setPhone] = useState('');
   const [flatNumber, setFlatNumber] = useState('');
+  const [societyCode, setSocietyCode] = useState('');
   const [selectedRole, setSelectedRole] = useState('resident');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -68,6 +60,10 @@ export default function LoginScreen({navigation}: LoginScreenProps) {
         setError('Please enter your full name');
         return;
       }
+      if (!societyCode.trim()) {
+        setError('Please enter your society code');
+        return;
+      }
     }
 
     setError('');
@@ -81,9 +77,10 @@ export default function LoginScreen({navigation}: LoginScreenProps) {
           email: email.trim(),
           password,
           full_name: fullName.trim(),
+          society_slug: societyCode.trim(),
+          role: selectedRole as 'guard' | 'resident',
           phone: phone.trim() || undefined,
           flat_number: flatNumber.trim() || undefined,
-          role: selectedRole,
         });
       } else {
         result = await login(email.trim(), password);
@@ -101,19 +98,19 @@ export default function LoginScreen({navigation}: LoginScreenProps) {
           routes: [{name: 'Main'}],
         });
       }
-    } catch (err) {
+    } catch {
       setError(isSignup ? 'Signup failed. Please try again.' : 'Login failed. Please try again.');
     } finally {
       setLoading(false);
     }
   };
 
-  const handleDemoLogin = async (role: string) => {
+  const handleDemoLogin = async () => {
     setError('');
     setLoading(true);
 
     try {
-      const result = await demoLogin(`demo-${role}@example.com`, role);
+      const result = await demoLogin();
 
       if (result.error) {
         setError(result.error);
@@ -127,7 +124,7 @@ export default function LoginScreen({navigation}: LoginScreenProps) {
           routes: [{name: 'Main'}],
         });
       }
-    } catch (err) {
+    } catch {
       setError('Demo login failed. Please try again.');
     } finally {
       setLoading(false);
@@ -135,46 +132,57 @@ export default function LoginScreen({navigation}: LoginScreenProps) {
   };
 
   return (
-    <KeyboardAvoidingView
-      style={styles.container}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-      <ScrollView
-        contentContainerStyle={styles.scrollContent}
-        keyboardShouldPersistTaps="handled"
-        showsVerticalScrollIndicator={false}>
-        {/* Header with friendly visual */}
-        <View style={styles.header}>
-          <View style={styles.logoWrapper}>
-            <View style={styles.logoContainer}>
-              <Text style={styles.logoEmoji}>🛡️</Text>
-              <Text style={styles.logoText}>VMS</Text>
+    <Screen>
+      <KeyboardAvoidingView
+        style={styles.container}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+        <ScrollView
+          contentContainerStyle={styles.scrollContent}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}>
+          {/* Header with friendly visual */}
+          <View style={styles.header}>
+            <View style={styles.logoWrapper}>
+              <View style={styles.logoContainer}>
+                <Text style={styles.logoEmoji}>🛡️</Text>
+                <Text style={styles.logoText}>VMS</Text>
+              </View>
             </View>
+            <Text variant="title" style={styles.title}>
+              {isSignup ? 'Create Account' : 'Welcome Back'}
+            </Text>
+            <Text variant="subtitle" style={styles.subtitle}>
+              {isSignup ? 'Join your society and manage visitors' : 'Sign in to your society account'}
+            </Text>
           </View>
-          <Text style={styles.title}>{isSignup ? 'Create Account' : 'Welcome Back'}</Text>
-          <Text style={styles.subtitle}>
-            {isSignup ? 'Join your society and manage visitors' : 'Sign in to your society account'}
-          </Text>
-        </View>
 
-        {/* Tab Switcher */}
-        <View style={styles.tabContainer}>
-          <TouchableOpacity
-            style={[styles.tab, !isSignup && styles.tabActive]}
-            onPress={() => { setIsSignup(false); setError(''); }}>
-            <Text style={[styles.tabText, !isSignup && styles.tabTextActive]}>Sign In</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.tab, isSignup && styles.tabActive]}
-            onPress={() => { setIsSignup(true); setError(''); }}>
-            <Text style={[styles.tabText, isSignup && styles.tabTextActive]}>Sign Up</Text>
-          </TouchableOpacity>
-        </View>
+          {/* Tab Switcher */}
+          <View style={styles.tabContainer}>
+            <TouchableOpacity
+              style={[styles.tab, !isSignup && styles.tabActive]}
+              onPress={() => {
+                setIsSignup(false);
+                setError('');
+              }}>
+              <Text style={[styles.tabText, !isSignup && styles.tabTextActive]}>Sign In</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.tab, isSignup && styles.tabActive]}
+              onPress={() => {
+                setIsSignup(true);
+                setError('');
+              }}>
+              <Text style={[styles.tabText, isSignup && styles.tabTextActive]}>Sign Up</Text>
+            </TouchableOpacity>
+          </View>
 
-        {/* Form */}
-        <View style={styles.form}>
+          {/* Form */}
+          <View style={styles.form}>
           {isSignup && (
             <>
-              <Text style={styles.label}>Full Name *</Text>
+              <Text variant="label" style={styles.label}>
+                Full Name *
+              </Text>
               <Input
                 placeholder="John Doe"
                 value={fullName}
@@ -185,7 +193,9 @@ export default function LoginScreen({navigation}: LoginScreenProps) {
                 autoCapitalize="words"
               />
 
-              <Text style={[styles.label, {marginTop: theme.spacing.md}]}>I am a *</Text>
+              <Text variant="label" style={[styles.label, {marginTop: theme.spacing.md}]}>
+                I am a *
+              </Text>
               <View style={styles.roleRow}>
                 {ROLES.map((role) => (
                   <TouchableOpacity
@@ -209,7 +219,9 @@ export default function LoginScreen({navigation}: LoginScreenProps) {
             </>
           )}
 
-          <Text style={[styles.label, isSignup && {marginTop: theme.spacing.md}]}>Email *</Text>
+          <Text variant="label" style={[styles.label, isSignup && {marginTop: theme.spacing.md}]}>
+            Email *
+          </Text>
           <Input
             placeholder="you@example.com"
             value={email}
@@ -222,7 +234,9 @@ export default function LoginScreen({navigation}: LoginScreenProps) {
             autoCorrect={false}
           />
 
-          <Text style={[styles.label, {marginTop: theme.spacing.md}]}>Password *</Text>
+          <Text variant="label" style={[styles.label, {marginTop: theme.spacing.md}]}>
+            Password *
+          </Text>
           <Input
             placeholder="••••••••"
             value={password}
@@ -232,13 +246,26 @@ export default function LoginScreen({navigation}: LoginScreenProps) {
             }}
             secureTextEntry
           />
+          {!isSignup && (
+            <TouchableOpacity
+              style={styles.forgotPasswordLink}
+              onPress={() => navigation.navigate('ForgotPassword')}>
+              <Text variant="caption" style={styles.forgotPasswordText}>
+                Forgot password?
+              </Text>
+            </TouchableOpacity>
+          )}
           {isSignup && (
-            <Text style={styles.hint}>Minimum 6 characters</Text>
+            <Text variant="caption" muted style={styles.hint}>
+              Minimum 6 characters
+            </Text>
           )}
 
           {isSignup && (
             <>
-              <Text style={[styles.label, {marginTop: theme.spacing.md}]}>Confirm Password *</Text>
+              <Text variant="label" style={[styles.label, {marginTop: theme.spacing.md}]}>
+                Confirm Password *
+              </Text>
               <Input
                 placeholder="••••••••"
                 value={confirmPassword}
@@ -251,7 +278,9 @@ export default function LoginScreen({navigation}: LoginScreenProps) {
 
               <View style={styles.twoColumn}>
                 <View style={styles.column}>
-                  <Text style={[styles.label, {marginTop: theme.spacing.md}]}>Phone</Text>
+                  <Text variant="label" style={[styles.label, {marginTop: theme.spacing.md}]}>
+                    Phone
+                  </Text>
                   <Input
                     placeholder="1234567890"
                     value={phone}
@@ -260,7 +289,9 @@ export default function LoginScreen({navigation}: LoginScreenProps) {
                   />
                 </View>
                 <View style={styles.column}>
-                  <Text style={[styles.label, {marginTop: theme.spacing.md}]}>Flat/Unit</Text>
+                  <Text variant="label" style={[styles.label, {marginTop: theme.spacing.md}]}>
+                    Flat/Unit
+                  </Text>
                   <Input
                     placeholder="A-101"
                     value={flatNumber}
@@ -268,13 +299,28 @@ export default function LoginScreen({navigation}: LoginScreenProps) {
                   />
                 </View>
               </View>
+
+              <Text variant="label" style={[styles.label, {marginTop: theme.spacing.md}]}>
+                Society Code *
+              </Text>
+              <Input
+                placeholder="society-code provided by admin"
+                value={societyCode}
+                onChangeText={text => {
+                  setSocietyCode(text);
+                  setError('');
+                }}
+                autoCapitalize="none"
+              />
             </>
           )}
 
           {/* Error Message */}
           {error ? (
             <View style={styles.errorContainer}>
-              <Text style={styles.errorText}>{error}</Text>
+              <Text variant="body" style={styles.errorText}>
+                {error}
+              </Text>
             </View>
           ) : null}
 
@@ -295,49 +341,46 @@ export default function LoginScreen({navigation}: LoginScreenProps) {
             <>
               <View style={styles.divider}>
                 <View style={styles.dividerLine} />
-                <Text style={styles.dividerText}>Or try demo</Text>
+                <Text variant="caption" muted style={styles.dividerText}>
+                  Or try demo
+                </Text>
                 <View style={styles.dividerLine} />
               </View>
 
               <View style={styles.demoButtons}>
                 <TouchableOpacity
                   style={styles.demoButton}
-                  onPress={() => handleDemoLogin('resident')}
+                  onPress={handleDemoLogin}
                   disabled={loading}>
                   <Text style={styles.demoButtonText}>🏠 Resident</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
                   style={styles.demoButton}
-                  onPress={() => handleDemoLogin('guard')}
+                  onPress={handleDemoLogin}
                   disabled={loading}>
                   <Text style={styles.demoButtonText}>👮 Guard</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={styles.demoButton}
-                  onPress={() => handleDemoLogin('admin')}
-                  disabled={loading}>
-                  <Text style={styles.demoButtonText}>👑 Admin</Text>
                 </TouchableOpacity>
               </View>
             </>
           )}
         </View>
 
-        {/* Footer */}
-        <View style={styles.footer}>
-          <Text style={styles.footerText}>
-            By signing in, you agree to our Terms of Service
-          </Text>
-        </View>
-      </ScrollView>
-    </KeyboardAvoidingView>
+          {/* Footer */}
+          <View style={styles.footer}>
+            <Text variant="caption" muted style={styles.footerText}>
+              By signing in, you agree to our Terms of Service
+            </Text>
+          </View>
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </Screen>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background,
+    backgroundColor: 'transparent',
   },
   scrollContent: {
     flexGrow: 1,
@@ -376,12 +419,12 @@ const styles = StyleSheet.create({
   title: {
     fontSize: theme.fontSize.xl,
     fontWeight: '700',
-    color: colors.text,
+    color: colors.foreground,
     marginBottom: theme.spacing.xs,
   },
   subtitle: {
     fontSize: theme.fontSize.sm,
-    color: colors.textSecondary,
+    color: colors.muted,
   },
   tabContainer: {
     flexDirection: 'row',
@@ -404,7 +447,7 @@ const styles = StyleSheet.create({
   tabText: {
     fontSize: theme.fontSize.sm,
     fontWeight: '600',
-    color: colors.textSecondary,
+    color: colors.muted,
   },
   tabTextActive: {
     color: '#FFFFFF',
@@ -415,12 +458,12 @@ const styles = StyleSheet.create({
   label: {
     fontSize: theme.fontSize.sm,
     fontWeight: '600',
-    color: colors.text,
+    color: colors.foreground,
     marginBottom: theme.spacing.xs,
   },
   hint: {
     fontSize: theme.fontSize.xs,
-    color: colors.textSecondary,
+    color: colors.muted,
     marginTop: 4,
   },
   roleRow: {
@@ -450,7 +493,7 @@ const styles = StyleSheet.create({
   roleChipText: {
     fontSize: theme.fontSize.sm,
     fontWeight: '600',
-    color: colors.text,
+    color: colors.foreground,
   },
   roleChipTextSelected: {
     color: colors.primary,
@@ -489,7 +532,7 @@ const styles = StyleSheet.create({
   dividerText: {
     paddingHorizontal: theme.spacing.md,
     fontSize: theme.fontSize.sm,
-    color: colors.textSecondary,
+    color: colors.muted,
   },
   demoButtons: {
     flexDirection: 'row',
@@ -508,7 +551,7 @@ const styles = StyleSheet.create({
   demoButtonText: {
     fontSize: theme.fontSize.xs,
     fontWeight: '600',
-    color: colors.text,
+    color: colors.foreground,
   },
   footer: {
     marginTop: theme.spacing.lg,
@@ -516,7 +559,16 @@ const styles = StyleSheet.create({
   },
   footerText: {
     fontSize: theme.fontSize.xs,
-    color: colors.textSecondary,
+    color: colors.muted,
     textAlign: 'center',
+  },
+  forgotPasswordLink: {
+    alignSelf: 'flex-end',
+    marginTop: theme.spacing.xs,
+  },
+  forgotPasswordText: {
+    fontSize: theme.fontSize.xs,
+    color: colors.primary,
+    fontWeight: '600',
   },
 });

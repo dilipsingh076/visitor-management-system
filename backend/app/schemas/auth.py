@@ -93,3 +93,7 @@ class RegisterSocietyRequest(BaseModel):
     @classmethod
     def optional_str_to_none(cls, v):
         return _coerce_optional_str(v)
+
+
+class RefreshTokenRequest(BaseModel):
+    refresh_token: str

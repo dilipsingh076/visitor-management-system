@@ -3,18 +3,10 @@
  * Shows pending approvals, quick actions, and visitor stats.
  */
 import React, {useState, useEffect, useCallback} from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  TouchableOpacity,
-  RefreshControl,
-  Alert,
-} from 'react-native';
+import {View, StyleSheet, ScrollView, TouchableOpacity, RefreshControl, Alert} from 'react-native';
 import {theme} from '../theme';
 import {colors} from '../theme/colors';
-import {Button, Card} from '../components/ui';
+import {Card, Screen, Text} from '../components/ui';
 import {apiClient} from '../config/api';
 import {getCachedUser, User, logout} from '../config/auth';
 
@@ -80,7 +72,7 @@ export default function ResidentDashboard({navigation}: ResidentDashboardProps) 
       if (stats) {
         setStats({...stats, pending_approvals: stats.pending_approvals - 1});
       }
-    } catch (error) {
+    } catch {
       Alert.alert('Error', 'Failed to approve visitor');
     } finally {
       setApproving(null);
@@ -95,7 +87,7 @@ export default function ResidentDashboard({navigation}: ResidentDashboardProps) 
       if (stats) {
         setStats({...stats, pending_approvals: stats.pending_approvals - 1});
       }
-    } catch (error) {
+    } catch {
       Alert.alert('Error', 'Failed to reject visitor');
     } finally {
       setApproving(null);
@@ -132,146 +124,162 @@ export default function ResidentDashboard({navigation}: ResidentDashboardProps) 
 
   if (loading) {
     return (
-      <View style={styles.loadingContainer}>
-        <Text style={styles.loadingText}>Loading...</Text>
-      </View>
+      <Screen>
+        <View style={styles.loadingContainer}>
+          <Text variant="body" muted>
+            Loading...
+          </Text>
+        </View>
+      </Screen>
     );
   }
 
   return (
-    <ScrollView
-      style={styles.container}
-      contentContainerStyle={styles.contentContainer}
-      refreshControl={
-        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-      }
-      showsVerticalScrollIndicator={false}>
-      {/* Header */}
-      <View style={styles.header}>
-        <View>
-          <Text style={styles.greeting}>{getGreeting()} 👋</Text>
-          <Text style={styles.userName}>{user?.username || 'Resident'}</Text>
-        </View>
-        <TouchableOpacity style={styles.profileButton} onPress={handleLogout}>
-          <Text style={styles.profileInitials}>
-            {getInitials(user?.username)}
-          </Text>
-        </TouchableOpacity>
-      </View>
-
-      {/* Quick Actions */}
-      <View style={styles.quickActions}>
-        <TouchableOpacity
-          style={[styles.actionCard, styles.actionCardPrimary]}
-          onPress={() => navigation.navigate('VisitorInvite')}
-          activeOpacity={0.8}>
-          <Text style={styles.actionIcon}>➕</Text>
-          <Text style={styles.actionLabel}>Invite Visitor</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={styles.actionCard}
-          onPress={() => navigation.navigate('MyVisitors')}
-          activeOpacity={0.8}>
-          <Text style={styles.actionIcon}>👥</Text>
-          <Text style={[styles.actionLabel, {color: colors.text}]}>My Visitors</Text>
-        </TouchableOpacity>
-      </View>
-
-      {/* Pending Approvals or friendly empty state */}
-      {pendingApprovals.length > 0 ? (
-        <View style={styles.section}>
-          <View style={styles.alertHeader}>
-            <Text style={styles.alertIcon}>🔔</Text>
-            <Text style={styles.alertTitle}>
-              {pendingApprovals.length} Pending Approval{pendingApprovals.length > 1 ? 's' : ''}
+    <Screen>
+      <ScrollView
+        contentContainerStyle={styles.contentContainer}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+        }
+        showsVerticalScrollIndicator={false}>
+        {/* Header */}
+        <View style={styles.header}>
+          <View>
+            <Text muted style={styles.greeting}>
+              {getGreeting()} 👋
+            </Text>
+            <Text variant="title" style={styles.userName}>
+              {user?.username || 'Resident'}
             </Text>
           </View>
-          <Text style={styles.alertSubtitle}>
-            Walk-in visitors waiting for your approval
-          </Text>
+          <TouchableOpacity style={styles.profileButton} onPress={handleLogout}>
+            <Text style={styles.profileInitials}>{getInitials(user?.username)}</Text>
+          </TouchableOpacity>
+        </View>
 
-          {pendingApprovals.slice(0, 3).map((visitor) => (
-            <View key={visitor.id} style={styles.approvalCard}>
-              <View style={styles.approvalInfo}>
-                <View style={styles.avatar}>
-                  <Text style={styles.avatarText}>
-                    {getInitials(visitor.visitor_name)}
-                  </Text>
-                </View>
-                <View style={styles.approvalDetails}>
-                  <Text style={styles.visitorName}>{visitor.visitor_name}</Text>
-                  <Text style={styles.visitorPurpose}>
-                    {visitor.purpose || 'Visit'}
-                    {visitor.is_walkin && ' • Walk-in'}
-                  </Text>
-                </View>
-              </View>
-              <View style={styles.approvalActions}>
-                <TouchableOpacity
-                  style={styles.rejectButton}
-                  onPress={() => handleReject(visitor.id)}
-                  disabled={approving === visitor.id}>
-                  <Text style={styles.rejectText}>✕</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={styles.approveButton}
-                  onPress={() => handleApprove(visitor.id)}
-                  disabled={approving === visitor.id}>
-                  <Text style={styles.approveText}>✓</Text>
-                </TouchableOpacity>
-              </View>
+        {/* Quick Actions */}
+        <View style={styles.quickActions}>
+          <TouchableOpacity
+            style={[styles.actionCard, styles.actionCardPrimary]}
+            onPress={() => navigation.navigate('VisitorInvite')}
+            activeOpacity={0.8}>
+            <Text style={styles.actionIcon}>➕</Text>
+            <Text style={styles.actionLabel}>Invite Visitor</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.actionCard}
+            onPress={() => navigation.navigate('MyVisitors')}
+            activeOpacity={0.8}>
+            <Text style={styles.actionIcon}>👥</Text>
+            <Text style={[styles.actionLabel, {color: colors.text}]}>My Visitors</Text>
+          </TouchableOpacity>
+        </View>
+
+        {/* Pending Approvals or friendly empty state */}
+        {pendingApprovals.length > 0 ? (
+          <View style={styles.section}>
+            <View style={styles.alertHeader}>
+              <Text style={styles.alertIcon}>🔔</Text>
+              <Text style={styles.alertTitle}>
+                {pendingApprovals.length} Pending Approval
+                {pendingApprovals.length > 1 ? 's' : ''}
+              </Text>
             </View>
-          ))}
-        </View>
-      ) : (
-        <View style={styles.emptyState}>
-          <Text style={styles.emptyStateIcon}>✅</Text>
-          <Text style={styles.emptyStateTitle}>All clear</Text>
-          <Text style={styles.emptyStateText}>No pending approvals. When someone visits, they’ll show up here.</Text>
-        </View>
-      )}
+            <Text style={styles.alertSubtitle}>
+              Walk-in visitors waiting for your approval
+            </Text>
 
-      {/* Stats */}
-      <Text style={styles.sectionTitle}>Today&apos;s Overview</Text>
-      <View style={styles.statsGrid}>
-        <View style={styles.statCard}>
-          <Text style={styles.statValue}>{stats?.visitors_today ?? 0}</Text>
-          <Text style={styles.statLabel}>Visitors Today</Text>
-        </View>
-        <View style={styles.statCard}>
-          <Text style={[styles.statValue, {color: colors.warning}]}>
-            {stats?.pending_approvals ?? 0}
-          </Text>
-          <Text style={styles.statLabel}>Pending</Text>
-        </View>
-        <View style={styles.statCard}>
-          <Text style={[styles.statValue, {color: colors.success}]}>
-            {stats?.checked_in ?? 0}
-          </Text>
-          <Text style={styles.statLabel}>Checked In</Text>
-        </View>
-      </View>
+            {pendingApprovals.slice(0, 3).map(visitor => (
+              <View key={visitor.id} style={styles.approvalCard}>
+                <View style={styles.approvalInfo}>
+                  <View style={styles.avatar}>
+                    <Text style={styles.avatarText}>{getInitials(visitor.visitor_name)}</Text>
+                  </View>
+                  <View style={styles.approvalDetails}>
+                    <Text style={styles.visitorName}>{visitor.visitor_name}</Text>
+                    <Text style={styles.visitorPurpose}>
+                      {visitor.purpose || 'Visit'}
+                      {visitor.is_walkin && ' • Walk-in'}
+                    </Text>
+                  </View>
+                </View>
+                <View style={styles.approvalActions}>
+                  <TouchableOpacity
+                    style={styles.rejectButton}
+                    onPress={() => handleReject(visitor.id)}
+                    disabled={approving === visitor.id}>
+                    <Text style={styles.rejectText}>✕</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={styles.approveButton}
+                    onPress={() => handleApprove(visitor.id)}
+                    disabled={approving === visitor.id}>
+                    <Text style={styles.approveText}>✓</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            ))}
+          </View>
+        ) : (
+          <View style={styles.emptyState}>
+            <Text style={styles.emptyStateIcon}>✅</Text>
+            <Text style={styles.emptyStateTitle}>All clear</Text>
+            <Text style={styles.emptyStateText}>
+              No pending approvals. When someone visits, they’ll show up here.
+            </Text>
+          </View>
+        )}
 
-      {/* Recent Activity Placeholder */}
-      <Text style={styles.sectionTitle}>Quick Tips</Text>
-      <Card style={styles.tipCard}>
-        <Text style={styles.tipIcon}>💡</Text>
-        <Text style={styles.tipText}>
-          Add frequent visitors like your maid or driver to quickly invite them
-          next time.
+        {/* Stats */}
+        <Text variant="label" style={styles.sectionTitle}>
+          Today&apos;s Overview
         </Text>
-      </Card>
-    </ScrollView>
+        <View style={styles.statsGrid}>
+          <View style={styles.statCard}>
+            <Text variant="title" style={styles.statValue}>
+              {stats?.visitors_today ?? 0}
+            </Text>
+            <Text variant="caption" muted style={styles.statLabel}>
+              Visitors Today
+            </Text>
+          </View>
+          <View style={styles.statCard}>
+            <Text variant="title" style={[styles.statValue, {color: colors.warning}]}>
+              {stats?.pending_approvals ?? 0}
+            </Text>
+            <Text variant="caption" muted style={styles.statLabel}>
+              Pending
+            </Text>
+          </View>
+          <View style={styles.statCard}>
+            <Text variant="title" style={[styles.statValue, {color: colors.success}]}>
+              {stats?.checked_in ?? 0}
+            </Text>
+            <Text variant="caption" muted style={styles.statLabel}>
+              Checked In
+            </Text>
+          </View>
+        </View>
+
+        {/* Quick Tips */}
+        <Text variant="label" style={styles.sectionTitle}>
+          Quick Tips
+        </Text>
+        <Card style={styles.tipCard}>
+          <Text style={styles.tipIcon}>💡</Text>
+          <Text style={styles.tipText}>
+            Add frequent visitors like your maid or driver to quickly invite them next time.
+          </Text>
+        </Card>
+      </ScrollView>
+    </Screen>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
   contentContainer: {
-    padding: theme.spacing.lg,
+    paddingHorizontal: theme.spacing.lg,
+    paddingTop: theme.spacing.lg,
     paddingBottom: theme.spacing.xxl,
   },
   loadingContainer: {

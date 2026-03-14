@@ -58,6 +58,9 @@ class Settings(BaseSettings):
     WAHA_API_URL: str = ""
     WAHA_API_KEY: str = ""
 
+    # Frontend base URL for shareable links (QR page, etc.)
+    FRONTEND_BASE_URL: str = "http://localhost:3000"
+
     # Email
     SMTP_HOST: str = "smtp.gmail.com"
     SMTP_PORT: int = 587
@@ -68,6 +71,7 @@ class Settings(BaseSettings):
     # Security
     SECRET_KEY: str = "change-me-in-production"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
+    REFRESH_TOKEN_EXPIRE_DAYS: int = 30
 
     # Rate Limiting
     RATE_LIMIT_ENABLED: bool = True

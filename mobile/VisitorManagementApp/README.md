@@ -32,6 +32,32 @@ npm start
 npm run android
 ```
 
+## iOS Setup & Running
+
+1. Install iOS dependencies (CocoaPods):
+   ```bash
+   cd ios
+   pod install
+   cd ..
+   ```
+
+2. If CocoaPods complains about UTF‑8 encoding, add this to your shell config (e.g. `~/.zshrc`) and restart the terminal:
+   ```bash
+   export LANG=en_US.UTF-8
+   ```
+
+3. Open the iOS workspace in Xcode:
+   ```bash
+   open ios/VisitorManagementApp.xcworkspace
+   ```
+
+4. Select a simulator (e.g. iPhone 15) and run the app from Xcode, or use the CLI:
+   ```bash
+   npm run ios
+   ```
+
+> Note: The `Podfile` is configured with `use_modular_headers!` so Firebase (`FirebaseCoreInternal` / `GoogleUtilities`) works correctly with static libraries.
+
 ## Web (Browser at localhost:8081)
 
 Run the interactive Visitor Management UI in your browser:

@@ -3,7 +3,7 @@
  */
 import messaging, { FirebaseMessagingTypes } from '@react-native-firebase/messaging';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Platform, Alert } from 'react-native';
+import { Alert } from 'react-native';
 
 const FCM_TOKEN_KEY = 'vms_fcm_token';
 

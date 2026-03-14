@@ -1,40 +1,44 @@
 /**
- * Mobile-specific color palette - warm, inviting, distinct from web
- * Indigo/Violet base for trust and modern app feel
+ * Mobile-specific color palette.
+ * Centralized tokens so screens use semantic names instead of hard-coded colors.
  */
 export const colors = {
-  // Primary - Indigo (trust, calm - different from web's emerald)
+  // Brand / primary
   primary: '#6366F1',
   primaryDark: '#4F46E5',
   primaryLight: '#E0E7FF',
   primaryMuted: '#EEF2FF',
 
-  // Background - warm stone tone
-  background: '#FAFAF9',
-  surface: '#F5F5F4',
+  // Background layers
+  background: '#0F172A', // canvas (slate-900)
+  surface: '#020617', // header / app shell (slate-950)
+  card: '#020617',
+  overlay: 'rgba(15,23,42,0.85)',
+
+  // Neutrals
+  border: '#1E293B',
+  borderLight: '#111827',
+  mutedBg: '#020617',
 
   // Text
-  foreground: '#1C1917',
-  muted: '#78716C',
-  mutedForeground: '#A8A29E',
-
-  // UI
-  border: '#E7E5E4',
-  borderLight: '#F5F5F4',
-  card: '#FFFFFF',
-  mutedBg: '#F5F5F4',
+  foreground: '#E5E7EB', // primary text
+  muted: '#9CA3AF',
+  mutedForeground: '#6B7280',
+  // Aliases used across screens (older code)
+  text: '#E5E7EB',
+  textSecondary: '#9CA3AF',
 
   // Semantic
-  success: '#0D9488',
-  successLight: '#CCFBF1',
-  warning: '#EA580C',
-  warningLight: '#FFEDD5',
-  error: '#DC2626',
-  errorLight: '#FEE2E2',
-  info: '#0284C7',
-  infoLight: '#E0F2FE',
+  success: '#22C55E',
+  successLight: 'rgba(34,197,94,0.1)',
+  warning: '#F97316',
+  warningLight: 'rgba(249,115,22,0.1)',
+  error: '#EF4444',
+  errorLight: 'rgba(239,68,68,0.1)',
+  info: '#38BDF8',
+  infoLight: 'rgba(56,189,248,0.1)',
 
-  // Accent for variety
+  // Accent
   accent: '#8B5CF6',
-  accentLight: '#EDE9FE',
+  accentLight: 'rgba(139,92,246,0.1)',
 } as const;

@@ -11,13 +11,17 @@ import {isAuthenticated, getCachedUser, getPrimaryRole, User} from '../config/au
 
 // Screens
 import LoginScreen from '../screens/LoginScreen';
+import ForgotPasswordScreen from '../screens/ForgotPasswordScreen';
 import ResidentDashboard from '../screens/ResidentDashboard';
 import GuardDashboard from '../screens/GuardDashboard';
+import GuardBlacklistScreen from '../screens/GuardBlacklistScreen';
 import CheckInScreen from '../screens/CheckInScreen';
 import VisitorInviteScreen from '../screens/VisitorInviteScreen';
 import DashboardScreen from '../screens/DashboardScreen';
 import QRScannerScreen from '../screens/QRScannerScreen';
 import WalkInScreen from '../screens/WalkInScreen';
+import ScanHistoryScreen from '../screens/ScanHistoryScreen';
+import ScanDetailsScreen from '../screens/ScanDetailsScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -57,13 +61,13 @@ function MainNavigator() {
   }
 
   const role = getPrimaryRole(user);
-  const isGuardOrAdmin = role === 'guard' || role === 'admin';
-  const isResidentOrAdmin = role === 'resident' || role === 'admin';
+  const isGuard = role === 'guard';
+  const isResident = role === 'resident';
 
   return (
     <Stack.Navigator screenOptions={screenOptions}>
       {/* Role-based home screen */}
-      {isGuardOrAdmin ? (
+      {isGuard ? (
         <Stack.Screen
           name="GuardDashboard"
           component={GuardDashboard}
@@ -78,7 +82,7 @@ function MainNavigator() {
       )}
 
       {/* Guard-specific screens */}
-      {isGuardOrAdmin && (
+      {isGuard && (
         <>
           <Stack.Screen
             name="QRScanner"
@@ -94,11 +98,26 @@ function MainNavigator() {
             component={WalkInScreen}
             options={{title: 'Walk-in Registration'}}
           />
+          <Stack.Screen
+            name="GuardBlacklist"
+            component={GuardBlacklistScreen}
+            options={{title: 'Blacklist'}}
+          />
+          <Stack.Screen
+            name="ScanHistory"
+            component={ScanHistoryScreen}
+            options={{title: 'Scan history'}}
+          />
+          <Stack.Screen
+            name="ScanDetails"
+            component={ScanDetailsScreen}
+            options={{title: 'Scan details'}}
+          />
         </>
       )}
 
       {/* Resident-specific screens */}
-      {isResidentOrAdmin && (
+      {isResident && (
         <>
           <Stack.Screen
             name="VisitorInvite"
@@ -154,14 +173,13 @@ export default function AppNavigator() {
 
   return (
     <NavigationContainer>
-      <Stack.Navigator screenOptions={{headerShown: false}}>
-        {!authenticated ? (
-          <Stack.Screen name="Login" component={LoginScreen} />
-        ) : (
-          <Stack.Screen name="Main" component={MainNavigator} />
-        )}
-        {/* Allow navigation to login after logout */}
-        <Stack.Screen name="LoginScreen" component={LoginScreen} />
+      <Stack.Navigator
+        screenOptions={{headerShown: false}}
+        initialRouteName={authenticated ? 'Main' : 'Login'}>
+        {/* Always register routes so reset() can target them */}
+        <Stack.Screen name="Login" component={LoginScreen} />
+        <Stack.Screen name="ForgotPassword" component={ForgotPasswordScreen} />
+        <Stack.Screen name="Main" component={MainNavigator} />
       </Stack.Navigator>
     </NavigationContainer>
   );
@@ -189,7 +207,7 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
   },
   loadingText: {
-    color: colors.textSecondary,
+    color: colors.muted,
     fontSize: 16,
   },
 });

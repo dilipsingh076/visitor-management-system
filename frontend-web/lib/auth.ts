@@ -194,6 +194,7 @@ export async function signup(data: {
     const user = result.user as User;
     if (result.society) user.society = result.society as SocietySummary;
     const accessToken = result.access_token as string | undefined;
+    const refreshToken = result.refresh_token as string | undefined;
 
     _currentUser = user;
     _isAuthenticated = true;
@@ -203,6 +204,9 @@ export async function signup(data: {
       if (accessToken) {
         localStorage.setItem("access_token", accessToken);
         setAuthCookie(accessToken);
+      }
+      if (refreshToken) {
+        localStorage.setItem("refresh_token", refreshToken);
       }
     }
 
@@ -273,7 +277,7 @@ export async function registerSociety(data: {
       return { user: null, error: message };
     }
 
-    let result: { user?: User; society?: SocietySummary; access_token?: string };
+    let result: { user?: User; society?: SocietySummary; access_token?: string; refresh_token?: string };
     try {
       result = responseText ? JSON.parse(responseText) : {};
     } catch {
@@ -285,6 +289,7 @@ export async function registerSociety(data: {
     const society = result.society as SocietySummary | undefined;
     if (society && user) user.society = society;
     const accessToken = result.access_token as string | undefined;
+    const refreshToken = result.refresh_token as string | undefined;
 
     _currentUser = user;
     _isAuthenticated = true;
@@ -294,6 +299,9 @@ export async function registerSociety(data: {
       if (accessToken) {
         localStorage.setItem("access_token", accessToken);
         setAuthCookie(accessToken);
+      }
+      if (refreshToken) {
+        localStorage.setItem("refresh_token", refreshToken);
       }
     }
 
@@ -328,6 +336,7 @@ export async function login(email: string, password: string): Promise<{ user: Us
     const user = data.user as User;
     if (data.society) user.society = data.society as SocietySummary;
     const accessToken = data.access_token as string | undefined;
+    const refreshToken = data.refresh_token as string | undefined;
 
     _currentUser = user;
     _isAuthenticated = true;
@@ -337,6 +346,9 @@ export async function login(email: string, password: string): Promise<{ user: Us
       if (accessToken) {
         localStorage.setItem("access_token", accessToken);
         setAuthCookie(accessToken);
+      }
+      if (refreshToken) {
+        localStorage.setItem("refresh_token", refreshToken);
       }
     }
 
@@ -405,6 +417,7 @@ export async function logout(): Promise<void> {
   if (typeof window !== "undefined") {
     sessionStorage.removeItem("vms_user");
     localStorage.removeItem("access_token");
+    localStorage.removeItem("refresh_token");
     localStorage.removeItem("demo_user");
     clearAuthCookie();
   }
@@ -511,6 +524,39 @@ export function getToken(): string | null {
     return localStorage.getItem("access_token");
   }
   return null;
+}
+
+export async function refreshAccessToken(): Promise<boolean> {
+  if (typeof window === "undefined") return false;
+  const refreshToken = localStorage.getItem("refresh_token");
+  if (!refreshToken) return false;
+
+  try {
+    const res = await fetch(`${API_BASE_URL}/auth/refresh`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({ refresh_token: refreshToken }),
+    });
+    if (!res.ok) {
+      localStorage.removeItem("access_token");
+      localStorage.removeItem("refresh_token");
+      return false;
+    }
+    const data = await res.json().catch(() => ({}));
+    const accessToken = data.access_token as string | undefined;
+    const newRefresh = data.refresh_token as string | undefined;
+    if (accessToken) {
+      localStorage.setItem("access_token", accessToken);
+      setAuthCookie(accessToken);
+    }
+    if (newRefresh) {
+      localStorage.setItem("refresh_token", newRefresh);
+    }
+    return Boolean(accessToken);
+  } catch {
+    return false;
+  }
 }
 
 export function removeToken(): void {

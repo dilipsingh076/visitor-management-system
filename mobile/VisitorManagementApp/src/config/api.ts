@@ -1,11 +1,22 @@
 /**
  * API configuration for mobile app with secure token storage.
  */
-import { getSecureToken } from '../lib/secureStorage';
+import { Platform } from 'react-native';
+import { getSecureToken, getRefreshToken, setSecureToken, setRefreshToken, clearAllAuthData } from '../lib/secureStorage';
 
-const API_BASE_URL = __DEV__
-  ? 'http://10.0.2.2:8001/api/v1'
-  : 'https://your-api-domain.com/api/v1';
+function getBaseUrl() {
+  if (__DEV__) {
+    // Android emulator uses 10.0.2.2 to reach host machine.
+    if (Platform.OS === 'android') {
+      return 'http://10.0.2.2:8000/api/v1';
+    }
+    // iOS simulator & web can hit localhost directly.
+    return 'http://localhost:8000/api/v1';
+  }
+  return 'https://your-api-domain.com/api/v1';
+}
+
+const API_BASE_URL = getBaseUrl();
 
 const REQUEST_TIMEOUT = 30000;
 
@@ -44,7 +55,7 @@ class ApiClient {
     const timeoutId = setTimeout(() => controller.abort(), this.timeout);
 
     try {
-      const response = await fetch(`${this.baseURL}${endpoint}`, {
+      let response = await fetch(`${this.baseURL}${endpoint}`, {
         ...options,
         headers,
         signal: controller.signal,
@@ -53,10 +64,49 @@ class ApiClient {
       clearTimeout(timeoutId);
 
       if (response.status === 401) {
-        return {
-          error: 'Session expired. Please login again.',
-          status: 401,
-        };
+        // Try refresh token once
+        const refreshToken = await getRefreshToken();
+        let refreshed = false;
+        if (refreshToken) {
+          try {
+            const refreshRes = await fetch(`${this.baseURL}/auth/refresh`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({ refresh_token: refreshToken }),
+            });
+            if (refreshRes.ok) {
+              const data = await refreshRes.json().catch(() => ({}));
+              const newAccess = data.access_token as string | undefined;
+              const newRefresh = data.refresh_token as string | undefined;
+              if (newAccess) {
+                await setSecureToken(newAccess);
+                headers['Authorization'] = `Bearer ${newAccess}`;
+              }
+              if (newRefresh) {
+                await setRefreshToken(newRefresh);
+              }
+              refreshed = Boolean(newAccess);
+              if (refreshed) {
+                response = await fetch(`${this.baseURL}${endpoint}`, {
+                  ...options,
+                  headers,
+                  signal: controller.signal,
+                });
+              }
+            }
+          } catch {
+            refreshed = false;
+          }
+        }
+        if (!refreshed || response.status === 401) {
+          await clearAllAuthData();
+          return {
+            error: 'Session expired. Please login again.',
+            status: 401,
+          };
+        }
       }
 
       if (response.status === 429) {

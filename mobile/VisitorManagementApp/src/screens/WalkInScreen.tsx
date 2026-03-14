@@ -3,18 +3,10 @@
  * Quick form to register unexpected visitors.
  */
 import React, {useState} from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  KeyboardAvoidingView,
-  Platform,
-  Alert,
-} from 'react-native';
+import {View, StyleSheet, ScrollView, KeyboardAvoidingView, Platform, Alert} from 'react-native';
 import {theme} from '../theme';
 import {colors} from '../theme/colors';
-import {Input, Button, Card} from '../components/ui';
+import {Input, Button, Card, Screen, Text} from '../components/ui';
 import {apiClient} from '../config/api';
 
 interface WalkInScreenProps {
@@ -93,60 +85,67 @@ export default function WalkInScreen({navigation}: WalkInScreenProps) {
 
   if (success) {
     return (
-      <View style={styles.successContainer}>
-        <View style={styles.successIcon}>
-          <Text style={styles.successEmoji}>✓</Text>
-        </View>
-        <Text style={styles.successTitle}>Walk-in Registered!</Text>
-        <Text style={styles.successSubtitle}>
-          Waiting for resident approval
-        </Text>
-
-        <Card style={styles.otpCard}>
-          <Text style={styles.otpLabel}>Entry OTP</Text>
-          <Text style={styles.otpValue}>{success.otp}</Text>
-          <Text style={styles.otpHint}>
-            Use this OTP to check in after approval
+      <Screen>
+        <View style={styles.successContainer}>
+          <View style={styles.successIcon}>
+            <Text style={styles.successEmoji}>✓</Text>
+          </View>
+          <Text variant="title" style={styles.successTitle}>
+            Walk-in Registered!
           </Text>
-        </Card>
+          <Text muted style={styles.successSubtitle}>
+            Waiting for resident approval
+          </Text>
 
-        <View style={styles.successActions}>
-          <Button
-            title="Register Another"
-            onPress={handleReset}
-            style={styles.actionButton}
-          />
-          <Button
-            title="Back to Dashboard"
-            onPress={() => navigation.goBack()}
-            variant="secondary"
-            style={styles.actionButton}
-          />
+          <Card style={styles.otpCard}>
+            <Text variant="caption" style={styles.otpLabel}>
+              Entry OTP
+            </Text>
+            <Text variant="title" style={styles.otpValue}>
+              {success.otp}
+            </Text>
+            <Text variant="caption" muted style={styles.otpHint}>
+              Use this OTP to check in after approval
+            </Text>
+          </Card>
+
+          <View style={styles.successActions}>
+            <Button title="Register Another" onPress={handleReset} style={styles.actionButton} />
+            <Button
+              title="Back to Dashboard"
+              onPress={() => navigation.goBack()}
+              variant="secondary"
+              style={styles.actionButton}
+            />
+          </View>
         </View>
-      </View>
+      </Screen>
     );
   }
 
   return (
-    <KeyboardAvoidingView
-      style={styles.container}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-      <ScrollView
-        style={styles.scrollView}
-        contentContainerStyle={styles.scrollContent}
-        keyboardShouldPersistTaps="handled"
-        showsVerticalScrollIndicator={false}>
-        {/* Header */}
-        <View style={styles.header}>
-          <Text style={styles.headerIcon}>🚶</Text>
-          <Text style={styles.title}>Walk-in Registration</Text>
-          <Text style={styles.subtitle}>
-            Register unexpected visitors for resident approval
-          </Text>
-        </View>
+    <Screen>
+      <KeyboardAvoidingView
+        style={styles.container}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+        <ScrollView
+          style={styles.scrollView}
+          contentContainerStyle={styles.scrollContent}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}>
+          {/* Header */}
+          <View style={styles.header}>
+            <Text style={styles.headerIcon}>🚶</Text>
+            <Text variant="title" style={styles.title}>
+              Walk-in Registration
+            </Text>
+            <Text variant="subtitle" style={styles.subtitle}>
+              Register unexpected visitors for resident approval
+            </Text>
+          </View>
 
-        {/* Form */}
-        <View style={styles.form}>
+          {/* Form */}
+          <View style={styles.form}>
           <View style={styles.inputGroup}>
             <Text style={styles.label}>Visitor Name *</Text>
             <Input
@@ -209,8 +208,8 @@ export default function WalkInScreen({navigation}: WalkInScreenProps) {
           {/* DPDP Consent */}
           <View style={styles.consentContainer}>
             <Text style={styles.consentText}>
-              ⚖️ By registering, the visitor consents to data collection as per
-              DPDP Act 2023. Data will be used only for visitor management.
+              ⚖️ By registering, the visitor consents to data collection as per DPDP Act 2023. Data will be used only
+              for visitor management.
             </Text>
           </View>
 
@@ -223,15 +222,16 @@ export default function WalkInScreen({navigation}: WalkInScreenProps) {
             style={styles.submitButton}
           />
         </View>
-      </ScrollView>
-    </KeyboardAvoidingView>
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </Screen>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background,
+    backgroundColor: 'transparent',
   },
   scrollView: {
     flex: 1,

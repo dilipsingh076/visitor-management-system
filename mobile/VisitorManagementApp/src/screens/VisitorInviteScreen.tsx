@@ -1,24 +1,25 @@
 /**
  * Invite Visitor - pre-approve visitors with OTP
  */
-import React, { useState } from 'react';
+import React, {useState} from 'react';
 import {
   View,
-  Text,
   StyleSheet,
-  SafeAreaView,
-  ScrollView,
   KeyboardAvoidingView,
   Platform,
   TextInput,
   TouchableOpacity,
   ActivityIndicator,
+  Linking,
+  ScrollView,
 } from 'react-native';
-import { apiClient } from '../config/api';
-import { API } from '../lib/api/endpoints';
-import { theme } from '../theme';
+import {apiClient} from '../config/api';
+import {API} from '../lib/api/endpoints';
+import {theme} from '../theme';
+import {colors} from '../theme/colors';
+import {Screen, Text} from '../components/ui';
 
-const { colors, spacing, borderRadius, shadow, fontSize } = theme;
+const {spacing, borderRadius, fontSize} = theme;
 
 export default function VisitorInviteScreen() {
   const [name, setName] = useState('');
@@ -68,35 +69,61 @@ export default function VisitorInviteScreen() {
     setError('');
   };
 
+  const handleOpenQrInBrowser = () => {
+    if (!result?.qr_code) {
+      return;
+    }
+    // Use web QR widget we added at /qr/[code]
+    const encoded = encodeURIComponent(result.qr_code);
+    const url = `http://localhost:3000/qr/${encoded}`;
+    Linking.openURL(url).catch(() => {
+      setError('Could not open QR in browser. Please open the web app at /qr manually.');
+    });
+  };
+
   if (result) {
     return (
-      <SafeAreaView style={styles.safe}>
-        <ScrollView
-          contentContainerStyle={styles.scrollContent}
-          showsVerticalScrollIndicator={false}>
-          <View style={styles.successCard}>
-            <View style={styles.successIconWrap}>
-              <Text style={styles.successIcon}>✓</Text>
-            </View>
-            <Text style={styles.successTitle}>Invitation created!</Text>
-            <Text style={styles.successDesc}>Share this OTP with your visitor:</Text>
-            <View style={styles.otpBox}>
-              <Text style={styles.otpText}>{result.otp}</Text>
-            </View>
-            <TouchableOpacity
-              style={styles.btn}
-              onPress={handleReset}
-              activeOpacity={0.85}>
-              <Text style={styles.btnText}>Invite another</Text>
-            </TouchableOpacity>
+      <Screen scroll>
+        <View style={styles.successCard}>
+          <View style={styles.successIconWrap}>
+            <Text style={styles.successIcon}>✓</Text>
           </View>
-        </ScrollView>
-      </SafeAreaView>
+          <Text variant="title" style={styles.successTitle}>
+            Invitation created!
+          </Text>
+          <Text muted style={styles.successDesc}>
+            Share this OTP with your visitor:
+          </Text>
+          <View style={styles.otpBox}>
+            <Text style={styles.otpText}>{result.otp}</Text>
+          </View>
+          {result.qr_code && (
+            <>
+              <Text muted style={styles.successDesc}>
+                Or share/open this QR link in your browser:
+              </Text>
+              <TouchableOpacity
+                style={styles.qrLinkButton}
+                onPress={handleOpenQrInBrowser}
+                activeOpacity={0.85}>
+                <Text variant="label" style={styles.qrLinkText}>
+                  Open QR Code in Browser
+                </Text>
+              </TouchableOpacity>
+            </>
+          )}
+          <TouchableOpacity style={styles.btn} onPress={handleReset} activeOpacity={0.85}>
+            <Text variant="label" style={styles.btnText}>
+              Invite another
+            </Text>
+          </TouchableOpacity>
+        </View>
+      </Screen>
     );
   }
 
   return (
-    <SafeAreaView style={styles.safe}>
+    <Screen>
       <KeyboardAvoidingView
         style={styles.container}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
@@ -105,20 +132,24 @@ export default function VisitorInviteScreen() {
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}>
           <View style={styles.header}>
-            <Text style={styles.title}>Invite Visitor</Text>
-            <Text style={styles.subtitle}>
+            <Text variant="title">Invite Visitor</Text>
+            <Text variant="body" muted>
               Pre-approve visitors. They'll receive an OTP for check-in.
             </Text>
           </View>
 
           {error ? (
             <View style={styles.errorBox}>
-              <Text style={styles.errorText}>{error}</Text>
+              <Text variant="caption" style={styles.errorText}>
+                {error}
+              </Text>
             </View>
           ) : null}
 
           <View style={styles.form}>
-            <Text style={styles.label}>Visitor name *</Text>
+            <Text variant="label" style={styles.label}>
+              Visitor name *
+            </Text>
             <TextInput
               style={styles.input}
               placeholder="Full name"
@@ -127,7 +158,9 @@ export default function VisitorInviteScreen() {
               onChangeText={setName}
             />
 
-            <Text style={styles.label}>Phone (10 digits) *</Text>
+            <Text variant="label" style={styles.label}>
+              Phone (10 digits) *
+            </Text>
             <TextInput
               style={styles.input}
               placeholder="9876543210"
@@ -138,7 +171,9 @@ export default function VisitorInviteScreen() {
               maxLength={10}
             />
 
-            <Text style={styles.label}>Purpose (optional)</Text>
+            <Text variant="label" style={styles.label}>
+              Purpose (optional)
+            </Text>
             <TextInput
               style={styles.input}
               placeholder="Meeting, delivery, etc."
@@ -155,20 +190,21 @@ export default function VisitorInviteScreen() {
               {loading ? (
                 <ActivityIndicator color="#fff" />
               ) : (
-                <Text style={styles.btnText}>Create Invitation</Text>
+                <Text variant="label" style={styles.btnText}>
+                  Create Invitation
+                </Text>
               )}
             </TouchableOpacity>
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
-    </SafeAreaView>
+    </Screen>
   );
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: colors.background },
-  container: { flex: 1 },
-  scrollContent: { padding: spacing.lg, paddingBottom: spacing.xxl },
+  container: {flex: 1, backgroundColor: 'transparent'},
+  scrollContent: {padding: spacing.lg, paddingBottom: spacing.xxl},
   header: { marginBottom: spacing.xl },
   title: {
     fontSize: fontSize.xl,
@@ -266,5 +302,19 @@ const styles = StyleSheet.create({
     fontFamily: 'monospace',
     letterSpacing: 6,
     color: colors.success,
+  },
+  qrLinkButton: {
+    marginTop: spacing.md,
+    paddingVertical: spacing.sm,
+    paddingHorizontal: spacing.lg,
+    borderRadius: borderRadius.md,
+    backgroundColor: colors.card,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  qrLinkText: {
+    fontSize: fontSize.sm,
+    color: colors.primary,
+    fontWeight: '600',
   },
 });

@@ -2,8 +2,10 @@
 Security utilities: password hashing, JWT (local + Keycloak).
 """
 import hashlib
+import os
 from datetime import datetime, timedelta, timezone
-from typing import Dict, Optional, Any
+from typing import Dict, Optional, Any, Tuple
+
 from jose import jwt, JWTError
 from jose.constants import ALGORITHMS
 import httpx
@@ -75,6 +77,22 @@ def create_access_token(
         settings.SECRET_KEY,
         algorithm="HS256",
     )
+
+
+def generate_refresh_token() -> Tuple[str, str]:
+    """
+    Generate an opaque refresh token and its SHA-256 hash.
+    Returns (token, token_hash).
+    """
+    raw = os.urandom(32)
+    token = raw.hex()
+    token_hash = hashlib.sha256(token.encode("utf-8")).hexdigest()
+    return token, token_hash
+
+
+def refresh_token_expiry() -> datetime:
+    """Compute refresh token expiry timestamp."""
+    return datetime.utcnow() + timedelta(days=settings.REFRESH_TOKEN_EXPIRE_DAYS)
 
 
 async def get_keycloak_public_key() -> str:
