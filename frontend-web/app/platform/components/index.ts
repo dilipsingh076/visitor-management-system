@@ -1,12 +1,10 @@
 // Layout components
 export { PageHeader } from "./PageHeader";
 export { StatCard } from "./StatCard";
-export { EmptyState } from "./EmptyState";
-export { DataTable } from "./DataTable";
 export { UserDrawer } from "./UserDrawer";
 
-// Charts
-export { GrowthChart, RevenueChart, BreakdownChart, VisitorTrendChart } from "./Charts";
+// Charts (GrowthChart, BreakdownChart used on platform dashboard)
+export { GrowthChart, BreakdownChart } from "./Charts";
 
 // Primitives
 export {

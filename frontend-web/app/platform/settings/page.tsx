@@ -12,10 +12,12 @@ import {
   Input,
   Select,
   SkeletonCard,
+  useToast,
 } from "../components";
 import { Settings, Save, RefreshCw, Plus } from "lucide-react";
 
 export default function PlatformSettingsPage() {
+  const toast = useToast();
   const { data: settings, isLoading, error, refetch } = usePlatformSettings();
   const updateMutation = useUpdateSetting();
   const [editedSettings, setEditedSettings] = useState<Record<string, string>>({});
@@ -35,8 +37,10 @@ export default function PlatformSettingsPage() {
         delete next[key];
         return next;
       });
+      toast.success("Setting saved", `${key} updated.`);
     } catch (err) {
       console.error("Failed to save:", err);
+      toast.error("Save failed", err instanceof Error ? err.message : "Could not save setting.");
     }
   };
 

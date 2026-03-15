@@ -13,6 +13,7 @@ import {
   getCurrentUser,
   getDemoUser,
   isAuthenticated as checkAuth,
+  refreshAccessToken,
   type User,
 } from "@/lib/auth";
 
@@ -63,6 +64,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setLoading(false);
     };
     load();
+
+    // Keep user logged in: refresh access token before it expires (e.g. every 25 min)
+    const REFRESH_INTERVAL_MS = 25 * 60 * 1000;
+    const refreshInterval = window.setInterval(() => {
+      if (localStorage.getItem("refresh_token")) {
+        refreshAccessToken();
+      }
+    }, REFRESH_INTERVAL_MS);
+    return () => clearInterval(refreshInterval);
   }, []);
 
   const isAuthenticated = Boolean(user ?? checkAuth());

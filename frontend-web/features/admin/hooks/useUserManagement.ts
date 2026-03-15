@@ -240,7 +240,6 @@ export function useUserManagement(): UseUserManagementReturn {
   }, []);
 
   const handleDeleteUser = useCallback((userId: string) => {
-    if (typeof window !== "undefined" && !window.confirm("Are you sure you want to delete this user?")) return;
     setOverrides((prev) => ({
       ...prev,
       deletedIds: new Set(prev.deletedIds).add(userId),

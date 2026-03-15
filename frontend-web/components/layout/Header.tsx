@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
+import { ShieldCheck, Menu, X } from "lucide-react";
 import {
   removeToken,
   getPrimaryRole,
@@ -106,14 +107,7 @@ export default function Header() {
           <div className="flex items-center gap-3 sm:gap-6">
             <Link href={authenticated && user ? getLandingPage(user) : "/"} className="flex items-center gap-2.5 transition-opacity hover:opacity-90">
               <span className="w-9 h-9 rounded-xl bg-primary flex items-center justify-center shadow-sm">
-                <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
-                  />
-                </svg>
+                <ShieldCheck className="w-5 h-5 text-white" aria-hidden />
               </span>
               <span className="text-lg font-bold text-foreground tracking-tight">VMS</span>
             </Link>
@@ -170,22 +164,7 @@ export default function Header() {
               onClick={() => setMobileOpen((open) => !open)}
             >
               <span className="sr-only">Toggle navigation</span>
-              <svg
-                className="w-5 h-5"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth={2}
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                aria-hidden
-              >
-                {mobileOpen ? (
-                  <path d="M6 18L18 6M6 6l12 12" />
-                ) : (
-                  <path d="M3 7h18M3 12h18M3 17h18" />
-                )}
-              </svg>
+              {mobileOpen ? <X className="w-5 h-5" aria-hidden /> : <Menu className="w-5 h-5" aria-hidden />}
             </button>
           </div>
         </div>

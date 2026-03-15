@@ -5,6 +5,7 @@ import { AdminHeader } from "@/components/layout/AdminHeader";
 import { useAuth } from "@/features/auth";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { PageLoader, ToastProvider } from "./components";
 
 export default function PlatformAdminLayout({
   children,
@@ -22,9 +23,9 @@ export default function PlatformAdminLayout({
     }
 
     if (!loading && user) {
-      const roles = user.roles || [user.role];
+      const roles = (user.roles || (user.role ? [user.role] : [])).map((r) => String(r).toLowerCase());
       if (!roles.includes("platform_admin")) {
-        router.push("/dashboard");
+        router.replace("/dashboard");
       }
     }
   }, [user, loading, router]);
@@ -32,7 +33,7 @@ export default function PlatformAdminLayout({
   if (loading) {
     return (
       <div className="h-screen flex items-center justify-center bg-muted-bg">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+        <PageLoader message="Loading…" />
       </div>
     );
   }
@@ -41,38 +42,40 @@ export default function PlatformAdminLayout({
     return null;
   }
 
-  const roles = user.roles || [user.role];
+  const roles = (user.roles || (user.role ? [user.role] : [])).map((r) => String(r).toLowerCase());
   if (!roles.includes("platform_admin")) {
     return null;
   }
 
   return (
-    <div className="h-screen flex bg-muted-bg overflow-hidden">
-      {/* Desktop sidebar */}
-      <AdminSidebar />
-
-      {/* Mobile sidebar overlay */}
-      {mobileMenuOpen && (
-        <div
-          className="fixed inset-0 bg-black/50 z-40 md:hidden"
-          onClick={() => setMobileMenuOpen(false)}
-        />
-      )}
-
-      {/* Mobile sidebar */}
-      <div
-        className={`fixed inset-y-0 left-0 z-50 w-64 bg-card transform transition-transform duration-300 md:hidden ${
-          mobileMenuOpen ? "translate-x-0" : "-translate-x-full"
-        }`}
-      >
+    <ToastProvider>
+      <div className="h-screen flex bg-muted-bg overflow-hidden">
+        {/* Desktop sidebar */}
         <AdminSidebar />
-      </div>
 
-      {/* Main content */}
-      <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
-        <AdminHeader onMenuClick={() => setMobileMenuOpen(!mobileMenuOpen)} />
-        <main className="flex-1 overflow-y-auto p-4 lg:p-6">{children}</main>
+        {/* Mobile sidebar overlay */}
+        {mobileMenuOpen && (
+          <div
+            className="fixed inset-0 bg-black/50 z-40 md:hidden"
+            onClick={() => setMobileMenuOpen(false)}
+          />
+        )}
+
+        {/* Mobile sidebar */}
+        <div
+          className={`fixed inset-y-0 left-0 z-50 w-64 bg-card transform transition-transform duration-300 md:hidden ${
+            mobileMenuOpen ? "translate-x-0" : "-translate-x-full"
+          }`}
+        >
+          <AdminSidebar />
+        </div>
+
+        {/* Main content: min-h-0 so flex child can scroll */}
+        <div className="flex-1 flex flex-col min-w-0 min-h-0 overflow-hidden">
+          <AdminHeader onMenuClick={() => setMobileMenuOpen(!mobileMenuOpen)} />
+          <main className="flex-1 min-h-0 overflow-y-auto overflow-x-auto p-4 lg:p-6">{children}</main>
+        </div>
       </div>
-    </div>
+    </ToastProvider>
   );
 }

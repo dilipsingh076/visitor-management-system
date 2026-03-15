@@ -71,3 +71,32 @@ For local testing, you can log in as a **platform admin (super admin)** user to 
 - **Password**: `SuperAdmin@123` or `Admin@123`
 
 This user has the `platform_admin` role and is not tied to any specific society. Use it from the web frontend login page to access the Platform → Societies UI and global views.
+
+## Seeding subscription data
+
+To populate subscription plans (Basic, Standard, Premium, Enterprise) and optionally assign Basic to existing societies:
+
+```bash
+# From the backend directory
+python -m scripts.seed_subscriptions           # Plans only
+python -m scripts.seed_subscriptions --societies  # Plans + assign Basic to societies without a subscription
+```
+
+After seeding, the Platform → Subscriptions page will show plans and subscriptions.
+
+## Database design: users and societies
+
+All users are stored in a **single `users` table** with a `society_id` column. This is the right design:
+
+- **One table** keeps the schema simple, avoids N tables per society, and lets you query across societies (e.g. platform admin).
+- **Filtering by society is fast** because:
+  - There is an index on `users.society_id` (single-column).
+  - There is a composite index on `(society_id, created_at)` for “list users by society” ordered by date.
+
+With these indexes, “users for this society” is an index lookup, not a full table scan, even with many users and many societies. You do **not** need a separate table per society.
+
+If you already have the `users` table and want to add the composite index by hand (e.g. you don’t recreate tables on startup), run once:
+
+```sql
+CREATE INDEX IF NOT EXISTS ix_users_society_id_created_at ON users (society_id, created_at);
+```

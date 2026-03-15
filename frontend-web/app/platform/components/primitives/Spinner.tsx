@@ -34,43 +34,4 @@ export function PageLoader({ message }: { message?: string }) {
   );
 }
 
-export function SkeletonLine({ className = "" }: { className?: string }) {
-  return <div className={`h-4 bg-muted-bg rounded animate-pulse ${className}`} />;
-}
-
-export function SkeletonBlock({ className = "" }: { className?: string }) {
-  return <div className={`h-20 bg-muted-bg rounded-lg animate-pulse ${className}`} />;
-}
-
-export function SkeletonCard() {
-  return (
-    <div className="bg-card rounded-xl border border-border p-4 space-y-3">
-      <SkeletonLine className="w-1/3" />
-      <SkeletonLine className="w-full" />
-      <SkeletonLine className="w-2/3" />
-    </div>
-  );
-}
-
-export function SkeletonTable({ rows = 5, cols = 4 }: { rows?: number; cols?: number }) {
-  return (
-    <div className="bg-card rounded-xl border border-border overflow-hidden">
-      <div className="border-b border-border bg-muted-bg/50 p-3">
-        <div className="flex gap-4">
-          {[...Array(cols)].map((_, i) => (
-            <SkeletonLine key={i} className="flex-1" />
-          ))}
-        </div>
-      </div>
-      <div className="divide-y divide-border">
-        {[...Array(rows)].map((_, i) => (
-          <div key={i} className="p-3 flex gap-4">
-            {[...Array(cols)].map((_, j) => (
-              <SkeletonLine key={j} className="flex-1" />
-            ))}
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
+export { SkeletonLine, SkeletonBlock, SkeletonCard, SkeletonTable } from "@/components/skeletons";

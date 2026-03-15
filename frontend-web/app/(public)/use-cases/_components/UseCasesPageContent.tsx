@@ -2,12 +2,14 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { AlertTriangle, CheckCircle, Check, ArrowRight, MessageCircle } from "lucide-react";
 import {
   FadeInUp,
   FadeInLeft,
   FadeInRight,
   GradientButton,
 } from "@/components/marketing";
+import { Text } from "@/components/ui";
 
 const useCases = [
   {
@@ -77,16 +79,14 @@ function UseCaseDetail({ useCase, isReversed }: { useCase: typeof useCases[0]; i
       <span className="inline-block px-2.5 py-1 bg-primary/10 text-primary rounded-full text-xs font-medium mb-3">
         {useCase.tagline}
       </span>
-      <h2 className="text-xl sm:text-2xl font-bold text-foreground mb-2">{useCase.title}</h2>
-      <p className="text-muted-foreground text-sm mb-6">{useCase.description}</p>
+      <Text variant="h2" as="h2" className="mb-2">{useCase.title}</Text>
+      <Text variant="muted" className="mb-6">{useCase.description}</Text>
 
       <div className="mb-6">
-        <h3 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-1.5">
-          <svg className="w-4 h-4 text-error" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-          </svg>
+        <Text variant="h4" as="h3" className="mb-3 flex items-center gap-1.5">
+          <AlertTriangle className="w-4 h-4 text-error" />
           Common Challenges
-        </h3>
+        </Text>
         <div className="grid sm:grid-cols-2 gap-2">
           {useCase.challenges.map((challenge, i) => (
             <div key={i} className="flex items-center gap-1.5 text-muted-foreground text-xs">
@@ -98,18 +98,14 @@ function UseCaseDetail({ useCase, isReversed }: { useCase: typeof useCases[0]; i
       </div>
 
       <div className="mb-6">
-        <h3 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-1.5">
-          <svg className="w-4 h-4 text-success" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
+        <Text variant="h4" as="h3" className="mb-3 flex items-center gap-1.5">
+          <CheckCircle className="w-4 h-4 text-success" />
           How VMS Helps
-        </h3>
+        </Text>
         <div className="grid sm:grid-cols-2 gap-2">
           {useCase.features.map((feature, i) => (
             <div key={i} className="flex items-start gap-1.5 text-muted-foreground text-xs">
-              <svg className="w-3.5 h-3.5 text-success mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
+              <Check className="w-3.5 h-3.5 text-success mt-0.5 flex-shrink-0" />
               {feature}
             </div>
           ))}
@@ -118,9 +114,7 @@ function UseCaseDetail({ useCase, isReversed }: { useCase: typeof useCases[0]; i
 
       <GradientButton href="/register-society" size="sm">
         Get Started
-        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-        </svg>
+        <ArrowRight className="w-4 h-4" />
       </GradientButton>
     </div>
   );
@@ -157,12 +151,10 @@ export function UseCasesPageContent() {
 
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           <FadeInUp className="max-w-2xl mx-auto text-center">
-            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-card mb-4">
-              Built for every type of <span className="text-primary">premises</span>
-            </h1>
-            <p className="text-base text-card/80">
-              From residential societies to industrial facilities, VMS adapts to your unique needs.
-            </p>
+            <Text variant="h1" as="h1" className="text-card mb-4">Built for every type of <span className="text-primary">premises</span></Text>
+            <Text variant="body" className="text-base text-card/80">
+              Societies, offices, factories, and campuses—each with different challenges. See how VMS fits your use case.
+            </Text>
           </FadeInUp>
         </div>
       </section>
@@ -193,18 +185,14 @@ export function UseCasesPageContent() {
       <section className="py-12 bg-primary">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <FadeInUp>
-            <h2 className="text-xl sm:text-2xl font-bold text-card mb-3">
-              Don&apos;t see your use case?
-            </h2>
-            <p className="text-card/80 text-sm mb-6 max-w-lg mx-auto">
+            <Text variant="h2" as="h2" className="text-card mb-3">Don&apos;t see your use case?</Text>
+            <Text variant="body" as="p" className="text-card/80 text-sm mb-6 max-w-lg mx-auto">
               VMS is flexible and can be customized for your specific requirements.
-            </p>
+            </Text>
             <div className="flex flex-wrap justify-center gap-3">
               <GradientButton href="/contact" variant="outline" size="md" className="bg-card text-primary border-card hover:bg-card/90">
                 Contact Sales
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-                </svg>
+                <MessageCircle className="w-4 h-4" />
               </GradientButton>
               <GradientButton href="/register-society" variant="secondary" size="md">
                 Start Free Trial

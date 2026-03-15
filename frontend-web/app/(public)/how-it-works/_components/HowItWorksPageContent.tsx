@@ -1,12 +1,14 @@
 "use client";
 
 import Image from "next/image";
+import { Clock, Ban, FileText, ShieldCheck, ArrowRight, Home, User, Shield } from "lucide-react";
 import {
   FadeInUp,
   FadeInLeft,
   FadeInRight,
   GradientButton,
 } from "@/components/marketing";
+import { Text } from "@/components/ui";
 
 const residentSteps = [
   { number: "01", title: "Create Invite", description: "Enter visitor name, phone, and expected arrival time.", highlight: "OTP/QR generated automatically" },
@@ -27,10 +29,10 @@ const guardSteps = [
 ];
 
 const features = [
-  { icon: <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>, title: "Time-bound Access", description: "Set validity windows for invites" },
-  { icon: <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636" /></svg>, title: "Blacklist Support", description: "Block visitors instantly" },
-  { icon: <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>, title: "Muster Export", description: "One-click emergency exports" },
-  { icon: <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622" /></svg>, title: "DPDP Compliant", description: "Built-in consent & audit logs" },
+  { icon: <Clock className="w-5 h-5" />, title: "Time-bound Access", description: "Set validity windows for invites" },
+  { icon: <Ban className="w-5 h-5" />, title: "Blacklist Support", description: "Block visitors instantly" },
+  { icon: <FileText className="w-5 h-5" />, title: "Muster Export", description: "One-click emergency exports" },
+  { icon: <ShieldCheck className="w-5 h-5" />, title: "DPDP Compliant", description: "Built-in consent & audit logs" },
 ];
 
 interface FlowSectionProps {
@@ -55,8 +57,8 @@ function FlowSection({ title, description, steps, imagePosition, imageSrc, image
 
   const ContentComponent = (
     <div>
-      <h3 className="text-lg sm:text-xl font-bold text-foreground mb-2">{title}</h3>
-      <p className="text-muted-foreground text-sm mb-6">{description}</p>
+      <Text variant="h3" as="h3" className="mb-2">{title}</Text>
+      <Text variant="muted" className="mb-6">{description}</Text>
       <div className="space-y-4">
         {steps.map((step, index) => (
           <FadeInUp key={index} delay={index * 0.1}>
@@ -65,8 +67,8 @@ function FlowSection({ title, description, steps, imagePosition, imageSrc, image
                 {step.number}
               </div>
               <div className="flex-1">
-                <h4 className="text-sm font-semibold text-foreground mb-0.5">{step.title}</h4>
-                <p className="text-muted-foreground text-xs mb-1">{step.description}</p>
+                <Text variant="h4" as="h4" className="mb-0.5">{step.title}</Text>
+                <Text variant="caption" className="mb-1">{step.description}</Text>
                 <span className="inline-block px-2 py-0.5 bg-primary/10 text-primary text-xs font-medium rounded">
                   {step.highlight}
                 </span>
@@ -107,14 +109,12 @@ export function HowItWorksPageContent() {
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           <FadeInUp className="max-w-2xl mx-auto text-center">
             <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-primary/20 rounded-full border border-primary/30 mb-4">
-              <span className="text-primary-light text-xs font-medium">Simple 3-Step Process</span>
+              <span className="text-primary-light text-xs font-medium">Simple workflow</span>
             </div>
-            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-card mb-4">
-              How <span className="text-primary">VMS</span> works
-            </h1>
-            <p className="text-base text-card/80">
-              From invite to check-out, VMS makes visitor management effortless.
-            </p>
+            <Text variant="h1" as="h1" className="text-card mb-4">How <span className="text-primary">VMS</span> works for everyone</Text>
+            <Text variant="body" className="text-base text-card/80">
+              Residents invite. Visitors check in with OTP or QR. Guards verify. One flow, three perspectives—no paper, no confusion.
+            </Text>
           </FadeInUp>
         </div>
       </section>
@@ -128,8 +128,8 @@ export function HowItWorksPageContent() {
                 <div className="w-10 h-10 rounded-lg bg-primary/10 text-primary flex items-center justify-center mx-auto mb-2">
                   {feature.icon}
                 </div>
-                <h3 className="font-medium text-foreground text-sm mb-0.5">{feature.title}</h3>
-                <p className="text-muted-foreground text-xs">{feature.description}</p>
+                <Text variant="h3" as="h3" className="text-sm mb-0.5">{feature.title}</Text>
+                <Text variant="caption">{feature.description}</Text>
               </div>
             </FadeInUp>
           ))}
@@ -141,9 +141,7 @@ export function HowItWorksPageContent() {
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <FadeInUp className="text-center mb-10">
             <span className="inline-flex items-center gap-2 px-3 py-1.5 bg-primary/10 text-primary rounded-full text-xs font-medium">
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-              </svg>
+              <Home className="w-4 h-4" />
               For Residents
             </span>
           </FadeInUp>
@@ -167,9 +165,7 @@ export function HowItWorksPageContent() {
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <FadeInUp className="text-center mb-10">
             <span className="inline-flex items-center gap-2 px-3 py-1.5 bg-info/10 text-info rounded-full text-xs font-medium">
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-              </svg>
+              <User className="w-4 h-4" />
               For Visitors
             </span>
           </FadeInUp>
@@ -193,9 +189,7 @@ export function HowItWorksPageContent() {
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <FadeInUp className="text-center mb-10">
             <span className="inline-flex items-center gap-2 px-3 py-1.5 bg-warning/10 text-warning rounded-full text-xs font-medium">
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622" />
-              </svg>
+              <Shield className="w-4 h-4" />
               For Security Guards
             </span>
           </FadeInUp>
@@ -222,18 +216,14 @@ export function HowItWorksPageContent() {
 
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10 text-center">
           <FadeInUp>
-            <h2 className="text-xl sm:text-2xl font-bold text-card mb-3">
-              Ready to see it in action?
-            </h2>
-            <p className="text-card/80 text-sm mb-6 max-w-lg mx-auto">
-              Start your free trial and experience contactless visitor management.
-            </p>
+            <Text variant="h2" as="h2" className="text-card mb-3">See it in action with a free trial</Text>
+            <Text variant="body" as="p" className="text-card/80 text-sm mb-6 max-w-lg mx-auto">
+              Set up in minutes. Invite a test visitor, check in with OTP or QR, and explore the dashboard.
+            </Text>
             <div className="flex flex-wrap justify-center gap-3">
               <GradientButton href="/register-society" size="md">
                 Get Started Free
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-                </svg>
+                <ArrowRight className="w-4 h-4" />
               </GradientButton>
               <GradientButton href="/contact" variant="secondary" size="md">
                 Schedule Demo

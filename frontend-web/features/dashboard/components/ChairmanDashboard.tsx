@@ -2,12 +2,13 @@
 
 import { useMemo } from "react";
 import Link from "next/link";
+import { Calendar, Users } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { downloadBlob } from "@/lib/api";
-import { Avatar, Badge, Button, Card, CardContent, CardHeader, Tabs, TabsList, TabsTrigger, TabsContent, StatCard, StatCardSkeleton } from "@/components/ui";
+import { Avatar, Badge, Button, Card, CardContent, CardHeader, LinkButton, Tabs, TabsList, TabsTrigger, TabsContent, StatCard, StatCardSkeleton } from "@/components/ui";
 import type { User } from "@/lib/auth";
 import { getRoleResponsibility, canAccessSocietyManagement } from "@/lib/auth";
-import { useDashboardStats, useRecentVisits, useDashboardMyRequests } from "../hooks/useDashboardData";
+import { useDashboardStats, useRecentVisits } from "../hooks/useDashboardData";
 import { dashboardKeys } from "../hooks/keys";
 import {
   useVisitorsList,
@@ -58,7 +59,6 @@ export function ChairmanDashboard({ user }: ChairmanDashboardProps) {
   const statsQ = useDashboardStats(true);
   const visitsQ = useRecentVisits({ enabled: true, limit: 10 });
   const pendingQ = useVisitorsList({ status: "pending", scope: "all", enabled: true });
-  const myReqQ = useDashboardMyRequests(true);
   const frequentQ = useFrequentVisitors(true);
   const residentsQ = useResidents();
   const notificationsQ = useUnreadNotifications(true);
@@ -161,15 +161,15 @@ export function ChairmanDashboard({ user }: ChairmanDashboardProps) {
       <section>
         <h2 className={`${theme.text.muted} mb-3 text-sm`}>Quick actions</h2>
         <div className="flex flex-wrap gap-2">
-          <Link href="/visitors/invite"><Button size="sm" variant="primary">Invite visitor</Button></Link>
-          <Link href="/visitors"><Button size="sm" variant="outline">View visitors</Button></Link>
-          <Link href="/guard"><Button size="sm" variant="outline">Guard dashboard</Button></Link>
-          <Link href="/blacklist"><Button size="sm" variant="outline">Blacklist</Button></Link>
+          <LinkButton href="/visitors/invite" size="sm" variant="primary">Invite visitor</LinkButton>
+          <LinkButton href="/visitors" size="sm" variant="outline">View visitors</LinkButton>
+          <LinkButton href="/guard" size="sm" variant="outline">Guard dashboard</LinkButton>
+          <LinkButton href="/blacklist" size="sm" variant="outline">Blacklist</LinkButton>
           {showManagement && (
             <>
-              <Link href="/admin/users"><Button size="sm" variant="outline">Manage users</Button></Link>
-              <Link href="/admin/amenities"><Button size="sm" variant="outline">Amenities</Button></Link>
-              <Link href="/admin/staff"><Button size="sm" variant="outline">Staff</Button></Link>
+              <LinkButton href="/admin/users" size="sm" variant="outline">Manage users</LinkButton>
+              <LinkButton href="/admin/amenities" size="sm" variant="outline">Amenities</LinkButton>
+              <LinkButton href="/admin/staff" size="sm" variant="outline">Staff</LinkButton>
               <Button variant="outline" size="sm" onClick={() => handleExportMuster("daily")}>Export muster</Button>
             </>
           )}
@@ -302,9 +302,13 @@ export function ChairmanDashboard({ user }: ChairmanDashboardProps) {
                         <p className={`${theme.text.mutedSmall} truncate`}>{fv.visit_count} visits · {fv.last_visit ?? "—"}</p>
                       </div>
                     </div>
-                    <Link href={`/visitors/invite?name=${encodeURIComponent(fv.name)}&phone=${encodeURIComponent(fv.phone)}&purpose=${encodeURIComponent(fv.purpose)}`}>
-                      <Button size="xs" variant="secondary">Invite</Button>
-                    </Link>
+                    <LinkButton
+                      href={`/visitors/invite?name=${encodeURIComponent(fv.name)}&phone=${encodeURIComponent(fv.phone)}&purpose=${encodeURIComponent(fv.purpose)}`}
+                      size="sm"
+                      variant="secondary"
+                    >
+                      Invite
+                    </LinkButton>
                   </div>
                 ))}
               </div>
@@ -320,9 +324,7 @@ export function ChairmanDashboard({ user }: ChairmanDashboardProps) {
           <CardContent className="py-4 space-y-4">
             <div className="flex items-start gap-3">
               <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${agmStatus.variant === "warning" ? "bg-warning/10 text-warning" : "bg-muted-bg text-muted-foreground"}`}>
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                </svg>
+                <Calendar className="w-4 h-4" />
               </div>
               <div>
                 <p className="text-sm font-medium text-foreground">{agmStatus.label}</p>
@@ -331,20 +333,16 @@ export function ChairmanDashboard({ user }: ChairmanDashboardProps) {
             </div>
             <div className="flex items-start gap-3">
               <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 bg-primary/10 text-primary">
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
-                </svg>
+                <Users className="w-4 h-4" />
               </div>
               <div>
                 <p className="text-sm font-medium text-foreground">Managing Committee</p>
                 <p className="text-xs text-muted-foreground">Monthly meetings and society operations</p>
               </div>
             </div>
-            <Link href="/admin/users" className="block">
-              <Button variant="outline" size="sm" className="w-full">
-                Manage Society Members
-              </Button>
-            </Link>
+            <LinkButton href="/admin/users" variant="outline" size="sm" className="block w-full">
+              Manage Society Members
+            </LinkButton>
           </CardContent>
         </Card>
       </div>
@@ -398,11 +396,11 @@ export function ChairmanDashboard({ user }: ChairmanDashboardProps) {
                   </div>
                 </div>
                 <div className="mt-4 flex flex-wrap gap-2">
-                  <Link href="/admin/users"><Button variant="outline" size="sm">Manage Users</Button></Link>
-                  <Link href="/admin/amenities"><Button variant="outline" size="sm">Amenities</Button></Link>
-                  <Link href="/admin/staff"><Button variant="outline" size="sm">Staff</Button></Link>
-                  <Link href="/visitors"><Button variant="outline" size="sm">View All Visitors</Button></Link>
-                  <Link href="/blacklist"><Button variant="outline" size="sm">View Blacklist</Button></Link>
+                  <LinkButton href="/admin/users" variant="outline" size="sm">Manage Users</LinkButton>
+                  <LinkButton href="/admin/amenities" variant="outline" size="sm">Amenities</LinkButton>
+                  <LinkButton href="/admin/staff" variant="outline" size="sm">Staff</LinkButton>
+                  <LinkButton href="/visitors" variant="outline" size="sm">View All Visitors</LinkButton>
+                  <LinkButton href="/blacklist" variant="outline" size="sm">View Blacklist</LinkButton>
                 </div>
               </CardContent>
             </Card>

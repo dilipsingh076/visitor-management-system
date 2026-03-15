@@ -14,4 +14,5 @@ export {
   TableEmpty,
   TableLoading,
   Pagination,
+  type TableDensity,
 } from "./Table";

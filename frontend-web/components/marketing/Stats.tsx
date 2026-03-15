@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useRef } from "react";
+import { Text } from "@/components/ui";
 
 const stats = [
   { value: 500, suffix: "+", label: "Societies", description: "Trusting VMS" },
@@ -72,12 +73,12 @@ export function Stats() {
     <section className="py-20 sm:py-24 bg-gradient-to-r from-emerald-600 to-emerald-500">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-12">
-          <h2 className="text-3xl sm:text-4xl font-bold text-white mb-4">
+          <Text variant="h1" as="h2" className="text-3xl sm:text-4xl text-white mb-4">
             Numbers that speak
-          </h2>
-          <p className="text-emerald-100 text-lg">
+          </Text>
+          <Text variant="body" className="text-emerald-100 text-lg">
             Join thousands of societies and offices already using VMS
-          </p>
+          </Text>
         </div>
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-12">
           {stats.map((stat, index) => (
@@ -86,8 +87,8 @@ export function Stats() {
               className="text-center p-6 rounded-2xl bg-white/10 backdrop-blur-sm"
             >
               <AnimatedNumber value={stat.value} suffix={stat.suffix} />
-              <p className="text-xl font-semibold text-white mt-2">{stat.label}</p>
-              <p className="text-emerald-100 text-sm mt-1">{stat.description}</p>
+              <Text variant="label" className="text-xl text-white mt-2 mb-0">{stat.label}</Text>
+              <Text variant="caption" className="text-emerald-100 mt-1">{stat.description}</Text>
             </div>
           ))}
         </div>

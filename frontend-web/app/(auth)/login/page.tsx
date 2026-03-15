@@ -39,7 +39,7 @@ export default function LoginPage() {
     if (result.user) {
       setUser(result.user);
       setLoading(false);
-      router.push(getLandingPage(result.user));
+      router.replace(getLandingPage(result.user));
       return;
     }
     setError("Sign in failed. Please try again.");

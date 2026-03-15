@@ -43,7 +43,7 @@ export type { ModalProps } from "./Modal";
 export { EmptyState } from "./EmptyState";
 export type { EmptyStateProps } from "./EmptyState";
 
-export { Skeleton, CardSkeleton, TableRowSkeleton, StatCardSkeleton } from "./Skeleton";
+export { Skeleton, SkeletonLine, SkeletonBlock, CardSkeleton, TableRowSkeleton, StatCardSkeleton } from "./Skeleton";
 export type { SkeletonProps } from "./Skeleton";
 
 export { Tabs, TabsList, TabsTrigger, TabsContent, TabBar } from "./Tabs";
@@ -67,8 +67,13 @@ export type { NavLinkProps } from "./NavLink";
 export { StyledLink } from "./StyledLink";
 export type { StyledLinkProps } from "./StyledLink";
 
-export { Spinner } from "./Spinner";
+export { Spinner, PageLoader } from "./Spinner";
 export type { SpinnerProps, SpinnerSize } from "./Spinner";
+
+export { RoleBadge } from "./Badge";
+
+export { ConfirmDialog } from "./Modal";
+export type { ConfirmDialogProps } from "./Modal";
 
 export { HeroIllustration } from "./HeroIllustration";
 export { WelcomeIllustration } from "./WelcomeIllustration";

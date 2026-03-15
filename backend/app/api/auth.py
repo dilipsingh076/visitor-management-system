@@ -179,7 +179,8 @@ async def register_society(body: RegisterSocietyRequest, db: AsyncSession = Depe
 async def get_current_user_info(current_user: dict = Depends(get_current_user), db: AsyncSession = Depends(get_db)):
     """
     Get current authenticated user information.
-    Includes society_id and society when user belongs to a society.
+    Loads user from DB when user_id is present so roles (including platform_admin) are correct
+    even when society_id is null. Includes society when user belongs to a society.
     """
     roles = current_user.get("realm_access", {}).get("roles", [])
     user_id = current_user.get("sub") or current_user.get("user_id")
@@ -194,24 +195,27 @@ async def get_current_user_info(current_user: dict = Depends(get_current_user), 
         "society_id": society_id,
         "building_id": current_user.get("building_id"),
     }
-    # Load society and user details from DB when available (use DB role as primary)
-    if user_id and society_id:
+    # Load user from DB whenever we have user_id (so platform_admin and others get correct roles)
+    if user_id:
         from uuid import UUID
         try:
             result = await db.execute(select(User).where(User.id == UUID(user_id)))
             user = result.scalar_one_or_none()
             if user:
-                # Use DB roles (supports multiple roles); primary = first
                 from app.api.users import _user_roles
                 roles = _user_roles(user)
                 payload["roles"] = roles
                 payload["role"] = "chairman" if user.role == "admin" else (roles[0] if roles else user.role)
-                result = await db.execute(select(Society).where(Society.id == user.society_id))
-                society = result.scalar_one_or_none()
-                if society:
-                    payload["society"] = {"id": str(society.id), "slug": society.slug, "name": society.name}
+                payload["username"] = user.full_name
+                payload["society_id"] = str(user.society_id) if user.society_id else None
+                payload["building_id"] = str(user.building_id) if user.building_id else None
                 payload["flat_number"] = user.flat_number
                 payload["phone"] = user.phone
+                if user.society_id:
+                    result = await db.execute(select(Society).where(Society.id == user.society_id))
+                    society = result.scalar_one_or_none()
+                    if society:
+                        payload["society"] = {"id": str(society.id), "slug": society.slug, "name": society.name}
         except (ValueError, TypeError):
             pass
     return JSONResponse(content=payload)
@@ -258,6 +262,8 @@ async def refresh_token(body: RefreshTokenRequest, db: AsyncSession = Depends(ge
     )
     if not user or not new_refresh:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid or expired refresh token")
+
+    await db.commit()
 
     # New access token based on current user roles/society
     roles = _user_to_response(user).get("roles", [])

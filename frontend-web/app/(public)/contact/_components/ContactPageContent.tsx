@@ -2,32 +2,19 @@
 
 import { useState } from "react";
 import Image from "next/image";
+import { Mail, Phone, MapPin, Check, Loader2 } from "lucide-react";
 import {
   FadeInUp,
   FadeInLeft,
   FadeInRight,
   SectionHeading,
 } from "@/components/marketing";
+import { Text } from "@/components/ui";
 
 const contactInfo = [
-  {
-    icon: <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>,
-    label: "Email",
-    value: "hello@vms.in",
-    href: "mailto:hello@vms.in",
-  },
-  {
-    icon: <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" /></svg>,
-    label: "Phone",
-    value: "+91 80 1234 5678",
-    href: "tel:+918012345678",
-  },
-  {
-    icon: <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>,
-    label: "Office",
-    value: "Bangalore, India",
-    href: "#",
-  },
+  { icon: <Mail className="w-5 h-5" />, label: "Email", value: "hello@vms.in", href: "mailto:hello@vms.in" },
+  { icon: <Phone className="w-5 h-5" />, label: "Phone", value: "+91 80 1234 5678", href: "tel:+918012345678" },
+  { icon: <MapPin className="w-5 h-5" />, label: "Office", value: "Bangalore, India", href: "#" },
 ];
 
 const offices = [
@@ -70,12 +57,12 @@ export function ContactPageContent() {
 
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           <FadeInUp className="max-w-2xl mx-auto text-center">
-            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-card mb-4">
+            <Text variant="h1" as="h1" className="text-card mb-4">
               Get in <span className="text-primary">touch</span>
-            </h1>
-            <p className="text-base text-card/80">
-              Have questions? Want a demo? Our team is here to help you get started.
-            </p>
+            </Text>
+            <Text variant="body" className="text-base text-card/80">
+              Need a demo, custom quote, or help choosing the right plan? We’ll respond within 24 hours.
+            </Text>
           </FadeInUp>
         </div>
       </section>
@@ -93,8 +80,8 @@ export function ContactPageContent() {
                   {info.icon}
                 </div>
                 <div>
-                  <p className="text-muted-foreground text-xs">{info.label}</p>
-                  <p className="text-foreground font-medium text-sm">{info.value}</p>
+                  <Text variant="caption">{info.label}</Text>
+                  <Text variant="label" className="text-sm mb-0">{info.value}</Text>
                 </div>
               </a>
             </FadeInUp>
@@ -109,18 +96,16 @@ export function ContactPageContent() {
             {/* Form */}
             <FadeInLeft>
               <div className="bg-muted-bg p-6 lg:p-8 rounded-xl">
-                <h2 className="text-lg font-bold text-foreground mb-1">Send us a message</h2>
-                <p className="text-muted-foreground text-sm mb-6">We&apos;ll get back to you within 24 hours.</p>
+                <Text variant="h3" as="h2" className="mb-1">Send us a message</Text>
+                <Text variant="muted" className="mb-6">We&apos;ll get back to you within 24 hours.</Text>
 
                 {isSubmitted ? (
                   <div className="text-center py-10">
                     <div className="w-14 h-14 bg-success/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                      <svg className="w-7 h-7 text-success" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                      </svg>
+                      <Check className="w-7 h-7 text-success" />
                     </div>
-                    <h3 className="text-base font-bold text-foreground mb-1">Thank you!</h3>
-                    <p className="text-muted-foreground text-sm">We&apos;ll get back to you soon.</p>
+                    <Text variant="h3" as="h3" className="mb-1">Thank you!</Text>
+                    <Text variant="muted">We&apos;ll get back to you soon.</Text>
                   </div>
                 ) : (
                   <form onSubmit={handleSubmit} className="space-y-4">
@@ -212,9 +197,7 @@ export function ContactPageContent() {
                     >
                       {isSubmitting ? (
                         <span className="flex items-center justify-center gap-2">
-                          <svg className="w-4 h-4 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                          </svg>
+                          <Loader2 className="w-4 h-4 animate-spin" />
                           Sending...
                         </span>
                       ) : (
@@ -229,30 +212,28 @@ export function ContactPageContent() {
             {/* FAQ */}
             <FadeInRight>
               <div>
-                <h2 className="text-lg font-bold text-foreground mb-1">Frequently asked questions</h2>
-                <p className="text-muted-foreground text-sm mb-6">Quick answers to common questions.</p>
+                <Text variant="h3" as="h2" className="mb-1">Frequently asked questions</Text>
+                <Text variant="muted" className="mb-6">Quick answers to common questions.</Text>
 
                 <div className="space-y-3">
                   {faqs.map((faq, index) => (
                     <div key={index} className="bg-muted-bg p-4 rounded-xl">
-                      <h3 className="font-medium text-foreground text-sm mb-1">{faq.q}</h3>
-                      <p className="text-muted-foreground text-xs">{faq.a}</p>
+                      <Text variant="label" className="mb-1">{faq.q}</Text>
+                      <Text variant="caption">{faq.a}</Text>
                     </div>
                   ))}
                 </div>
 
                 <div className="mt-6 p-4 bg-primary/10 rounded-xl">
-                  <h3 className="font-medium text-primary text-sm mb-1">Need immediate help?</h3>
-                  <p className="text-primary/80 text-xs mb-3">
+                  <Text variant="label" className="text-primary mb-1">Need immediate help?</Text>
+                  <Text variant="caption" className="text-primary/80 mb-3">
                     Our support team is available Monday to Saturday, 9 AM to 6 PM IST.
-                  </p>
+                  </Text>
                   <a
                     href="tel:+918012345678"
                     className="inline-flex items-center gap-1.5 text-primary font-medium text-sm hover:text-primary-hover"
                   >
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
-                    </svg>
+                    <Phone className="w-4 h-4" />
                     Call us now
                   </a>
                 </div>
@@ -280,9 +261,9 @@ export function ContactPageContent() {
                   <span className="inline-block px-2.5 py-0.5 bg-primary/10 text-primary text-xs font-medium rounded-full mb-3">
                     {office.type}
                   </span>
-                  <h3 className="text-base font-bold text-foreground mb-0.5">{office.city}</h3>
-                  <p className="text-primary text-xs mb-2">{office.country}</p>
-                  <p className="text-muted-foreground text-xs">{office.address}</p>
+                  <Text variant="h3" as="h3" className="mb-0.5">{office.city}</Text>
+                  <Text variant="caption" className="text-primary mb-2">{office.country}</Text>
+                  <Text variant="caption">{office.address}</Text>
                 </div>
               </FadeInUp>
             ))}

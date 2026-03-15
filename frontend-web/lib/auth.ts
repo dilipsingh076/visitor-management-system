@@ -66,15 +66,24 @@ export function isCommittee(role: string): boolean {
   return role === "chairman" || role === "secretary" || role === "treasurer";
 }
 
+/** Normalize role string to lowercase for consistent comparison (API may return "Guard" etc.). */
+function normalizeRole(role: string): string {
+  return (role || "").toLowerCase().trim();
+}
+
 export function getPrimaryRole(user: User | null): string {
   if (!user) return "resident";
-  if (user.role) return user.role;
-  const roles = user.roles || [];
   const order = ["platform_admin", "chairman", "secretary", "treasurer", "guard", "resident"];
+  if (user.role) {
+    const r = normalizeRole(user.role);
+    if (order.includes(r)) return r;
+    return r || "resident";
+  }
+  const roles = (user.roles || []).map((r) => normalizeRole(String(r)));
   for (const r of order) {
     if (roles.includes(r)) return r;
   }
-  return roles[0] || "resident";
+  return normalizeRole(String(roles[0])) || "resident";
 }
 
 export function canAccessPlatform(user: User | null): boolean {
@@ -163,6 +172,44 @@ function clearAuthCookie(): void {
 // Auth state stored in memory for current session
 let _currentUser: User | null = null;
 let _isAuthenticated: boolean = false;
+
+// Prevent concurrent refresh calls (multiple 401s => single refresh)
+let _refreshPromise: Promise<boolean> | null = null;
+
+/** Seconds before expiry at which we consider token "expiring soon" and refresh */
+const REFRESH_BEFORE_EXPIRY_SECONDS = 5 * 60; // 5 minutes
+
+/**
+ * Parse JWT payload without verification (only to read exp). Returns null if invalid.
+ */
+function getAccessTokenExpiry(accessToken: string): number | null {
+  try {
+    const parts = accessToken.split(".");
+    if (parts.length !== 3) return null;
+    const payload = parts[1];
+    const base64 = payload.replace(/-/g, "+").replace(/_/g, "/");
+    const decoded = JSON.parse(atob(base64)) as { exp?: number };
+    return typeof decoded.exp === "number" ? decoded.exp : null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * If the access token is expired or will expire within REFRESH_BEFORE_EXPIRY_SECONDS,
+ * refresh it. Call this before API requests so the user stays logged in.
+ */
+export async function ensureValidAccessToken(): Promise<boolean> {
+  if (typeof window === "undefined") return true;
+  const token = localStorage.getItem("access_token");
+  if (!token) return true; // No token, let the request fail and trigger normal 401 flow
+  const exp = getAccessTokenExpiry(token);
+  const nowSeconds = Math.floor(Date.now() / 1000);
+  const stillValid = exp !== null && exp - nowSeconds > REFRESH_BEFORE_EXPIRY_SECONDS;
+  if (stillValid) return true;
+  // Expired or unparseable: try refresh so we don’t send a bad/expired token
+  return refreshAccessToken();
+}
 
 /**
  * Sign up a new user.
@@ -529,34 +576,51 @@ export function getToken(): string | null {
 export async function refreshAccessToken(): Promise<boolean> {
   if (typeof window === "undefined") return false;
   const refreshToken = localStorage.getItem("refresh_token");
-  if (!refreshToken) return false;
-
-  try {
-    const res = await fetch(`${API_BASE_URL}/auth/refresh`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      credentials: "include",
-      body: JSON.stringify({ refresh_token: refreshToken }),
-    });
-    if (!res.ok) {
-      localStorage.removeItem("access_token");
-      localStorage.removeItem("refresh_token");
-      return false;
-    }
-    const data = await res.json().catch(() => ({}));
-    const accessToken = data.access_token as string | undefined;
-    const newRefresh = data.refresh_token as string | undefined;
-    if (accessToken) {
-      localStorage.setItem("access_token", accessToken);
-      setAuthCookie(accessToken);
-    }
-    if (newRefresh) {
-      localStorage.setItem("refresh_token", newRefresh);
-    }
-    return Boolean(accessToken);
-  } catch {
+  if (!refreshToken) {
+    // Don’t keep sending an expired access token; clear it so 401 flow runs once
+    localStorage.removeItem("access_token");
+    clearAuthCookie();
     return false;
   }
+
+  if (_refreshPromise) return _refreshPromise;
+
+  _refreshPromise = (async () => {
+    try {
+      const res = await fetch(`${API_BASE_URL}/auth/refresh`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ refresh_token: refreshToken }),
+      });
+      if (!res.ok) {
+        localStorage.removeItem("access_token");
+        localStorage.removeItem("refresh_token");
+        clearAuthCookie();
+        return false;
+      }
+      const data = await res.json().catch(() => ({}));
+      const accessToken = data.access_token as string | undefined;
+      const newRefresh = data.refresh_token as string | undefined;
+      if (accessToken) {
+        localStorage.setItem("access_token", accessToken);
+        setAuthCookie(accessToken);
+      }
+      if (newRefresh) {
+        localStorage.setItem("refresh_token", newRefresh);
+      }
+      return Boolean(accessToken);
+    } catch {
+      localStorage.removeItem("access_token");
+      localStorage.removeItem("refresh_token");
+      clearAuthCookie();
+      return false;
+    } finally {
+      _refreshPromise = null;
+    }
+  })();
+
+  return _refreshPromise;
 }
 
 export function removeToken(): void {

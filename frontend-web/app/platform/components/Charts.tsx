@@ -35,45 +35,6 @@ export function GrowthChart({ data, title }: GrowthChartProps) {
   );
 }
 
-interface RevenueChartProps {
-  data: { date: string; amount: number }[];
-  title?: string;
-}
-
-export function RevenueChart({ data, title }: RevenueChartProps) {
-  const maxAmount = Math.max(...data.map((d) => Number(d.amount)), 1);
-
-  return (
-    <div className="bg-card rounded-xl border border-border p-4">
-      {title && <h3 className="text-sm font-semibold text-foreground mb-4">{title}</h3>}
-      <div className="h-48 flex items-end gap-1">
-        {data.map((item, index) => {
-          const height = (Number(item.amount) / maxAmount) * 100;
-          return (
-            <div
-              key={index}
-              className="flex-1 bg-info/30 hover:bg-info/50 transition-colors rounded-t group relative"
-              style={{ height: `${Math.max(height, 2)}%` }}
-            >
-              <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1 px-2 py-1 bg-foreground text-card text-xs rounded opacity-0 group-hover:opacity-100 whitespace-nowrap transition pointer-events-none z-10">
-                ₹{Number(item.amount).toLocaleString()} - {item.date}
-              </div>
-            </div>
-          );
-        })}
-      </div>
-      <div className="flex justify-between mt-2 text-xs text-muted-foreground">
-        {data.slice(0, 1).map((d, i) => (
-          <span key={i}>{d.date}</span>
-        ))}
-        {data.slice(-1).map((d, i) => (
-          <span key={i}>{d.date}</span>
-        ))}
-      </div>
-    </div>
-  );
-}
-
 interface BreakdownChartProps {
   data: Record<string, number>;
   title?: string;
@@ -143,55 +104,6 @@ export function BreakdownChart({ data, title }: BreakdownChartProps) {
             </div>
           );
         })}
-      </div>
-    </div>
-  );
-}
-
-interface VisitorTrendChartProps {
-  data: { date: string; visitors: number; checkins: number }[];
-  title?: string;
-}
-
-export function VisitorTrendChart({ data, title }: VisitorTrendChartProps) {
-  const maxValue = Math.max(
-    ...data.map((d) => Math.max(d.visitors, d.checkins)),
-    1
-  );
-
-  return (
-    <div className="bg-card rounded-xl border border-border p-4">
-      {title && <h3 className="text-sm font-semibold text-foreground mb-4">{title}</h3>}
-      <div className="h-48 flex items-end gap-1">
-        {data.map((item, index) => {
-          const visitorsHeight = (item.visitors / maxValue) * 100;
-          const checkinsHeight = (item.checkins / maxValue) * 100;
-          return (
-            <div key={index} className="flex-1 flex gap-px items-end group relative">
-              <div
-                className="flex-1 bg-success/40 rounded-t"
-                style={{ height: `${Math.max(visitorsHeight, 2)}%` }}
-              />
-              <div
-                className="flex-1 bg-info/40 rounded-t"
-                style={{ height: `${Math.max(checkinsHeight, 2)}%` }}
-              />
-              <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1 px-2 py-1 bg-foreground text-card text-xs rounded opacity-0 group-hover:opacity-100 whitespace-nowrap transition pointer-events-none z-10">
-                V: {item.visitors}, C: {item.checkins}
-              </div>
-            </div>
-          );
-        })}
-      </div>
-      <div className="flex items-center justify-center gap-4 mt-3">
-        <div className="flex items-center gap-1.5 text-xs">
-          <div className="w-2.5 h-2.5 rounded-full bg-success/40" />
-          <span className="text-muted-foreground">Visitors</span>
-        </div>
-        <div className="flex items-center gap-1.5 text-xs">
-          <div className="w-2.5 h-2.5 rounded-full bg-info/40" />
-          <span className="text-muted-foreground">Check-ins</span>
-        </div>
       </div>
     </div>
   );

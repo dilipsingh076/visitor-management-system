@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { usePlatformSocietiesList, useActivateSociety, useDeactivateSociety } from "@/features/admin/hooks/usePlatformSocieties";
 import {
   PageHeader,
@@ -31,6 +32,7 @@ import {
 import Link from "next/link";
 
 export default function PlatformSocietiesPage() {
+  const router = useRouter();
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState("");
   const [activeMenu, setActiveMenu] = useState<string | null>(null);
@@ -95,8 +97,8 @@ export default function PlatformSocietiesPage() {
         </div>
       </div>
 
-      {/* Table */}
-      <Table>
+      {/* Table — platform compound Table (ariaLabel, stickyHeader) */}
+      <Table ariaLabel="Societies" stickyHeader>
         <TableHead>
           <TableTh>Society</TableTh>
           <TableTh>Location</TableTh>
@@ -106,7 +108,7 @@ export default function PlatformSocietiesPage() {
           <TableTh>Status</TableTh>
           <TableTh>Actions</TableTh>
         </TableHead>
-        <TableBody>
+        <TableBody onRowClick={(rowId) => router.push(`/platform/societies/${rowId}`)}>
           {isLoading ? (
             <TableLoading colSpan={7} />
           ) : data?.items.length === 0 ? (
@@ -118,7 +120,7 @@ export default function PlatformSocietiesPage() {
             />
           ) : (
             data?.items.map((society) => (
-              <TableRow key={society.id}>
+              <TableRow key={society.id} rowId={String(society.id)}>
                 <TableTd>
                   <div>
                     <p className="font-medium text-foreground">{society.name}</p>
@@ -134,14 +136,25 @@ export default function PlatformSocietiesPage() {
                 <TableTd>
                   <Badge variant="primary">{society.plan || "basic"}</Badge>
                 </TableTd>
-                <TableTd>
-                  <span className="text-sm text-foreground">{society.total_buildings}</span>
+                <TableTd noRowClick className="p-0">
+                  <Link
+                    href={`/platform/societies/${String(society.id)}/buildings`}
+                    className="flex items-center gap-1.5 px-4 py-3 text-sm text-primary hover:underline font-medium min-h-[2.5rem]"
+                  >
+                    <Building2 className="w-3.5 h-3.5 shrink-0" />
+                    <span>{society.total_buildings}</span>
+                    <span className="sr-only"> buildings — view list</span>
+                  </Link>
                 </TableTd>
-                <TableTd>
-                  <div className="flex items-center gap-1.5 text-sm text-foreground">
-                    <Users className="w-3.5 h-3.5 text-muted-foreground" />
-                    {society.total_residents}
-                  </div>
+                <TableTd noRowClick className="p-0">
+                  <Link
+                    href={`/platform/societies/${String(society.id)}/residents`}
+                    className="flex items-center gap-1.5 px-4 py-3 text-sm text-primary hover:underline font-medium min-h-[2.5rem]"
+                  >
+                    <Users className="w-3.5 h-3.5 shrink-0" />
+                    <span>{society.total_residents}</span>
+                    <span className="sr-only"> residents — view list</span>
+                  </Link>
                 </TableTd>
                 <TableTd>
                   <Badge 
@@ -151,7 +164,7 @@ export default function PlatformSocietiesPage() {
                     {society.is_active ? (society.status || "Active") : "Inactive"}
                   </Badge>
                 </TableTd>
-                <TableTd>
+                <TableTd noRowClick>
                   <div className="relative">
                     <Button
                       variant="ghost"
@@ -160,7 +173,6 @@ export default function PlatformSocietiesPage() {
                     >
                       <MoreHorizontal className="w-4 h-4" />
                     </Button>
-                    
                     {activeMenu === society.id && (
                       <>
                         <div
@@ -177,6 +189,7 @@ export default function PlatformSocietiesPage() {
                           </Link>
                           {society.is_active ? (
                             <button
+                              type="button"
                               onClick={() => handleDeactivate(society.id)}
                               disabled={deactivateMutation.isPending}
                               className="w-full flex items-center gap-2 px-3 py-2 text-sm text-error hover:bg-muted-bg transition"
@@ -186,6 +199,7 @@ export default function PlatformSocietiesPage() {
                             </button>
                           ) : (
                             <button
+                              type="button"
                               onClick={() => handleActivate(society.id)}
                               disabled={activateMutation.isPending}
                               className="w-full flex items-center gap-2 px-3 py-2 text-sm text-success hover:bg-muted-bg transition"

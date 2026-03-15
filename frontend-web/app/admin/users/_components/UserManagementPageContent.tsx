@@ -1,34 +1,19 @@
 "use client";
 
-import { Avatar, Button, Input, Badge, Modal, Select, PageHeader, EmptyState, EmptyIllustration, Alert } from "@/components/ui";
-import { ROLE_LABELS } from "@/lib/auth";
+import { useState } from "react";
+import { Plus, Pencil, Ban, CheckCircle, Trash2 } from "lucide-react";
+import { Avatar, Button, Input, Badge, Modal, ConfirmDialog, Select, PageHeader, EmptyState, EmptyIllustration, Alert, RoleBadge } from "@/components/ui";
 import {
   useUserManagement,
   ROLE_OPTIONS,
-  ROLE_BADGE_VARIANTS,
   COMMITTEE_ROLES,
   shouldShowFlatForRole,
 } from "@/features/admin";
 import { PageWrapper, PageLoadingSkeleton, SearchInput } from "@/components/common";
 import { theme } from "@/lib/theme";
 
-function RoleBadges({ roles }: { roles: string[] }) {
-  const list = Array.isArray(roles) && roles.length > 0 ? roles : [];
-  return (
-    <div className="flex flex-wrap gap-1">
-      {list.map((role) => {
-        const variant = ROLE_BADGE_VARIANTS[role] ?? "default";
-        return (
-          <Badge key={role} variant={variant}>
-            {ROLE_LABELS[role] ?? role}
-          </Badge>
-        );
-      })}
-    </div>
-  );
-}
-
 export function UserManagementPageContent() {
+  const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null);
   const {
     authLoading,
     authUser,
@@ -83,9 +68,7 @@ export function UserManagementPageContent() {
         description="Chairman and committee can assign committee roles. Resident and Guard are assigned only through signup."
         action={
           <Button size="sm" onClick={modals.openAddModal}>
-            <svg className="w-3.5 h-3.5 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-            </svg>
+            <Plus className="w-3.5 h-3.5 mr-1.5" />
             Add User
           </Button>
         }
@@ -153,7 +136,11 @@ export function UserManagementPageContent() {
                     </div>
                   </td>
                   <td className={theme.table.td}>
-                    <RoleBadges roles={user.roles ?? [user.role]} />
+                    <div className="flex flex-wrap gap-1">
+                      {(user.roles ?? (user.role ? [user.role] : [])).map((role) => (
+                        <RoleBadge key={role} role={role} size="sm" />
+                      ))}
+                    </div>
                   </td>
                   <td className={`${theme.table.td} ${theme.text.mutedSmall} hidden md:table-cell`}>{user.flat_number || "—"}</td>
                   <td className={`${theme.table.td} ${theme.text.mutedSmall} hidden lg:table-cell`}>{user.last_login || "Never"}</td>
@@ -163,9 +150,7 @@ export function UserManagementPageContent() {
                   <td className={theme.table.td}>
                     <div className="flex items-center justify-end gap-1">
                       <Button size="sm" variant="ghost" onClick={() => modals.openEditModal(user)} aria-label="Edit user">
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                        </svg>
+                        <Pencil className="w-4 h-4" />
                       </Button>
                       <Button
                         size="sm"
@@ -175,25 +160,19 @@ export function UserManagementPageContent() {
                         aria-label={user.status === "active" ? "Deactivate" : "Activate"}
                       >
                         {user.status === "active" ? (
-                          <svg className="w-4 h-4 text-warning" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
-                          </svg>
+                          <Ban className="w-4 h-4 text-warning" />
                         ) : (
-                          <svg className="w-4 h-4 text-success" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                          </svg>
+                          <CheckCircle className="w-4 h-4 text-success" />
                         )}
                       </Button>
                       <Button
                         size="sm"
                         variant="ghost"
-                        onClick={() => handleDeleteUser(user.id)}
+                        onClick={() => setDeleteTarget({ id: user.id, name: user.username })}
                         className="text-error hover:bg-error/10"
                         aria-label="Delete user"
                       >
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                        </svg>
+                        <Trash2 className="w-4 h-4" />
                       </Button>
                     </div>
                   </td>
@@ -234,6 +213,20 @@ export function UserManagementPageContent() {
           />
         )}
       </Modal>
+
+      <ConfirmDialog
+        isOpen={!!deleteTarget}
+        onClose={() => setDeleteTarget(null)}
+        onConfirm={() => {
+          if (deleteTarget) handleDeleteUser(deleteTarget.id);
+          setDeleteTarget(null);
+        }}
+        title="Delete user"
+        message={deleteTarget ? `Are you sure you want to remove "${deleteTarget.name}" from the society? This cannot be undone.` : ""}
+        confirmLabel="Delete"
+        cancelLabel="Cancel"
+        variant="danger"
+      />
     </PageWrapper>
   );
 }

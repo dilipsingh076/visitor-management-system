@@ -1,6 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
+import { ROLE_LABELS } from "@/lib/auth";
 
 export type BadgeVariant = "default" | "primary" | "success" | "warning" | "error" | "info" | "outline";
 export type BadgeSize = "sm" | "md";
@@ -36,5 +37,37 @@ export function Badge({ children, variant = "default", size = "md", className = 
     >
       {children}
     </span>
+  );
+}
+
+const ROLE_VARIANTS: Record<string, BadgeVariant> = {
+  platform_admin: "primary",
+  chairman: "info",
+  secretary: "info",
+  treasurer: "warning",
+  guard: "default",
+  resident: "success",
+};
+
+/** Role badge built from Badge primitive. Use for user role display. */
+export function RoleBadge({
+  role,
+  label,
+  variant,
+  size = "sm",
+  className = "",
+}: {
+  role: string;
+  label?: string;
+  variant?: BadgeVariant;
+  size?: BadgeSize;
+  className?: string;
+}) {
+  const resolvedVariant = variant ?? ROLE_VARIANTS[role.toLowerCase()] ?? "default";
+  const resolvedLabel = label ?? ROLE_LABELS[role] ?? role;
+  return (
+    <Badge variant={resolvedVariant} size={size} className={className}>
+      {resolvedLabel}
+    </Badge>
   );
 }

@@ -1,5 +1,6 @@
 "use client";
 
+import { Search } from "lucide-react";
 import { Input } from "@/components/ui";
 
 export interface SearchInputProps {
@@ -10,22 +11,7 @@ export interface SearchInputProps {
   "aria-label"?: string;
 }
 
-const SearchIcon = () => (
-  <svg
-    className="w-5 h-5 text-muted-foreground"
-    fill="none"
-    stroke="currentColor"
-    viewBox="0 0 24 24"
-    aria-hidden
-  >
-    <path
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      strokeWidth={2}
-      d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-    />
-  </svg>
-);
+const SearchIcon = () => <Search className="w-5 h-5 text-muted-foreground" aria-hidden />;
 
 export function SearchInput({
   value,

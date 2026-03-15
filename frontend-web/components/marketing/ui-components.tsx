@@ -2,6 +2,8 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { CheckCircle, Quote } from "lucide-react";
+import { Text } from "@/components/ui";
 
 export function GradientText({
   children,
@@ -65,8 +67,8 @@ export function FeatureCard({
       <div className="w-12 h-12 rounded-lg bg-primary/10 text-primary flex items-center justify-center mb-4 transition-transform duration-200 group-hover:scale-105">
         {icon}
       </div>
-      <h3 className="text-lg font-semibold text-foreground mb-2">{title}</h3>
-      <p className="text-muted-foreground text-sm leading-relaxed">{description}</p>
+      <Text variant="h3" as="h3" className="text-lg mb-2">{title}</Text>
+      <Text variant="muted" className="text-sm">{description}</Text>
     </div>
   );
 }
@@ -96,8 +98,8 @@ export function ImageWithOverlay({
       <div className="absolute inset-0 bg-gradient-to-t from-foreground/80 to-transparent" />
       {(title || subtitle) && (
         <div className="absolute bottom-0 left-0 right-0 p-4">
-          {title && <h3 className="text-card text-lg font-semibold">{title}</h3>}
-          {subtitle && <p className="text-card/80 text-sm mt-1">{subtitle}</p>}
+          {title && <Text variant="h3" as="h3" className="text-card text-lg">{title}</Text>}
+          {subtitle && <Text variant="muted" className="text-card/80 text-sm mt-1">{subtitle}</Text>}
         </div>
       )}
     </div>
@@ -177,17 +179,23 @@ export function SectionHeading({
   return (
     <div className={`${centered ? "text-center" : ""} ${className}`}>
       {eyebrow && (
-        <p className={`font-semibold uppercase tracking-wider text-xs mb-3 ${light ? "text-primary-light" : "text-primary"}`}>
+        <Text variant="eyebrow" className={`mb-3 block ${light ? "text-primary-light" : ""}`}>
           {eyebrow}
-        </p>
+        </Text>
       )}
-      <h2 className={`text-2xl sm:text-3xl font-bold mb-3 ${light ? "text-card" : "text-foreground"}`}>
-        {title}
-      </h2>
+      {typeof title === "string" ? (
+        <Text variant="h2" as="h2" className={`text-2xl sm:text-3xl mb-3 block ${light ? "text-card" : "text-foreground"}`}>
+          {title}
+        </Text>
+      ) : (
+        <Text as="div" variant="h2" className={`text-2xl sm:text-3xl mb-3 block ${light ? "text-card" : "text-foreground"}`}>
+          {title}
+        </Text>
+      )}
       {description && (
-        <p className={`text-base max-w-2xl mx-auto ${light ? "text-card/80" : "text-muted-foreground"}`}>
+        <Text variant="muted" className={`text-base max-w-2xl mx-auto block ${light ? "text-card/80" : ""}`}>
           {description}
-        </p>
+        </Text>
       )}
     </div>
   );
@@ -230,11 +238,7 @@ export function TrustBadge({
 }) {
   return (
     <div className={`flex items-center gap-2 ${className}`}>
-      {icon || (
-        <svg className="w-4 h-4 text-primary" fill="currentColor" viewBox="0 0 24 24">
-          <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" />
-        </svg>
-      )}
+      {icon || <CheckCircle className="w-4 h-4 text-primary" />}
       <span className="text-muted-foreground text-sm">{label}</span>
     </div>
   );
@@ -256,17 +260,15 @@ export function TestimonialCard({
 }) {
   return (
     <div className={`bg-card p-6 rounded-xl border border-border transition-shadow duration-200 hover:shadow-md ${className}`}>
-      <svg className="w-8 h-8 text-primary/20 mb-3" fill="currentColor" viewBox="0 0 24 24">
-        <path d="M14.017 21v-7.391c0-5.704 3.731-9.57 8.983-10.609l.995 2.151c-2.432.917-3.995 3.638-3.995 5.849h4v10h-9.983zm-14.017 0v-7.391c0-5.704 3.748-9.57 9-10.609l.996 2.151c-2.433.917-3.996 3.638-3.996 5.849h3.983v10h-9.983z" />
-      </svg>
-      <p className="text-foreground text-sm leading-relaxed mb-4">&ldquo;{quote}&rdquo;</p>
+      <Quote className="w-8 h-8 text-primary/20 mb-3" />
+      <Text variant="body" className="mb-4">&ldquo;{quote}&rdquo;</Text>
       <div className="flex items-center gap-3">
         <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center text-card text-sm font-semibold">
           {author.split(" ").map((n) => n[0]).join("")}
         </div>
         <div>
-          <p className="font-medium text-foreground text-sm">{author}</p>
-          <p className="text-muted-foreground text-xs">{role}{company && `, ${company}`}</p>
+          <Text variant="label" className="mb-0 font-medium text-sm">{author}</Text>
+          <Text variant="caption">{role}{company ? `, ${company}` : ""}</Text>
         </div>
       </div>
     </div>

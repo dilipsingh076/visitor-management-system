@@ -1,7 +1,9 @@
 "use client";
 
 import { forwardRef, useEffect } from "react";
+import { X } from "lucide-react";
 import { theme } from "@/lib/theme";
+import { Button } from "./Button";
 
 export interface ModalProps {
   isOpen: boolean;
@@ -66,9 +68,7 @@ export const Modal = forwardRef<HTMLDivElement, ModalProps>(
                   className="p-1 rounded-lg hover:bg-muted-bg text-muted-foreground hover:text-foreground transition"
                   aria-label="Close modal"
                 >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
+                  <X className="w-5 h-5" />
                 </button>
               )}
             </div>
@@ -81,3 +81,53 @@ export const Modal = forwardRef<HTMLDivElement, ModalProps>(
 );
 
 Modal.displayName = "Modal";
+
+export interface ConfirmDialogProps {
+  isOpen: boolean;
+  onClose: () => void;
+  onConfirm: () => void | Promise<void>;
+  title: string;
+  message: string;
+  confirmLabel?: string;
+  cancelLabel?: string;
+  variant?: "danger" | "warning" | "default";
+  isLoading?: boolean;
+}
+
+/** Confirmation dialog built from Modal + Button. Use for delete/destructive actions. */
+export function ConfirmDialog({
+  isOpen,
+  onClose,
+  onConfirm,
+  title,
+  message,
+  confirmLabel = "Confirm",
+  cancelLabel = "Cancel",
+  variant = "default",
+  isLoading = false,
+}: ConfirmDialogProps) {
+  const handleConfirm = () => {
+    const result = onConfirm();
+    if (result instanceof Promise) {
+      result.then(() => onClose()).catch(() => {});
+    } else {
+      onClose();
+    }
+  };
+
+  const confirmVariant = variant === "danger" ? "danger" : "primary";
+
+  return (
+    <Modal isOpen={isOpen} onClose={onClose} title={title} size="sm" showCloseButton={!isLoading}>
+      <p className="text-sm text-muted-foreground mb-4">{message}</p>
+      <div className="flex justify-end gap-2">
+        <Button variant="outline" size="sm" onClick={onClose} disabled={isLoading}>
+          {cancelLabel}
+        </Button>
+        <Button variant={confirmVariant} size="sm" onClick={handleConfirm} loading={isLoading}>
+          {confirmLabel}
+        </Button>
+      </div>
+    </Modal>
+  );
+}

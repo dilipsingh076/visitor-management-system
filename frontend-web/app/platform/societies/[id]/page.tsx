@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import { useParams } from "next/navigation";
+import Link from "next/link";
+import { useQuery } from "@tanstack/react-query";
 import {
   usePlatformSocietyDetail,
   useUpdateSociety,
@@ -9,18 +11,27 @@ import {
   useDeactivateSociety,
   useAssignSocietyAdmin,
 } from "@/features/admin/hooks/usePlatformSocieties";
+import { usePlatformUsersList } from "@/features/admin/hooks/usePlatformUsers";
+import { listBuildings } from "@/lib/api";
 import {
   PageHeader,
   Button,
   Badge,
   Card,
   StatCard,
-  Input,
-  Select,
   Modal,
   InputField,
   SelectField,
   SkeletonCard,
+  Table,
+  TableHead,
+  TableTh,
+  TableBody,
+  TableRow,
+  TableTd,
+  TableEmpty,
+  TableLoading,
+  Avatar,
 } from "../../components";
 import {
   Building2,
@@ -36,7 +47,11 @@ import {
   X,
   UserPlus,
   Shield,
+  ArrowRight,
 } from "lucide-react";
+
+const RESIDENTS_PREVIEW = 5;
+const BUILDINGS_PREVIEW = 5;
 
 export default function SocietyDetailPage() {
   const params = useParams();
@@ -47,6 +62,19 @@ export default function SocietyDetailPage() {
   const activateMutation = useActivateSociety();
   const deactivateMutation = useDeactivateSociety();
   const assignAdminMutation = useAssignSocietyAdmin();
+
+  const { data: buildings = [], isLoading: buildingsLoading } = useQuery({
+    queryKey: ["buildings", societyId],
+    queryFn: () => listBuildings(societyId),
+    enabled: !!societyId,
+  });
+  const { data: residentsData, isLoading: residentsLoading } = usePlatformUsersList({
+    page: 1,
+    page_size: RESIDENTS_PREVIEW,
+    society_id: societyId,
+  });
+  const residents = residentsData?.items ?? [];
+  const buildingsPreview = buildings.slice(0, BUILDINGS_PREVIEW);
 
   const [isEditing, setIsEditing] = useState(false);
   const [showAssignAdmin, setShowAssignAdmin] = useState(false);
@@ -402,6 +430,140 @@ export default function SocietyDetailPage() {
             </div>
           )}
         </div>
+      </Card>
+
+      {/* Buildings */}
+      <Card padding="none">
+        <div className="px-5 py-3 border-b border-border bg-muted-bg/30 flex items-center justify-between">
+          <h2 className="text-sm font-semibold text-foreground">Buildings</h2>
+          <Link
+            href={`/platform/societies/${societyId}/buildings`}
+            className="text-xs font-medium text-primary hover:underline flex items-center gap-1"
+          >
+            View all ({society.total_buildings})
+            <ArrowRight className="w-3.5 h-3.5" />
+          </Link>
+        </div>
+        <div className="overflow-x-auto">
+          <Table ariaLabel="Buildings preview">
+            <TableHead>
+              <TableTh>Name</TableTh>
+              <TableTh>Code</TableTh>
+              <TableTh>Sort order</TableTh>
+            </TableHead>
+            <TableBody>
+              {buildingsLoading ? (
+                <TableLoading colSpan={3} rows={3} />
+              ) : buildings.length === 0 ? (
+                <TableEmpty
+                  colSpan={3}
+                  icon={<Building2 className="w-5 h-5" />}
+                  title="No buildings"
+                  description="This society has no buildings yet"
+                  action={
+                    <Link href={`/platform/societies/${societyId}/buildings`}>
+                      <Button variant="outline" size="sm">
+                        View buildings
+                      </Button>
+                    </Link>
+                  }
+                />
+              ) : (
+                buildingsPreview.map((b) => (
+                  <TableRow key={b.id}>
+                    <TableTd className="font-medium">{b.name}</TableTd>
+                    <TableTd className="text-muted-foreground font-mono text-sm">{b.code ?? "—"}</TableTd>
+                    <TableTd className="text-muted-foreground text-sm">{b.sort_order ?? "—"}</TableTd>
+                  </TableRow>
+                ))
+              )}
+            </TableBody>
+          </Table>
+        </div>
+        {buildings.length > BUILDINGS_PREVIEW && (
+          <div className="px-5 py-2 border-t border-border text-center">
+            <Link
+              href={`/platform/societies/${societyId}/buildings`}
+              className="text-sm text-primary hover:underline"
+            >
+              View all {buildings.length} buildings →
+            </Link>
+          </div>
+        )}
+      </Card>
+
+      {/* Residents */}
+      <Card padding="none">
+        <div className="px-5 py-3 border-b border-border bg-muted-bg/30 flex items-center justify-between">
+          <h2 className="text-sm font-semibold text-foreground">Residents & Users</h2>
+          <Link
+            href={`/platform/societies/${societyId}/residents`}
+            className="text-xs font-medium text-primary hover:underline flex items-center gap-1"
+          >
+            View all ({society.total_residents})
+            <ArrowRight className="w-3.5 h-3.5" />
+          </Link>
+        </div>
+        <div className="overflow-x-auto">
+          <Table ariaLabel="Residents preview">
+            <TableHead>
+              <TableTh>User</TableTh>
+              <TableTh>Role</TableTh>
+              <TableTh>Status</TableTh>
+            </TableHead>
+            <TableBody>
+              {residentsLoading ? (
+                <TableLoading colSpan={3} rows={3} />
+              ) : residents.length === 0 ? (
+                <TableEmpty
+                  colSpan={3}
+                  icon={<Users className="w-5 h-5" />}
+                  title="No residents"
+                  description="No users in this society yet"
+                  action={
+                    <Link href={`/platform/societies/${societyId}/residents`}>
+                      <Button variant="outline" size="sm">
+                        View residents
+                      </Button>
+                    </Link>
+                  }
+                />
+              ) : (
+                residents.map((u) => (
+                  <TableRow key={u.id}>
+                    <TableTd>
+                      <div className="flex items-center gap-2">
+                        <Avatar name={u.full_name} size="sm" />
+                        <div>
+                          <p className="text-sm font-medium">{u.full_name || "—"}</p>
+                          <p className="text-xs text-muted-foreground">{u.email}</p>
+                        </div>
+                      </div>
+                    </TableTd>
+                    <TableTd>
+                      <Badge variant="secondary">{u.role?.replace(/_/g, " ") ?? "—"}</Badge>
+                    </TableTd>
+                    <TableTd>
+                      <Badge variant={u.is_active ? "success" : "error"}>
+                        {u.is_active ? "Active" : "Blocked"}
+                      </Badge>
+                    </TableTd>
+                  </TableRow>
+                ))
+              )}
+            </TableBody>
+          </Table>
+        </div>
+        {(residentsData?.total ?? 0) > RESIDENTS_PREVIEW && (
+          <div className="px-5 py-2 border-t border-border text-center">
+            <Link
+              href={`/platform/societies/${societyId}/residents`}
+              className="text-sm text-primary hover:underline"
+            >
+              View all {residentsData?.total ?? 0} residents →
+            </Link>
+          </div>
+        )}
       </Card>
 
       {/* Assign Admin Modal */}

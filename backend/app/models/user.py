@@ -1,7 +1,8 @@
 """
 User model (residents, guards, admins).
+Single table with society_id is the correct design; filtering by society is fast with indexes.
 """
-from sqlalchemy import Column, String, Boolean, DateTime, JSON, ForeignKey
+from sqlalchemy import Column, String, Boolean, DateTime, JSON, ForeignKey, Index
 from sqlalchemy.orm import relationship
 from datetime import datetime
 import uuid
@@ -14,8 +15,13 @@ class User(Base):
     """
     User model for residents, guards, and admins.
     Can be authenticated via Keycloak (keycloak_id set) or local password (password_hash set).
+    All users in one table with society_id; index + composite index keep "users by society" queries fast.
     """
     __tablename__ = "users"
+    __table_args__ = (
+        # Fast "list users by society" + "order by created_at" (admin list, residents page)
+        Index("ix_users_society_id_created_at", "society_id", "created_at"),
+    )
 
     id = Column(GUID(), primary_key=True, default=uuid.uuid4)
     keycloak_id = Column(String(255), unique=True, nullable=True, index=True)  # Nullable for local-auth users

@@ -1,19 +1,20 @@
 "use client";
 
 import { useState } from "react";
+import { useParams } from "next/navigation";
 import {
   usePlatformUsersList,
   useBlockUser,
   useUnblockUser,
   useVerifyUser,
 } from "@/features/admin/hooks/usePlatformUsers";
-import { usePlatformSocietiesList } from "@/features/admin/hooks/usePlatformSocieties";
+import { usePlatformSocietyDetail } from "@/features/admin/hooks/usePlatformSocieties";
+import type { PlatformUser } from "@/features/admin/types";
 import {
   PageHeader,
   UserDrawer,
   Badge,
   Avatar,
-  Select,
   Table,
   TableHead,
   TableTh,
@@ -23,16 +24,10 @@ import {
   TableEmpty,
   TableLoading,
   Pagination,
-} from "../components";
+  Select,
+} from "../../../components";
 import { SearchInput } from "@/components/common/SearchInput";
-import {
-  Users,
-  Shield,
-  Ban,
-  CheckCircle,
-  Building2,
-  Filter,
-} from "lucide-react";
+import { Users, Shield, Filter } from "lucide-react";
 
 type BadgeVariant = "default" | "primary" | "secondary" | "success" | "warning" | "error" | "info";
 
@@ -55,45 +50,22 @@ const ROLE_OPTIONS = [
   { value: "resident", label: "Resident" },
 ];
 
-interface UserData {
-  id: string;
-  email: string | null;
-  phone: string | null;
-  full_name: string | null;
-  flat_number: string | null;
-  is_active: boolean;
-  is_verified: boolean;
-  role: string;
-  roles: string[];
-  society_id: string | null;
-  building_id: string | null;
-  last_login: string | null;
-  created_at: string;
-  society_name?: string | null;
-}
+export default function SocietyResidentsPage() {
+  const params = useParams();
+  const societyId = params.id as string;
 
-export default function PlatformUsersPage() {
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState("");
   const [roleFilter, setRoleFilter] = useState("");
-  const [societyFilter, setSocietyFilter] = useState("");
-  const [selectedUser, setSelectedUser] = useState<UserData | null>(null);
+  const [selectedUser, setSelectedUser] = useState<PlatformUser | null>(null);
 
-  const { data: societiesData } = usePlatformSocietiesList({
-    page: 1,
-    page_size: 200,
-  });
-  const societyOptions = [
-    { value: "", label: "All Societies" },
-    ...(societiesData?.items ?? []).map((s) => ({ value: s.id, label: s.name })),
-  ];
-
+  const { data: society } = usePlatformSocietyDetail(societyId);
   const { data, isLoading, error } = usePlatformUsersList({
     page,
     page_size: 20,
     search: search || undefined,
     role: roleFilter || undefined,
-    society_id: societyFilter || undefined,
+    society_id: societyId,
   });
 
   const blockMutation = useBlockUser();
@@ -130,7 +102,7 @@ export default function PlatformUsersPage() {
   if (error) {
     return (
       <div className="bg-error/10 text-error px-4 py-3 rounded-lg text-sm">
-        Failed to load users: {error.message}
+        Failed to load residents: {error.message}
       </div>
     );
   }
@@ -138,28 +110,25 @@ export default function PlatformUsersPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Users"
-        description="Manage all users across all societies"
+        title="Residents"
+        description={society ? `All residents and users in ${society.name}` : "Residents in this society"}
+        breadcrumbs={[
+          { label: "Societies", href: "/platform/societies" },
+          { label: society?.name ?? "Society", href: `/platform/societies/${societyId}` },
+          { label: "Residents" },
+        ]}
       />
 
-      {/* Filters */}
-      <div className="flex flex-col sm:flex-row gap-3 flex-wrap">
-        <div className="flex-1 min-w-[200px] max-w-sm">
+      <div className="flex flex-col sm:flex-row gap-3">
+        <div className="flex-1 max-w-sm">
           <SearchInput
             value={search}
             onChange={setSearch}
-            placeholder="Search users..."
+            placeholder="Search residents..."
           />
         </div>
-        <div className="flex items-center gap-2 flex-wrap">
-          <Filter className="w-4 h-4 text-muted-foreground shrink-0" />
-          <div className="w-44">
-            <Select
-              options={societyOptions}
-              value={societyFilter}
-              onChange={(e) => setSocietyFilter(e.target.value)}
-            />
-          </div>
+        <div className="flex items-center gap-2">
+          <Filter className="w-4 h-4 text-muted-foreground" />
           <div className="w-44">
             <Select
               options={ROLE_OPTIONS}
@@ -170,30 +139,28 @@ export default function PlatformUsersPage() {
         </div>
       </div>
 
-      {/* Table */}
-      <Table>
+      <Table ariaLabel="Residents" stickyHeader>
         <TableHead>
           <TableTh>User</TableTh>
-          <TableTh>Society</TableTh>
           <TableTh>Role</TableTh>
           <TableTh>Status</TableTh>
           <TableTh>Last Login</TableTh>
         </TableHead>
         <TableBody>
           {isLoading ? (
-            <TableLoading colSpan={5} />
+            <TableLoading colSpan={4} />
           ) : data?.items.length === 0 ? (
             <TableEmpty
-              colSpan={5}
+              colSpan={4}
               icon={<Users className="w-6 h-6" />}
-              title="No users found"
-              description="Try adjusting your search"
+              title="No residents found"
+              description="Try adjusting your search or filters"
             />
           ) : (
             data?.items.map((user) => (
               <TableRow
                 key={user.id}
-                onClick={() => setSelectedUser(user as UserData)}
+                onClick={() => setSelectedUser(user)}
                 className="cursor-pointer"
               >
                 <TableTd>
@@ -206,16 +173,6 @@ export default function PlatformUsersPage() {
                       <p className="text-xs text-muted-foreground">{user.email}</p>
                     </div>
                   </div>
-                </TableTd>
-                <TableTd>
-                  {user.society_name ? (
-                    <div className="flex items-center gap-1.5 text-sm text-foreground">
-                      <Building2 className="w-3.5 h-3.5 text-muted-foreground" />
-                      <span className="truncate max-w-[150px]">{user.society_name}</span>
-                    </div>
-                  ) : (
-                    <span className="text-sm text-muted-foreground">—</span>
-                  )}
                 </TableTd>
                 <TableTd>
                   <Badge variant={ROLE_VARIANTS[user.role] || "default"}>
@@ -255,10 +212,9 @@ export default function PlatformUsersPage() {
         />
       )}
 
-      {/* User Drawer */}
       {selectedUser && (
         <UserDrawer
-          user={selectedUser}
+          user={{ ...selectedUser, full_name: selectedUser.full_name ?? null, roles: selectedUser.roles ?? [] }}
           isOpen={!!selectedUser}
           onClose={() => setSelectedUser(null)}
           onBlock={handleBlock}

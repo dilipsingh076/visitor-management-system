@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { Mail, QrCode, ShieldCheck, BarChart3, Ban, FileText, ArrowRight, Play, Check } from "lucide-react";
 import { useAuthContext } from "@/features/auth";
 import {
   FadeInUp,
@@ -12,80 +13,34 @@ import {
   TrustBadge,
   TestimonialCard,
   GradientButton,
+  MobileComingSoon,
 } from "@/components/marketing";
+import { Text } from "@/components/ui";
 
 const features = [
-  {
-    icon: (
-      <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-      </svg>
-    ),
-    title: "Pre-approval & Invites",
-    description: "Residents create visitor invites with OTP or QR codes. Share via WhatsApp instantly.",
-  },
-  {
-    icon: (
-      <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" />
-      </svg>
-    ),
-    title: "Contactless Check-in",
-    description: "Visitors enter OTP or scan QR at gate. Host gets instant notification.",
-  },
-  {
-    icon: (
-      <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-      </svg>
-    ),
-    title: "DPDP Act Compliant",
-    description: "Explicit consent capture, audit logs, and data access/erasure support.",
-  },
-  {
-    icon: (
-      <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-      </svg>
-    ),
-    title: "Real-time Dashboard",
-    description: "Guards see live visitor counts. Admins get analytics with auto-refresh.",
-  },
-  {
-    icon: (
-      <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
-      </svg>
-    ),
-    title: "Blacklist Management",
-    description: "Block specific visitors instantly. Prevent unwanted entries.",
-  },
-  {
-    icon: (
-      <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-      </svg>
-    ),
-    title: "Muster Export",
-    description: "One-click CSV export. Essential for fire drills and emergencies.",
-  },
+  { icon: <Mail className="w-6 h-6" />, title: "Pre-approval & Invites", description: "Residents create visitor invites with OTP or QR codes. Share via WhatsApp instantly." },
+  { icon: <QrCode className="w-6 h-6" />, title: "Contactless Check-in", description: "Visitors enter OTP or scan QR at gate. Host gets instant notification." },
+  { icon: <ShieldCheck className="w-6 h-6" />, title: "DPDP Act Compliant", description: "Explicit consent capture, audit logs, and data access/erasure support." },
+  { icon: <BarChart3 className="w-6 h-6" />, title: "Real-time Dashboard", description: "Guards see live visitor counts. Admins get analytics with auto-refresh." },
+  { icon: <Ban className="w-6 h-6" />, title: "Blacklist Management", description: "Block specific visitors instantly. Prevent unwanted entries." },
+  { icon: <FileText className="w-6 h-6" />, title: "Muster Export", description: "One-click CSV export. Essential for fire drills and emergencies." },
 ];
 
 const testimonials = [
   {
-    quote: "VMS has completely transformed how we manage visitors at our society. No more paper registers, no more confusion at the gate.",
+    quote: "We went from illegible paper registers and guards calling 50 flats a day to OTP check-in. Residents love it; our committee finally has a proper audit trail.",
     author: "Rajesh Sharma",
     role: "Chairman",
     company: "Green Valley Society, Pune",
   },
   {
-    quote: "The OTP-based check-in is brilliant. Our delivery personnel check in within seconds. Real-time visibility of everyone on premises.",
+    quote: "Delivery and repair staff check in in under 30 seconds. We see who's expected in real time. Fire drill muster is one click—no more running around with clipboards.",
     author: "Priya Menon",
     role: "Secretary",
     company: "Palm Heights, Bangalore",
   },
   {
-    quote: "DPDP compliance was critical for us. VMS handles consent and audit logs automatically. Our reception team focuses on welcoming guests.",
+    quote: "We needed DPDP-compliant visitor records and consent. VMS does that out of the box. Our legal team was satisfied; our reception team just uses the dashboard.",
     author: "Amit Desai",
     role: "Admin Manager",
     company: "TechCorp, Mumbai",
@@ -102,17 +57,17 @@ const stats = [
 const useCases = [
   {
     title: "Gated Societies",
-    description: "Streamline visitor management for residential complexes.",
+    description: "Residents invite guests; guards verify OTP/QR. No more paper logs or missed callbacks.",
     image: "/images/website/society.jpg",
   },
   {
     title: "Corporate Offices",
-    description: "Professional reception with time-bound invites.",
+    description: "Time-bound meeting invites, full audit trail, and a professional reception experience.",
     image: "/images/website/office-lobby.jpg",
   },
   {
     title: "Industrial Facilities",
-    description: "Contractor management and emergency muster.",
+    description: "Contractor access, safety compliance, and one-click muster for emergencies.",
     image: "/images/website/factory.jpg",
   },
 ];
@@ -159,40 +114,33 @@ export function HomePageContent() {
               </FadeInUp>
 
               <FadeInUp delay={0.1}>
-                <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-card mb-4 leading-tight">
-                  Secure Visitor Management for{" "}
-                  <span className="text-primary">Modern India</span>
-                </h1>
+                <Text variant="hero" as="h1" className="text-card mb-4 max-w-lg mx-auto lg:mx-0">
+                  No more paper registers.{" "}
+                  <span className="text-primary">Visitor management that actually works.</span>
+                </Text>
               </FadeInUp>
 
               <FadeInUp delay={0.15}>
-                <p className="text-base text-card/80 mb-6 max-w-lg mx-auto lg:mx-0">
-                  Replace paper registers with contactless check-in. Pre-approve guests with OTP or QR codes. 
-                  Real-time dashboard for guards and residents.
-                </p>
+                <Text variant="body" className="text-base text-card/80 mb-6 max-w-lg mx-auto lg:mx-0">
+                  Residents invite guests with a tap. Visitors check in with OTP or QR at the gate. Guards see who’s expected in real time. 
+                  Built for Indian societies, offices, and factories—and fully compliant with the DPDP Act 2023.
+                </Text>
               </FadeInUp>
 
               <FadeInUp delay={0.2}>
                 {showDashboardCta ? (
                   <GradientButton href="/dashboard" size="md">
                     Go to Dashboard
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-                    </svg>
+                    <ArrowRight className="w-4 h-4" />
                   </GradientButton>
                 ) : (
                   <div className="flex flex-wrap justify-center lg:justify-start gap-3">
                     <GradientButton href="/register-society" size="md">
                       Start Free Trial
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-                      </svg>
+                      <ArrowRight className="w-4 h-4" />
                     </GradientButton>
                     <GradientButton href="/how-it-works" variant="secondary" size="md">
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                      </svg>
+                      <Play className="w-4 h-4" />
                       Watch Demo
                     </GradientButton>
                   </div>
@@ -225,13 +173,11 @@ export function HomePageContent() {
                 <div className="absolute -bottom-4 -left-4 bg-card/10 backdrop-blur-sm border border-card/20 px-3 py-2 rounded-lg">
                   <div className="flex items-center gap-2">
                     <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center">
-                      <svg className="w-4 h-4 text-card" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                      </svg>
+                      <Check className="w-4 h-4 text-card" />
                     </div>
                     <div>
-                      <p className="text-card font-medium text-sm">Visitor Checked In</p>
-                      <p className="text-card/60 text-xs">Just now</p>
+                      <Text variant="body" className="text-card font-medium text-sm">Visitor Checked In</Text>
+                      <Text variant="caption" className="text-card/60">Just now</Text>
                     </div>
                   </div>
                 </div>
@@ -264,6 +210,40 @@ export function HomePageContent() {
         </div>
       </section>
 
+      {/* Problem we solve — scannable value */}
+      <section className="py-14 bg-card">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+          <FadeInUp className="max-w-3xl mx-auto text-center mb-10">
+            <Text variant="h2" as="h2" className="mb-3">The problem we solve</Text>
+            <Text variant="muted" className="text-sm">
+              Paper registers are illegible, unsearchable, and useless in an emergency. Guards waste time calling residents. 
+              Visitors queue at peak hours. There’s no record of who’s on premises. VMS fixes this with one platform: 
+              digital invites, contactless check-in, and real-time visibility for everyone.
+            </Text>
+          </FadeInUp>
+          <div className="grid sm:grid-cols-3 gap-4 max-w-4xl mx-auto">
+            <FadeInUp delay={0.05}>
+              <div className="bg-muted-bg rounded-xl p-4 text-center">
+                <Text variant="label" className="mb-1">For residents</Text>
+                <Text variant="caption">Invite once, get notified when guests arrive. No more calls to the guard.</Text>
+              </div>
+            </FadeInUp>
+            <FadeInUp delay={0.1}>
+              <div className="bg-muted-bg rounded-xl p-4 text-center">
+                <Text variant="label" className="mb-1">For guards</Text>
+                <Text variant="caption">See expected visitors and walk-ins in one dashboard. Verify OTP/QR in seconds.</Text>
+              </div>
+            </FadeInUp>
+            <FadeInUp delay={0.15}>
+              <div className="bg-muted-bg rounded-xl p-4 text-center">
+                <Text variant="label" className="mb-1">For admins</Text>
+                <Text variant="caption">Audit trail, muster export for drills, blacklist, and DPDP-ready consent.</Text>
+              </div>
+            </FadeInUp>
+          </div>
+        </div>
+      </section>
+
       {/* Features Section */}
       <section className="py-16 bg-muted-bg">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
@@ -271,7 +251,7 @@ export function HomePageContent() {
             <SectionHeading
               eyebrow="Features"
               title={<>Everything you need to <span className="text-primary">manage visitors</span></>}
-              description="Built for Indian gated societies, offices, and factories."
+              description="One platform for invites, check-in, real-time dashboard, blacklist, and emergency muster. Built for Indian gated societies, offices, and factories."
               className="mb-12"
             />
           </FadeInUp>
@@ -294,13 +274,14 @@ export function HomePageContent() {
               className="inline-flex items-center gap-2 text-primary font-medium text-sm hover:text-primary-hover transition group"
             >
               View all features
-              <svg className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
-              </svg>
+              <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
             </Link>
           </FadeInUp>
         </div>
       </section>
+
+      {/* Mobile app — coming soon */}
+      <MobileComingSoon />
 
       {/* How it Works Section */}
       <section className="py-16 bg-foreground">
@@ -309,7 +290,7 @@ export function HomePageContent() {
             <SectionHeading
               eyebrow="How it works"
               title={<>From invite to check-out in <span className="text-primary">4 simple steps</span></>}
-              description="No paper registers, no confusion at the gate."
+              description="Residents invite, visitors check in with OTP or QR, guards verify, and everyone stays in sync. No paper, no phone tag."
               light
               className="mb-12"
             />
@@ -326,8 +307,8 @@ export function HomePageContent() {
                     <div className="w-12 h-12 rounded-lg bg-primary flex items-center justify-center mb-4">
                       <span className="text-lg font-bold text-card">{step.number}</span>
                     </div>
-                    <h3 className="text-base font-semibold text-card mb-1">{step.title}</h3>
-                    <p className="text-card/70 text-sm">{step.description}</p>
+                    <Text variant="h4" as="h3" className="text-card text-base mb-1">{step.title}</Text>
+                    <Text variant="muted" className="text-card/70 text-sm">{step.description}</Text>
                   </div>
                 </div>
               </FadeInUp>
@@ -337,9 +318,7 @@ export function HomePageContent() {
           <FadeInUp delay={0.4} className="text-center mt-8">
             <GradientButton href="/how-it-works" variant="secondary" size="sm">
               Learn more
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
-              </svg>
+              <ArrowRight className="w-4 h-4" />
             </GradientButton>
           </FadeInUp>
         </div>
@@ -369,8 +348,8 @@ export function HomePageContent() {
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-foreground/90 to-transparent" />
                   <div className="absolute inset-0 flex flex-col justify-end p-5">
-                    <h3 className="text-lg font-semibold text-card mb-1">{useCase.title}</h3>
-                    <p className="text-card/80 text-sm">{useCase.description}</p>
+                    <Text variant="h3" as="h3" className="text-card text-lg mb-1">{useCase.title}</Text>
+                    <Text variant="muted" className="text-card/80 text-sm">{useCase.description}</Text>
                   </div>
                 </div>
               </FadeInUp>
@@ -383,9 +362,7 @@ export function HomePageContent() {
               className="inline-flex items-center gap-2 text-primary font-medium text-sm hover:text-primary-hover transition group"
             >
               Explore all use cases
-              <svg className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
-              </svg>
+              <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
             </Link>
           </FadeInUp>
         </div>
@@ -397,8 +374,8 @@ export function HomePageContent() {
           <FadeInUp>
             <SectionHeading
               eyebrow="Testimonials"
-              title={<>Trusted by <span className="text-primary">societies across India</span></>}
-              description="See what our customers say about VMS."
+              title={<>Trusted by <span className="text-primary">societies and offices</span></>}
+              description="Real feedback from chairmen, secretaries, and admin teams who switched to VMS."
               className="mb-12"
             />
           </FadeInUp>
@@ -431,27 +408,24 @@ export function HomePageContent() {
 
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           <FadeInUp className="max-w-2xl mx-auto text-center">
-            <h2 className="text-2xl sm:text-3xl font-bold text-card mb-4">
-              Ready to modernize your{" "}
-              <span className="text-primary">visitor management</span>?
-            </h2>
-            <p className="text-base text-card/80 mb-6">
-              Join 500+ societies and offices across India using VMS for secure, contactless check-ins.
-            </p>
+            <Text variant="h2" as="h2" className="text-card mb-4">
+              Ready to replace paper registers with <span className="text-primary">contactless check-in</span>?
+            </Text>
+            <Text variant="body" className="text-base text-card/80 mb-6">
+              Join hundreds of societies and offices across India. Start your free trial in minutes—no credit card required.
+            </Text>
             <div className="flex flex-wrap justify-center gap-3">
               <GradientButton href="/register-society" size="md">
-                Get Started Free
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-                </svg>
+                Start free trial
+                <ArrowRight className="w-4 h-4" />
               </GradientButton>
               <GradientButton href="/contact" variant="secondary" size="md">
-                Contact Sales
+                Talk to sales
               </GradientButton>
             </div>
-            <p className="text-card/50 text-xs mt-4">
-              No credit card required • Free 14-day trial • Cancel anytime
-            </p>
+            <Text variant="caption" className="text-card/50 mt-4">
+              Free setup • 14-day trial • DPDP compliant • Cancel anytime
+            </Text>
           </FadeInUp>
         </div>
       </section>

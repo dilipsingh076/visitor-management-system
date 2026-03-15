@@ -3,7 +3,7 @@
  * Supports both httpOnly cookie auth and Bearer token fallback.
  */
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api/v1";
-import { refreshAccessToken } from "@/lib/auth";
+import { refreshAccessToken, ensureValidAccessToken } from "@/lib/auth";
 
 export interface ApiResponse<T> {
   data?: T;
@@ -36,7 +36,16 @@ class ApiClient {
         : {}),
     };
 
-    const token = typeof window !== "undefined" ? localStorage.getItem("access_token") : null;
+    let token = typeof window !== "undefined" ? localStorage.getItem("access_token") : null;
+    if (token && typeof window !== "undefined") {
+      const refreshed = await ensureValidAccessToken();
+      token = localStorage.getItem("access_token");
+      // If proactive refresh failed, don’t send the old (expired) token
+      if (!refreshed && token) {
+        localStorage.removeItem("access_token");
+        token = null;
+      }
+    }
     if (token) {
       headers["Authorization"] = `Bearer ${token}`;
     }
@@ -66,12 +75,18 @@ class ApiClient {
           } else {
             delete headers["Authorization"];
           }
-          response = await fetch(`${this.baseURL}${endpoint}`, {
-            ...options,
-            headers,
-            credentials: "include",
-            signal: controller.signal,
-          });
+          const retryController = new AbortController();
+          const retryTimeoutId = setTimeout(() => retryController.abort(), this.defaultTimeout);
+          try {
+            response = await fetch(`${this.baseURL}${endpoint}`, {
+              ...options,
+              headers,
+              credentials: "include",
+              signal: retryController.signal,
+            });
+          } finally {
+            clearTimeout(retryTimeoutId);
+          }
         }
         if (!refreshed || response.status === 401) {
           if (typeof window !== "undefined") {

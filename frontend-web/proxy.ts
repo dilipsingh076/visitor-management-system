@@ -3,9 +3,7 @@ import type { NextRequest } from "next/server";
 
 /**
  * Protected paths require auth. Redirect to /login if no auth cookie.
- * For middleware to work, the login flow must set a cookie when the user logs in
- * (e.g. same name as below). Currently the app uses localStorage; consider
- * setting a cookie on login so this middleware can enforce protection.
+ * Login flow sets vms_access cookie so this proxy can enforce protection.
  */
 const AUTH_COOKIE_NAME = "vms_access";
 
@@ -23,7 +21,7 @@ function isProtectedPath(pathname: string): boolean {
   return PROTECTED_PREFIXES.some((p) => pathname === p || pathname.startsWith(p + "/"));
 }
 
-export function middleware(request: NextRequest) {
+export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   if (!isProtectedPath(pathname)) {

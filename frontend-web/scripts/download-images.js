@@ -57,8 +57,8 @@ const images = [
   },
   {
     name: 'building-modern.jpg',
-    // Modern architecture
-    url: 'https://images.unsplash.com/photo-1464938050520-ef2571a5d2b9?w=1200&q=80'
+    // Modern architecture (previous URL 404'd; using stable Unsplash source)
+    url: 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=1200&q=80'
   },
   {
     name: 'reception.jpg',

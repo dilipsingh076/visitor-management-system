@@ -2,6 +2,7 @@ export { Footer } from "./Footer";
 export { Navbar } from "./Navbar";
 export { Testimonials } from "./Testimonials";
 export { Stats } from "./Stats";
+export { MobileComingSoon } from "./MobileComingSoon";
 
 // Animation components
 export {

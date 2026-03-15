@@ -292,12 +292,14 @@ async def list_all_societies(
             total_residents=resident_count or 0,
         ))
 
+    total_val = total or 0
+    total_pages = (total_val + page_size - 1) // page_size if total_val else 0
     return SocietyListResponse(
         items=items,
-        total=total or 0,
+        total=total_val,
         page=page,
         page_size=page_size,
-        total_pages=(total or 0 + page_size - 1) // page_size if total else 0,
+        total_pages=total_pages,
     )
 
 
@@ -581,12 +583,14 @@ async def list_all_users(
             society_name=society_map.get(u.society_id),
         ))
 
+    total_val = total or 0
+    total_pages = (total_val + page_size - 1) // page_size if total_val else 0
     return GlobalUserListResponse(
         items=items,
-        total=total or 0,
+        total=total_val,
         page=page,
         page_size=page_size,
-        total_pages=(total or 0 + page_size - 1) // page_size if total else 0,
+        total_pages=total_pages,
     )
 
 
