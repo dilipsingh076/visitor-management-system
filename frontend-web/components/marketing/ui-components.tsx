@@ -173,27 +173,28 @@ export function SectionHeading({
   title: string | React.ReactNode;
   description?: string;
   centered?: boolean;
+  /** Dark section (bg-foreground): light text via Text inverse */
   light?: boolean;
   className?: string;
 }) {
   return (
     <div className={`${centered ? "text-center" : ""} ${className}`}>
       {eyebrow && (
-        <Text variant="eyebrow" className={`mb-3 block ${light ? "text-primary-light" : ""}`}>
+        <Text variant="eyebrow" inverse={light} className="mb-3 block">
           {eyebrow}
         </Text>
       )}
       {typeof title === "string" ? (
-        <Text variant="h2" as="h2" className={`text-2xl sm:text-3xl mb-3 block ${light ? "text-card" : "text-foreground"}`}>
+        <Text variant="h2" as="h2" inverse={light} className="text-2xl sm:text-3xl mb-3 block">
           {title}
         </Text>
       ) : (
-        <Text as="div" variant="h2" className={`text-2xl sm:text-3xl mb-3 block ${light ? "text-card" : "text-foreground"}`}>
+        <Text as="div" variant="h2" inverse={light} className="text-2xl sm:text-3xl mb-3 block">
           {title}
         </Text>
       )}
       {description && (
-        <Text variant="muted" className={`text-base max-w-2xl mx-auto block ${light ? "text-card/80" : ""}`}>
+        <Text variant="muted" inverse={light} className="text-base max-w-2xl mx-auto block">
           {description}
         </Text>
       )}
@@ -231,15 +232,18 @@ export function TrustBadge({
   icon,
   label,
   className = "",
+  inverse = false,
 }: {
   icon?: React.ReactNode;
   label: string;
   className?: string;
+  /** Light label on dark hero (e.g. over image + gradient) */
+  inverse?: boolean;
 }) {
   return (
     <div className={`flex items-center gap-2 ${className}`}>
-      {icon || <CheckCircle className="w-4 h-4 text-primary" />}
-      <span className="text-muted-foreground text-sm">{label}</span>
+      {icon || <CheckCircle className={`w-4 h-4 ${inverse ? "text-primary-light" : "text-primary"}`} />}
+      <span className={`text-sm ${inverse ? "text-card/80" : "text-muted-foreground"}`}>{label}</span>
     </div>
   );
 }

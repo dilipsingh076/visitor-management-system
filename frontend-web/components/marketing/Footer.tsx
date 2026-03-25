@@ -48,11 +48,11 @@ export function Footer() {
                 <ShieldCheck className="w-5 h-5 text-card" />
               </div>
               <div>
-                <span className="text-base font-bold">VMS</span>
-                <span className="block text-xs text-primary font-medium">Visitor Management</span>
+                <span className="text-base font-bold text-card">VMS</span>
+                <span className="block text-xs text-primary-light font-medium">Visitor Management</span>
               </div>
             </Link>
-            <Text variant="body" className="text-card/70 mb-4 max-w-xs">
+            <Text variant="body" inverse className="mb-4 max-w-xs opacity-80">
               Secure, contactless visitor management for Indian gated societies, offices, and factories. DPDP Act 2023 compliant.
             </Text>
             
@@ -71,7 +71,9 @@ export function Footer() {
           </div>
 
           <div>
-            <Text variant="eyebrow" as="span" className="text-card block mb-3">Product</Text>
+            <Text variant="eyebrow" inverse as="span" className="block mb-3">
+              Product
+            </Text>
             <ul className="space-y-2">
               {footerLinks.product.map((link) => (
                 <li key={link.label}>
@@ -84,7 +86,9 @@ export function Footer() {
           </div>
 
           <div>
-            <Text variant="eyebrow" as="span" className="text-card block mb-3">Company</Text>
+            <Text variant="eyebrow" inverse as="span" className="block mb-3">
+              Company
+            </Text>
             <ul className="space-y-2">
               {footerLinks.company.map((link) => (
                 <li key={link.label}>
@@ -97,7 +101,9 @@ export function Footer() {
           </div>
 
           <div>
-            <Text variant="eyebrow" as="span" className="text-card block mb-3">Legal</Text>
+            <Text variant="eyebrow" inverse as="span" className="block mb-3">
+              Legal
+            </Text>
             <ul className="space-y-2">
               {footerLinks.legal.map((link) => (
                 <li key={link.label}>
@@ -110,7 +116,9 @@ export function Footer() {
           </div>
 
           <div>
-            <Text variant="eyebrow" as="span" className="text-card block mb-3">Support</Text>
+            <Text variant="eyebrow" inverse as="span" className="block mb-3">
+              Support
+            </Text>
             <ul className="space-y-2">
               {footerLinks.support.map((link) => (
                 <li key={link.label}>
@@ -125,7 +133,7 @@ export function Footer() {
 
         <div className="mt-10 pt-6 border-t border-card/10">
           <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
-            <Text variant="caption" className="text-card/50">
+            <Text variant="caption" inverse className="opacity-70">
               © {currentYear} VMS. All rights reserved.
             </Text>
             <div className="flex items-center gap-4 text-xs text-card/50">

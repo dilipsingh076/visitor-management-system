@@ -22,7 +22,7 @@ export function MobileComingSoon() {
             <SectionHeading
               eyebrow="Available on Mobile"
               title={<>One platform. <span className="text-primary">Web and mobile.</span></>}
-              description="We're building a native mobile app so residents and committee members can manage visitors from anywhere. Invite guests, approve walk-ins, and stay in sync with your web dashboard."
+              description="We're building a native app so residents and committee get the same flows as the web product—invites, walk-ins, notices, flats, meetings, and more—on the go."
               className="mb-8"
             />
             <ul className="grid sm:grid-cols-2 gap-3 mb-8">

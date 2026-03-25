@@ -111,8 +111,10 @@ export function HowItWorksPageContent() {
             <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-primary/20 rounded-full border border-primary/30 mb-4">
               <span className="text-primary-light text-xs font-medium">Simple workflow</span>
             </div>
-            <Text variant="h1" as="h1" className="text-card mb-4">How <span className="text-primary">VMS</span> works for everyone</Text>
-            <Text variant="body" className="text-base text-card/80">
+            <Text variant="h1" as="h1" inverse className="mb-4">
+              How <span className="text-primary">VMS</span> works for everyone
+            </Text>
+            <Text variant="body" inverse className="text-base">
               Residents invite. Visitors check in with OTP or QR. Guards verify. One flow, three perspectives—no paper, no confusion.
             </Text>
           </FadeInUp>
@@ -216,8 +218,10 @@ export function HowItWorksPageContent() {
 
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10 text-center">
           <FadeInUp>
-            <Text variant="h2" as="h2" className="text-card mb-3">See it in action with a free trial</Text>
-            <Text variant="body" as="p" className="text-card/80 text-sm mb-6 max-w-lg mx-auto">
+            <Text variant="h2" as="h2" inverse className="mb-3">
+              See it in action with a free trial
+            </Text>
+            <Text variant="body" inverse as="p" className="text-sm mb-6 max-w-lg mx-auto">
               Set up in minutes. Invite a test visitor, check in with OTP or QR, and explore the dashboard.
             </Text>
             <div className="flex flex-wrap justify-center gap-3">

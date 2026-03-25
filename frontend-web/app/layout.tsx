@@ -1,8 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
-import { ClientProviders } from "@/providers/ClientProviders";
-import ConditionalShell from "@/components/layout/ConditionalShell";
 
 const plusJakarta = Plus_Jakarta_Sans({
   subsets: ["latin"],
@@ -48,21 +46,11 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning className={plusJakarta.variable}>
-      <head>
-        {/* Preconnect to external resources for faster loading */}
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link
-          rel="preconnect"
-          href="https://fonts.gstatic.com"
-          crossOrigin="anonymous"
-        />
-        {/* DNS prefetch for API */}
-        <link rel="dns-prefetch" href="//api.vms.in" />
-      </head>
-      <body suppressHydrationWarning className="font-sans antialiased min-h-screen bg-background overflow-x-hidden">
-        <ClientProviders>
-          <ConditionalShell>{children}</ConditionalShell>
-        </ClientProviders>
+      <body
+        suppressHydrationWarning
+        className="font-sans antialiased min-h-screen bg-background overflow-x-hidden"
+      >
+        {children}
       </body>
     </html>
   );

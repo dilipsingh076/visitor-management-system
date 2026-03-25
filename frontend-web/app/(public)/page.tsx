@@ -1,6 +1,6 @@
 import { Metadata } from "next";
-import { HomePageContent } from "./_components/HomePageContent";
 import { WebPageJsonLd } from "@/components/seo";
+import { HomePageContent } from "./_components/HomePageContent";
 
 const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://vms.in";
 

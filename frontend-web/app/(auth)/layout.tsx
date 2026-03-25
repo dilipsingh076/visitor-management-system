@@ -1,12 +1,22 @@
+import { ClientProviders } from "@/providers/ClientProviders";
+import { theme } from "@/lib/theme";
+
 /**
- * Auth layout. Wraps all authenticated routes: login, dashboard, guard, visitors, checkin, blacklist, admin, platform.
- * RBAC/route protection is handled by middleware; role-based UI is in page content.
- * Does not affect URL (route group).
+ * Auth routes: login, signup, register-society.
+ * Provides auth + React Query; full-viewport shell matches previous ConditionalShell behavior.
  */
 export default function AuthLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  return <>{children}</>;
+  return (
+    <ClientProviders>
+      <div
+        className={`h-screen overflow-hidden flex flex-col ${theme.surface.page}`}
+      >
+        {children}
+      </div>
+    </ClientProviders>
+  );
 }

@@ -55,6 +55,27 @@ const FAQ_GROUPS = [
       },
     ],
   },
+  {
+    heading: "Society & committee tools",
+    items: [
+      {
+        q: "Can we publish notices to all residents?",
+        a: "Yes. Committee members can create society-wide notices from the admin workspace. Notifications appear in each resident’s inbox. If your deployment includes AI, you can optionally draft notice text from a title.",
+      },
+      {
+        q: "What is Meetings AI?",
+        a: "Committees can upload or record meeting audio, generate transcripts and summaries, and ask questions across past meetings—depending on your organisation’s AI and storage settings.",
+      },
+      {
+        q: "Do residents see buildings, flats, and nearby places?",
+        a: "Admins configure towers, wings, and flats so visits and household data stay consistent. When enabled, residents can browse categorized nearby services (e.g. pharmacies, ATMs) around the society.",
+      },
+      {
+        q: "What can residents do under “My flat”?",
+        a: "Typically: manage household members, log complaints, and track maintenance-related views—exact options depend on how your society enables modules.",
+      },
+    ],
+  },
 ];
 
 export default function FAQPage() {

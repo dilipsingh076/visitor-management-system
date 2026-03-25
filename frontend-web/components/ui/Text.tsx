@@ -18,6 +18,21 @@ const variantClass: Record<TextVariant, string> = {
   eyebrow: "font-semibold uppercase tracking-wider text-xs text-primary",
 };
 
+/** Light text on dark surfaces (bg-foreground, hero overlays). Avoids text-foreground vs text-card conflicts. */
+const variantClassInverse: Record<TextVariant, string> = {
+  hero: "text-3xl sm:text-4xl lg:text-5xl font-bold leading-tight tracking-tight text-card",
+  h1: "text-3xl font-bold tracking-tight text-card",
+  h2: "text-2xl font-bold tracking-tight text-card",
+  h3: "text-xl font-semibold text-card",
+  h4: "text-lg font-semibold text-card",
+  body: "text-sm leading-relaxed text-card",
+  bodySmall: "text-xs leading-relaxed text-card",
+  caption: "text-xs text-card/70",
+  muted: "text-sm text-card/80",
+  label: "block text-sm font-medium text-card mb-1.5",
+  eyebrow: "font-semibold uppercase tracking-wider text-xs text-primary-light",
+};
+
 const defaultTag: Record<TextVariant, ElementType> = {
   hero: "h1",
   h1: "h1",
@@ -37,10 +52,13 @@ export interface TextProps {
   as?: ElementType;
   children: ReactNode;
   className?: string;
+  /** Use on dark backgrounds (e.g. bg-foreground) so copy is light, not slate. */
+  inverse?: boolean;
 }
 
-export function Text( props: TextProps ) {
-  const { variant = "body", as, children, className = "" } = props;
+export function Text(props: TextProps) {
+  const { variant = "body", as, children, className = "", inverse = false } = props;
   const Component = as ?? defaultTag[variant];
-  return <Component className={`${variantClass[variant]} ${className}`.trim()}>{children}</Component>;
+  const base = inverse ? variantClassInverse[variant] : variantClass[variant];
+  return <Component className={`${base} ${className}`.trim()}>{children}</Component>;
 }

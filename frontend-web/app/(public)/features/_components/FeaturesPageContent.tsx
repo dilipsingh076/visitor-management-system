@@ -1,7 +1,26 @@
 "use client";
 
 import Image from "next/image";
-import { Mail, QrCode, User, BarChart3, Ban, FileText, Bell, Clock, ShieldCheck, ArrowRight, Check } from "lucide-react";
+import {
+  Mail,
+  QrCode,
+  User,
+  BarChart3,
+  Ban,
+  FileText,
+  Bell,
+  Clock,
+  ShieldCheck,
+  ArrowRight,
+  Check,
+  Megaphone,
+  Mic,
+  MapPin,
+  Building2,
+  Home,
+  Wrench,
+  Sparkles,
+} from "lucide-react";
 import {
   FadeInUp,
   FadeInLeft,
@@ -14,14 +33,96 @@ import {
 import { Text } from "@/components/ui";
 
 const features = [
-  { title: "Pre-approval and Invitations", description: "Residents create visitor invites with OTP or QR codes. Share via WhatsApp instantly.", icon: <Mail className="w-6 h-6" /> },
-  { title: "Contactless Check-in", description: "Visitors enter OTP or scan QR at gate, accept consent, and check in. Host notified immediately.", icon: <QrCode className="w-6 h-6" /> },
-  { title: "Guard Walk-in Registration", description: "Guards can register walk-ins and assign residents. Instant approval notification.", icon: <User className="w-6 h-6" /> },
-  { title: "Real-time Dashboard", description: "Guards and admins see pending, approved, and checked-in visitors in real-time.", icon: <BarChart3 className="w-6 h-6" /> },
-  { title: "Blacklist Management", description: "Block specific visitors by phone or identity. Prevent unwanted entries instantly.", icon: <Ban className="w-6 h-6" /> },
-  { title: "Muster Export", description: "Download CSV of everyone on premises. Essential for fire drills and emergencies.", icon: <FileText className="w-6 h-6" /> },
-  { title: "Host Notifications", description: "Residents get alerts when visitors check in. No more calls to the guard.", icon: <Bell className="w-6 h-6" /> },
-  { title: "Time Validity", description: "Invites with expected arrival window and configurable buffer for flexibility.", icon: <Clock className="w-6 h-6" /> },
+  {
+    title: "Invitations & passes",
+    description:
+      "Create invites with OTP, QR, or shareable links. Tie visits to building and flat when your society uses towers and units.",
+    icon: <Mail className="h-6 w-6" />,
+  },
+  {
+    title: "Contactless check-in",
+    description:
+      "Visitors complete OTP or QR check-in at the gate with explicit consent capture aligned to DPDP expectations.",
+    icon: <QrCode className="h-6 w-6" />,
+  },
+  {
+    title: "Guard walk-ins",
+    description:
+      "Register unexpected visitors, pick tower and flat, and notify the resident to approve before entry.",
+    icon: <User className="h-6 w-6" />,
+  },
+  {
+    title: "Live visitor views",
+    description:
+      "Guards and admins filter pending, approved, checked-in, and rejected visits with fast actions from one queue.",
+    icon: <BarChart3 className="h-6 w-6" />,
+  },
+  {
+    title: "Blacklist",
+    description:
+      "Block individuals by phone or identity so the gate desk can enforce society decisions consistently.",
+    icon: <Ban className="h-6 w-6" />,
+  },
+  {
+    title: "Muster export",
+    description:
+      "Download who is currently on premises as CSV for fire drills, incidents, or compliance reviews.",
+    icon: <FileText className="h-6 w-6" />,
+  },
+  {
+    title: "Notifications",
+    description:
+      "Residents receive alerts for invites, walk-ins, society notices, and visit outcomes—web and mobile where available.",
+    icon: <Bell className="h-6 w-6" />,
+  },
+  {
+    title: "Invite windows",
+    description:
+      "Set expected arrival and validity so guards know which visits are current—reducing confusion at peak hours.",
+    icon: <Clock className="h-6 w-6" />,
+  },
+  {
+    title: "Society notices",
+    description:
+      "Publish announcements to all members. Use optional AI drafting to turn a title into a full notice when AI is enabled.",
+    icon: <Megaphone className="h-6 w-6" />,
+  },
+  {
+    title: "Meetings AI",
+    description:
+      "Upload or record audio, transcribe, summarize, and query past meetings—built for committee and AGM workflows.",
+    icon: <Mic className="h-6 w-6" />,
+  },
+  {
+    title: "My flat & complaints",
+    description:
+      "Residents manage household members, complaints, and maintenance visibility from a single flat profile.",
+    icon: <Home className="h-6 w-6" />,
+  },
+  {
+    title: "Nearby places",
+    description:
+      "Surface pharmacies, hospitals, ATMs, and more around the society when administrators enable map search.",
+    icon: <MapPin className="h-6 w-6" />,
+  },
+  {
+    title: "Buildings & flats",
+    description:
+      "Configure towers, wings, and units so staff and residents see the same structure everywhere in the app.",
+    icon: <Building2 className="h-6 w-6" />,
+  },
+  {
+    title: "Amenities & staff",
+    description:
+      "Maintain a directory of society amenities and on-site maintenance roles so residents know who to contact.",
+    icon: <Wrench className="h-6 w-6" />,
+  },
+  {
+    title: "Platform-ready",
+    description:
+      "Super admins can onboard societies, manage plans, and support operations across multiple deployments.",
+    icon: <Sparkles className="h-6 w-6" />,
+  },
 ];
 
 const complianceFeatures = [
@@ -54,11 +155,12 @@ export function FeaturesPageContent() {
             <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-primary/20 rounded-full border border-primary/30 mb-4">
               <span className="text-primary-light text-xs font-medium">Complete Feature Set</span>
             </div>
-            <Text variant="h1" as="h1" className="text-card mb-4">
+            <Text variant="h1" as="h1" inverse className="mb-4">
               One platform for <span className="text-primary">invites, check-in, and compliance</span>
             </Text>
-            <Text variant="body" className="text-base text-card/80">
-              From digital invites and OTP/QR check-in to real-time dashboards, blacklist, muster export, and DPDP-ready consent. Built for Indian societies, offices, and factories.
+            <Text variant="body" inverse className="text-base">
+              From digital invites and OTP/QR check-in to guard queues, society notices, meetings AI, flats, nearby places,
+              and DPDP-ready consent—built for Indian societies, offices, and factories.
             </Text>
           </FadeInUp>
         </div>
@@ -70,16 +172,20 @@ export function FeaturesPageContent() {
           <FadeInLeft>
             <div className="group relative h-48 rounded-xl overflow-hidden shadow-lg">
               <Image
-                src="/images/website/mobile-app.jpg"
-                alt="Mobile check-in"
+                src="/images/website/qr-scan.jpg"
+                alt="Visitor scanning QR code at gate"
                 fill
                 className="object-cover transition-transform duration-300 group-hover:scale-105"
                 sizes="(max-width: 768px) 100vw, 50vw"
               />
-              <div className="absolute inset-0 bg-gradient-to-r from-primary/90 to-primary/50 flex items-center p-6">
+              <div className="absolute inset-0 flex items-center bg-gradient-to-r from-primary/90 to-primary/50 p-6">
                 <div>
-                  <Text variant="h4" as="p" className="text-card mb-1">Contactless Check-in</Text>
-                  <Text variant="bodySmall" as="p" className="text-card/90">OTP or QR — no shared devices</Text>
+                  <Text variant="h4" as="p" className="mb-1 text-card">
+                    Contactless check-in
+                  </Text>
+                  <Text variant="bodySmall" as="p" className="text-card/90">
+                    OTP or QR — consent captured at the gate
+                  </Text>
                 </div>
               </div>
             </div>
@@ -88,16 +194,20 @@ export function FeaturesPageContent() {
           <FadeInRight>
             <div className="group relative h-48 rounded-xl overflow-hidden shadow-lg">
               <Image
-                src="/images/website/dashboard.jpg"
-                alt="Dashboard"
+                src="/images/guard-dashboard.jpg"
+                alt="Guard desk monitoring live visitor queue"
                 fill
                 className="object-cover transition-transform duration-300 group-hover:scale-105"
                 sizes="(max-width: 768px) 100vw, 50vw"
               />
-              <div className="absolute inset-0 bg-gradient-to-r from-info/90 to-info/50 flex items-center p-6">
+              <div className="absolute inset-0 flex items-center bg-gradient-to-r from-info/90 to-info/50 p-6">
                 <div>
-                  <Text variant="h4" as="p" className="text-card mb-1">Real-time Dashboard</Text>
-                  <Text variant="bodySmall" as="p" className="text-card/90">Live visitor tracking for guards</Text>
+                  <Text variant="h4" as="p" className="mb-1 text-card">
+                    Live guard desk
+                  </Text>
+                  <Text variant="bodySmall" as="p" className="text-card/90">
+                    Pending, approved, and on-site in one view
+                  </Text>
                 </div>
               </div>
             </div>
@@ -112,7 +222,7 @@ export function FeaturesPageContent() {
             <SectionHeading
               eyebrow="Features"
               title={<>Feature <span className="text-primary">Highlights</span></>}
-              description="Every feature designed for simpler, faster, more secure visitor management."
+              description="Covers the full visitor lifecycle plus society operations—matching what you see in the VMS web app today."
               className="mb-12"
             />
           </FadeInUp>
@@ -193,8 +303,10 @@ export function FeaturesPageContent() {
       <section className="py-12 bg-primary">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <FadeInUp>
-            <Text variant="h2" as="h2" className="text-card mb-3">Get the full feature set with a free trial</Text>
-            <Text variant="body" as="p" className="text-card/80 text-sm mb-6 max-w-lg mx-auto">
+            <Text variant="h2" as="h2" inverse className="mb-3">
+              Get the full feature set with a free trial
+            </Text>
+            <Text variant="body" inverse as="p" className="text-sm mb-6 max-w-lg mx-auto">
               No credit card required. Set up in minutes and see why societies and offices choose VMS.
             </Text>
             <div className="flex flex-wrap justify-center gap-3">

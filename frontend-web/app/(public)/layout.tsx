@@ -2,6 +2,9 @@ import { Metadata } from "next";
 import { Navbar, Footer } from "@/components/marketing";
 import { OrganizationJsonLd, SoftwareApplicationJsonLd } from "@/components/seo";
 
+/** Marketing pages are static content + client islands; no auth/query providers at root. */
+export const dynamic = "force-static";
+
 const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://vms.in";
 
 export const metadata: Metadata = {

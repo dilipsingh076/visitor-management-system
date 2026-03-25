@@ -151,8 +151,10 @@ export function UseCasesPageContent() {
 
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           <FadeInUp className="max-w-2xl mx-auto text-center">
-            <Text variant="h1" as="h1" className="text-card mb-4">Built for every type of <span className="text-primary">premises</span></Text>
-            <Text variant="body" className="text-base text-card/80">
+            <Text variant="h1" as="h1" inverse className="mb-4">
+              Built for every type of <span className="text-primary">premises</span>
+            </Text>
+            <Text variant="body" inverse className="text-base">
               Societies, offices, factories, and campuses—each with different challenges. See how VMS fits your use case.
             </Text>
           </FadeInUp>
@@ -185,8 +187,10 @@ export function UseCasesPageContent() {
       <section className="py-12 bg-primary">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <FadeInUp>
-            <Text variant="h2" as="h2" className="text-card mb-3">Don&apos;t see your use case?</Text>
-            <Text variant="body" as="p" className="text-card/80 text-sm mb-6 max-w-lg mx-auto">
+            <Text variant="h2" as="h2" inverse className="mb-3">
+              Don&apos;t see your use case?
+            </Text>
+            <Text variant="body" inverse as="p" className="text-sm mb-6 max-w-lg mx-auto">
               VMS is flexible and can be customized for your specific requirements.
             </Text>
             <div className="flex flex-wrap justify-center gap-3">

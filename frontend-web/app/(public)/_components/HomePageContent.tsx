@@ -3,7 +3,20 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { Mail, QrCode, ShieldCheck, BarChart3, Ban, FileText, ArrowRight, Play, Check } from "lucide-react";
+import {
+  Mail,
+  QrCode,
+  ShieldCheck,
+  ArrowRight,
+  Play,
+  Check,
+  LayoutDashboard,
+  Megaphone,
+  Mic,
+  Home,
+  MapPin,
+  Building2,
+} from "lucide-react";
 import { useAuthContext } from "@/features/auth";
 import {
   FadeInUp,
@@ -18,29 +31,80 @@ import {
 import { Text } from "@/components/ui";
 
 const features = [
-  { icon: <Mail className="w-6 h-6" />, title: "Pre-approval & Invites", description: "Residents create visitor invites with OTP or QR codes. Share via WhatsApp instantly." },
-  { icon: <QrCode className="w-6 h-6" />, title: "Contactless Check-in", description: "Visitors enter OTP or scan QR at gate. Host gets instant notification." },
-  { icon: <ShieldCheck className="w-6 h-6" />, title: "DPDP Act Compliant", description: "Explicit consent capture, audit logs, and data access/erasure support." },
-  { icon: <BarChart3 className="w-6 h-6" />, title: "Real-time Dashboard", description: "Guards see live visitor counts. Admins get analytics with auto-refresh." },
-  { icon: <Ban className="w-6 h-6" />, title: "Blacklist Management", description: "Block specific visitors instantly. Prevent unwanted entries." },
-  { icon: <FileText className="w-6 h-6" />, title: "Muster Export", description: "One-click CSV export. Essential for fire drills and emergencies." },
+  {
+    icon: <Mail className="h-6 w-6" />,
+    title: "Invites & digital passes",
+    description:
+      "Residents create invites with OTP, QR, or shareable links—optionally tied to building and flat in multi-tower societies.",
+  },
+  {
+    icon: <QrCode className="h-6 w-6" />,
+    title: "Contactless check-in",
+    description:
+      "Visitors check in at the gate with OTP or QR and explicit DPDP consent. Hosts get instant in-app notifications.",
+  },
+  {
+    icon: <LayoutDashboard className="h-6 w-6" />,
+    title: "Guard desk & walk-ins",
+    description:
+      "One screen for pending approvals, checked-in guests, and walk-ins. Guards register arrivals and residents approve from their phone.",
+  },
+  {
+    icon: <Megaphone className="h-6 w-6" />,
+    title: "Society notices",
+    description:
+      "Committee publishes announcements to every resident. Optional AI-assisted drafting when your deployment includes AI.",
+  },
+  {
+    icon: <Mic className="h-6 w-6" />,
+    title: "Meetings AI",
+    description:
+      "Upload or record audio, get transcripts and summaries, and ask questions across your society’s meeting history.",
+  },
+  {
+    icon: <Home className="h-6 w-6" />,
+    title: "My flat & household",
+    description:
+      "Residents manage household members, complaints, and maintenance visibility—aligned with how your society is set up.",
+  },
+  {
+    icon: <MapPin className="h-6 w-6" />,
+    title: "Nearby places",
+    description:
+      "Help residents find pharmacies, ATMs, hospitals, and more near the society when location search is enabled.",
+  },
+  {
+    icon: <Building2 className="h-6 w-6" />,
+    title: "Buildings, amenities & staff",
+    description:
+      "Admins configure towers and flats, amenities, maintenance staff, and society rules from a single admin workspace.",
+  },
+  {
+    icon: <ShieldCheck className="h-6 w-6" />,
+    title: "Blacklist, muster & audit",
+    description:
+      "Block unwanted visitors, export who is on premises for drills, and rely on role-based access with consent-aware flows.",
+  },
 ];
 
 const testimonials = [
   {
-    quote: "We went from illegible paper registers and guards calling 50 flats a day to OTP check-in. Residents love it; our committee finally has a proper audit trail.",
+    quote:
+      "Walk-ins and OTP check-in replaced paper registers. We now publish society notices from the same system, and the committee uses meeting transcripts instead of scattered notes.",
     author: "Rajesh Sharma",
     role: "Chairman",
     company: "Green Valley Society, Pune",
   },
   {
-    quote: "Delivery and repair staff check in in under 30 seconds. We see who's expected in real time. Fire drill muster is one click—no more running around with clipboards.",
+    quote:
+      "Guards see who is expected and who is inside. Residents use My Flat for complaints and nearby places for new staff—we finally have one portal instead of five WhatsApp groups.",
     author: "Priya Menon",
     role: "Secretary",
     company: "Palm Heights, Bangalore",
   },
   {
-    quote: "We needed DPDP-compliant visitor records and consent. VMS does that out of the box. Our legal team was satisfied; our reception team just uses the dashboard.",
+    quote:
+      "Consent at check-in and muster exports for drills satisfied our DPDP review. Office reception uses the same visitor flow we piloted at our society gate.",
     author: "Amit Desai",
     role: "Admin Manager",
     company: "TechCorp, Mumbai",
@@ -57,26 +121,29 @@ const stats = [
 const useCases = [
   {
     title: "Gated Societies",
-    description: "Residents invite guests; guards verify OTP/QR. No more paper logs or missed callbacks.",
-    image: "/images/website/society.jpg",
+    description:
+      "Residents, flats, committees, notices, gate desk, and walk-ins—one stack for Indian apartment complexes.",
+    image: "/images/website/apartment-building.jpg",
   },
   {
     title: "Corporate Offices",
-    description: "Time-bound meeting invites, full audit trail, and a professional reception experience.",
+    description:
+      "Visitor passes, reception check-in, audit-friendly logs, and optional multi-location rollouts.",
     image: "/images/website/office-lobby.jpg",
   },
   {
     title: "Industrial Facilities",
-    description: "Contractor access, safety compliance, and one-click muster for emergencies.",
+    description:
+      "Contractor time windows, muster exports, and clear visibility of who is on site during shifts.",
     image: "/images/website/factory.jpg",
   },
 ];
 
 const steps = [
-  { number: "01", title: "Invite", description: "Resident creates invite with OTP or QR" },
-  { number: "02", title: "Share", description: "Code shared via WhatsApp or SMS" },
-  { number: "03", title: "Check-in", description: "Visitor enters code at gate" },
-  { number: "04", title: "Notify", description: "Host receives instant notification" },
+  { number: "01", title: "Invite", description: "Resident creates invite with OTP, QR, or link" },
+  { number: "02", title: "Share", description: "Code shared via WhatsApp, SMS, or in person" },
+  { number: "03", title: "Check-in", description: "Visitor enters OTP or scans QR; consent captured" },
+  { number: "04", title: "Notify", description: "Host and guards see status in real time" },
 ];
 
 export function HomePageContent() {
@@ -114,16 +181,17 @@ export function HomePageContent() {
               </FadeInUp>
 
               <FadeInUp delay={0.1}>
-                <Text variant="hero" as="h1" className="text-card mb-4 max-w-lg mx-auto lg:mx-0">
+                <Text variant="hero" as="h1" inverse className="mb-4 max-w-lg mx-auto lg:mx-0">
                   No more paper registers.{" "}
                   <span className="text-primary">Visitor management that actually works.</span>
                 </Text>
               </FadeInUp>
 
               <FadeInUp delay={0.15}>
-                <Text variant="body" className="text-base text-card/80 mb-6 max-w-lg mx-auto lg:mx-0">
-                  Residents invite guests with a tap. Visitors check in with OTP or QR at the gate. Guards see who’s expected in real time. 
-                  Built for Indian societies, offices, and factories—and fully compliant with the DPDP Act 2023.
+                <Text variant="body" inverse className="text-base mb-6 max-w-lg mx-auto lg:mx-0">
+                  Residents invite guests with a tap. Visitors check in with OTP or QR at the gate. Guards and committees use one
+                  dashboard for walk-ins, notices, and meetings—while residents manage flats, complaints, and nearby services.
+                  Built for Indian societies, offices, and factories—with DPDP-aligned consent and audit trails.
                 </Text>
               </FadeInUp>
 
@@ -149,9 +217,9 @@ export function HomePageContent() {
 
               <FadeInUp delay={0.25}>
                 <div className="flex flex-wrap justify-center lg:justify-start gap-4 mt-6">
-                  <TrustBadge label="Free Setup" />
-                  <TrustBadge label="No Credit Card" />
-                  <TrustBadge label="Cancel Anytime" />
+                  <TrustBadge inverse label="Free Setup" />
+                  <TrustBadge inverse label="No Credit Card" />
+                  <TrustBadge inverse label="Cancel Anytime" />
                 </div>
               </FadeInUp>
             </div>
@@ -176,8 +244,12 @@ export function HomePageContent() {
                       <Check className="w-4 h-4 text-card" />
                     </div>
                     <div>
-                      <Text variant="body" className="text-card font-medium text-sm">Visitor Checked In</Text>
-                      <Text variant="caption" className="text-card/60">Just now</Text>
+                      <Text variant="body" inverse className="font-medium text-sm">
+                        Visitor Checked In
+                      </Text>
+                      <Text variant="caption" inverse>
+                        Just now
+                      </Text>
                     </div>
                   </div>
                 </div>
@@ -185,7 +257,7 @@ export function HomePageContent() {
                 <div className="absolute -top-3 -right-3 bg-card/10 backdrop-blur-sm border border-card/20 px-3 py-2 rounded-lg">
                   <div className="flex items-center gap-2">
                     <span className="text-xl font-bold text-card">24</span>
-                    <span className="text-card/70 text-xs">Visitors<br />Today</span>
+                    <span className="text-xs text-card/80">Visitors<br />Today</span>
                   </div>
                 </div>
               </div>
@@ -216,28 +288,28 @@ export function HomePageContent() {
           <FadeInUp className="max-w-3xl mx-auto text-center mb-10">
             <Text variant="h2" as="h2" className="mb-3">The problem we solve</Text>
             <Text variant="muted" className="text-sm">
-              Paper registers are illegible, unsearchable, and useless in an emergency. Guards waste time calling residents. 
-              Visitors queue at peak hours. There’s no record of who’s on premises. VMS fixes this with one platform: 
-              digital invites, contactless check-in, and real-time visibility for everyone.
+              Paper registers are illegible, unsearchable, and useless in an emergency. Guards waste time calling residents,
+              and committee updates live in random chats. VMS brings invites, gate desk, notices, meetings, flats, and
+              nearby services into one place—with consent-aware check-in and muster when you need it.
             </Text>
           </FadeInUp>
           <div className="grid sm:grid-cols-3 gap-4 max-w-4xl mx-auto">
             <FadeInUp delay={0.05}>
               <div className="bg-muted-bg rounded-xl p-4 text-center">
                 <Text variant="label" className="mb-1">For residents</Text>
-                <Text variant="caption">Invite once, get notified when guests arrive. No more calls to the guard.</Text>
+                <Text variant="caption">Invite once, track status, and use My Flat for complaints and household updates.</Text>
               </div>
             </FadeInUp>
             <FadeInUp delay={0.1}>
               <div className="bg-muted-bg rounded-xl p-4 text-center">
                 <Text variant="label" className="mb-1">For guards</Text>
-                <Text variant="caption">See expected visitors and walk-ins in one dashboard. Verify OTP/QR in seconds.</Text>
+                <Text variant="caption">Pending, approved, and on-site lists in one view—plus walk-ins routed to residents.</Text>
               </div>
             </FadeInUp>
             <FadeInUp delay={0.15}>
               <div className="bg-muted-bg rounded-xl p-4 text-center">
                 <Text variant="label" className="mb-1">For admins</Text>
-                <Text variant="caption">Audit trail, muster export for drills, blacklist, and DPDP-ready consent.</Text>
+                <Text variant="caption">Notices, buildings, amenities, staff, and exports for audits and emergencies.</Text>
               </div>
             </FadeInUp>
           </div>
@@ -250,8 +322,8 @@ export function HomePageContent() {
           <FadeInUp>
             <SectionHeading
               eyebrow="Features"
-              title={<>Everything you need to <span className="text-primary">manage visitors</span></>}
-              description="One platform for invites, check-in, real-time dashboard, blacklist, and emergency muster. Built for Indian gated societies, offices, and factories."
+              title={<>Everything in <span className="text-primary">one workspace</span></>}
+              description="Visitors, gate operations, society communications, meetings, flats, amenities, and nearby services—aligned with how your society or workplace is actually run."
               className="mb-12"
             />
           </FadeInUp>
@@ -307,8 +379,12 @@ export function HomePageContent() {
                     <div className="w-12 h-12 rounded-lg bg-primary flex items-center justify-center mb-4">
                       <span className="text-lg font-bold text-card">{step.number}</span>
                     </div>
-                    <Text variant="h4" as="h3" className="text-card text-base mb-1">{step.title}</Text>
-                    <Text variant="muted" className="text-card/70 text-sm">{step.description}</Text>
+                    <Text variant="h4" as="h3" inverse className="text-base mb-1">
+                      {step.title}
+                    </Text>
+                    <Text variant="muted" inverse className="text-sm">
+                      {step.description}
+                    </Text>
                   </div>
                 </div>
               </FadeInUp>
@@ -348,8 +424,12 @@ export function HomePageContent() {
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-foreground/90 to-transparent" />
                   <div className="absolute inset-0 flex flex-col justify-end p-5">
-                    <Text variant="h3" as="h3" className="text-card text-lg mb-1">{useCase.title}</Text>
-                    <Text variant="muted" className="text-card/80 text-sm">{useCase.description}</Text>
+                    <Text variant="h3" as="h3" inverse className="text-lg mb-1">
+                      {useCase.title}
+                    </Text>
+                    <Text variant="muted" inverse className="text-sm">
+                      {useCase.description}
+                    </Text>
                   </div>
                 </div>
               </FadeInUp>
@@ -408,10 +488,10 @@ export function HomePageContent() {
 
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           <FadeInUp className="max-w-2xl mx-auto text-center">
-            <Text variant="h2" as="h2" className="text-card mb-4">
+            <Text variant="h2" as="h2" inverse className="mb-4">
               Ready to replace paper registers with <span className="text-primary">contactless check-in</span>?
             </Text>
-            <Text variant="body" className="text-base text-card/80 mb-6">
+            <Text variant="body" inverse className="text-base mb-6">
               Join hundreds of societies and offices across India. Start your free trial in minutes—no credit card required.
             </Text>
             <div className="flex flex-wrap justify-center gap-3">
@@ -423,7 +503,7 @@ export function HomePageContent() {
                 Talk to sales
               </GradientButton>
             </div>
-            <Text variant="caption" className="text-card/50 mt-4">
+            <Text variant="caption" inverse className="mt-4 opacity-80">
               Free setup • 14-day trial • DPDP compliant • Cancel anytime
             </Text>
           </FadeInUp>

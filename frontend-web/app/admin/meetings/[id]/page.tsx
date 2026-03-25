@@ -1,9 +1,10 @@
-"use client";
-
-import { use } from "react";
 import { MeetingDetailContent } from "./_components/MeetingDetailContent";
 
-export default function MeetingDetailPage({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = use(params);
+export default async function MeetingDetailPage({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
+  const { id } = await params;
   return <MeetingDetailContent meetingId={id} />;
 }

@@ -57,10 +57,10 @@ export function ContactPageContent() {
 
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           <FadeInUp className="max-w-2xl mx-auto text-center">
-            <Text variant="h1" as="h1" className="text-card mb-4">
+            <Text variant="h1" as="h1" inverse className="mb-4">
               Get in <span className="text-primary">touch</span>
             </Text>
-            <Text variant="body" className="text-base text-card/80">
+            <Text variant="body" inverse className="text-base">
               Need a demo, custom quote, or help choosing the right plan? We’ll respond within 24 hours.
             </Text>
           </FadeInUp>

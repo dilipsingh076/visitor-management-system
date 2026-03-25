@@ -58,10 +58,10 @@ export function AboutPageContent() {
 
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           <FadeInUp className="max-w-2xl mx-auto text-center">
-            <Text variant="h1" as="h1" className="text-card mb-4">
+            <Text variant="h1" as="h1" inverse className="mb-4">
               We built VMS because visitor management <span className="text-primary">shouldn’t be painful</span>
             </Text>
-            <Text variant="body" className="text-base text-card/80">
+            <Text variant="body" inverse className="text-base">
               Paper registers, guards on the phone all day, and zero visibility in an emergency—we lived it. 
               So we built one platform that gives residents, guards, and admins exactly what they need.
             </Text>
@@ -230,8 +230,12 @@ export function AboutPageContent() {
       <section className="py-12 bg-primary">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <FadeInUp>
-            <Text variant="h2" as="h2" className="text-card mb-3">Ready to leave paper registers behind?</Text>
-            <Text variant="body" as="p" className="text-card/80 text-sm mb-6 max-w-lg mx-auto">Start your free trial or talk to our team for a tailored demo.</Text>
+            <Text variant="h2" as="h2" inverse className="mb-3">
+              Ready to leave paper registers behind?
+            </Text>
+            <Text variant="body" inverse as="p" className="text-sm mb-6 max-w-lg mx-auto">
+              Start your free trial or talk to our team for a tailored demo.
+            </Text>
             <div className="flex flex-wrap justify-center gap-3">
               <GradientButton href="/register-society" variant="outline" size="md" className="bg-card text-primary border-card hover:bg-card/90">
                 Get Started Free
