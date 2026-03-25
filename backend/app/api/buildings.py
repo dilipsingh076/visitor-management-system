@@ -5,11 +5,11 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
-from sqlalchemy import select
+from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.dependencies import get_db, get_current_user, get_current_admin
-from app.models.society import Society, Building
+from app.models.society import Society, Building, Flat
 from app.models.user import User
 
 router = APIRouter()
@@ -38,10 +38,18 @@ async def list_buildings(
     user_society = current_user.get("society_id")
     if user_society and str(sid) != user_society:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not allowed to list buildings of another society")
-    result = await db.execute(
-        select(Building).where(Building.society_id == sid, Building.is_active == True).order_by(Building.sort_order, Building.name)
+    flat_count_sq = (
+        select(func.count(Flat.id))
+        .where(Flat.building_id == Building.id, Flat.is_active == True)
+        .correlate(Building)
+        .scalar_subquery()
     )
-    buildings = result.scalars().all()
+    result = await db.execute(
+        select(Building, flat_count_sq.label("flat_count"))
+        .where(Building.society_id == sid, Building.is_active == True)
+        .order_by(Building.sort_order, Building.name)
+    )
+    rows = result.all()
     return JSONResponse(
         content=[
             {
@@ -51,8 +59,9 @@ async def list_buildings(
                 "name": b.name,
                 "sort_order": b.sort_order,
                 "is_active": b.is_active,
+                "flat_count": fc or 0,
             }
-            for b in buildings
+            for b, fc in rows
         ]
     )
 

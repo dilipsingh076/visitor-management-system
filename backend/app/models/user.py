@@ -36,6 +36,7 @@ class User(Base):
     password_hash = Column(String(255), nullable=True)  # For local auth; null if Keycloak
     society_id = Column(GUID(), ForeignKey("societies.id", ondelete="SET NULL"), nullable=True, index=True)
     building_id = Column(GUID(), ForeignKey("buildings.id", ondelete="SET NULL"), nullable=True, index=True)
+    flat_id = Column(GUID(), ForeignKey("flats.id", ondelete="SET NULL"), nullable=True, index=True)
     last_login = Column(DateTime, nullable=True)
     extra_data = Column(JSON, nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
@@ -43,6 +44,7 @@ class User(Base):
 
     society = relationship("Society", backref="users")
     building = relationship("Building", backref="users")
+    flat = relationship("Flat", backref="owner")
 
     def __repr__(self):
         return f"<User(id={self.id}, email={self.email}, role={self.role})>"

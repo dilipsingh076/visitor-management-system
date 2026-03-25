@@ -27,12 +27,19 @@ class ApiClient {
 
   private async request<T>(
     endpoint: string,
-    options: RequestInit = {}
+    options: RequestOptions = {}
   ): Promise<ApiResponse<T>> {
+    const opts = options as RequestOptions & RequestInit;
+    const timeoutMs =
+      typeof opts.timeout === "number" && opts.timeout > 0
+        ? opts.timeout
+        : this.defaultTimeout;
+    const { timeout: _timeoutIgnored, retries: _retriesIgnored, ...fetchInit } = opts;
+
     const headers: Record<string, string> = {
       "Content-Type": "application/json",
-      ...(typeof options.headers === "object" && !(options.headers instanceof Headers)
-        ? (options.headers as Record<string, string>)
+      ...(typeof fetchInit.headers === "object" && !(fetchInit.headers instanceof Headers)
+        ? (fetchInit.headers as Record<string, string>)
         : {}),
     };
 
@@ -51,11 +58,11 @@ class ApiClient {
     }
 
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), this.defaultTimeout);
+    const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
 
     try {
       let response = await fetch(`${this.baseURL}${endpoint}`, {
-        ...options,
+        ...fetchInit,
         headers,
         credentials: "include",
         signal: controller.signal,
@@ -76,10 +83,10 @@ class ApiClient {
             delete headers["Authorization"];
           }
           const retryController = new AbortController();
-          const retryTimeoutId = setTimeout(() => retryController.abort(), this.defaultTimeout);
+          const retryTimeoutId = setTimeout(() => retryController.abort(), timeoutMs);
           try {
             response = await fetch(`${this.baseURL}${endpoint}`, {
-              ...options,
+              ...fetchInit,
               headers,
               credentials: "include",
               signal: retryController.signal,
@@ -275,6 +282,7 @@ export interface BuildingListItem {
   name: string;
   sort_order: number | null;
   is_active: boolean;
+  flat_count: number;
 }
 
 /** List buildings for a society. Authenticated. */
@@ -306,6 +314,8 @@ export interface UserListItem {
   roles?: string[];
   phone: string | null;
   flat_number: string | null;
+  building_id: string | null;
+  flat_id: string | null;
   is_active: boolean;
   created_at: string | null;
   last_login: string | null;
@@ -333,6 +343,8 @@ export async function createUser(body: {
   password: string;
   phone?: string;
   flat_number?: string;
+  building_id?: string;
+  flat_id?: string;
 }): Promise<{ user: UserListItem | null; error?: string }> {
   const res = await apiClient.post<UserListItem>("/users/", body);
   if (res.error) return { user: null, error: res.error };
@@ -342,7 +354,7 @@ export async function createUser(body: {
 /** Update user in current user's society (roles, name, phone, flat). Committee only. Resident/guard only via signup. */
 export async function updateUser(
   userId: string,
-  body: { roles?: string[]; full_name?: string; phone?: string; flat_number?: string }
+  body: { roles?: string[]; full_name?: string; phone?: string; flat_number?: string; building_id?: string; flat_id?: string }
 ): Promise<{ user: UserListItem | null; error?: string }> {
   const res = await apiClient.patch<UserListItem>(`/users/${userId}`, body);
   if (res.error) return { user: null, error: res.error };

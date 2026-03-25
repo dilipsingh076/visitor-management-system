@@ -21,6 +21,17 @@ class CheckOutRequest(BaseModel):
     visit_id: UUID
 
 
+class VisitPassResponse(BaseModel):
+    """Public pass data returned for QR-only visit flow (no OTP, no phone numbers)."""
+    visit_id: UUID
+    visitor_name: Optional[str] = None
+    qr_code: Optional[str] = None
+    status: str
+    purpose: Optional[str] = None
+    host_name: Optional[str] = None
+    expected_arrival: Optional[datetime] = None
+
+
 class CheckInResponse(BaseModel):
     """Schema for check-in response."""
     visit_id: UUID

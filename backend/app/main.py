@@ -12,8 +12,8 @@ from starlette.middleware.cors import CORSMiddleware
 import structlog
 
 from app.core.config import settings
-from app.api import auth, visitors, checkin, health, dashboard, residents, blacklist, notifications, societies, buildings, users
-from app.api import admin, admin_subscriptions, admin_complaints, admin_support, admin_settings, society_complaints, society_amenities, society_staff
+from app.api import auth, visitors, checkin, health, dashboard, residents, blacklist, notifications, societies, buildings, users, public
+from app.api import admin, admin_subscriptions, admin_complaints, admin_support, admin_settings, society_complaints, society_amenities, society_staff, meetings, nearby_places, flats, maintenance, resident_complaints
 
 # Configure structured logging
 logger = structlog.get_logger()
@@ -22,6 +22,8 @@ logger = structlog.get_logger()
 CORS_ALLOW_ORIGINS = [
     "http://localhost:3000",
     "http://127.0.0.1:3000",
+    "http://localhost:3003",
+    "http://127.0.0.1:3003",
     "http://localhost:8000",
     "http://127.0.0.1:8000",
     "http://localhost:8080",
@@ -202,6 +204,12 @@ app.include_router(society_complaints.router, prefix="/api/v1/society/complaints
 app.include_router(society_amenities.router, prefix="/api/v1/society/amenities", tags=["society-amenities"])
 app.include_router(society_staff.router, prefix="/api/v1/society/staff", tags=["society-staff"])
 app.include_router(admin_settings.router, prefix="/api/v1/admin", tags=["platform-admin-settings"])
+app.include_router(meetings.router, prefix="/api/v1/meetings", tags=["meetings-ai"])
+app.include_router(nearby_places.router, prefix="/api/v1/nearby-places", tags=["nearby-places"])
+app.include_router(flats.router, prefix="/api/v1/flats", tags=["flats"])
+app.include_router(maintenance.router, prefix="/api/v1/maintenance", tags=["maintenance"])
+app.include_router(resident_complaints.router, prefix="/api/v1/complaints", tags=["resident-complaints"])
+app.include_router(public.router, prefix="/api/v1/public", tags=["public"])
 
 
 @app.get("/")

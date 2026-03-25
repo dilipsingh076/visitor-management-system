@@ -11,6 +11,7 @@ export * from "./constants";
 // Society admin hooks (existing)
 export * from "./hooks/useAdminUsers";
 export * from "./hooks/useUserManagement";
+export * from "./hooks/useFlats";
 
 // Platform admin hooks (new)
 export * from "./hooks/usePlatformDashboard";

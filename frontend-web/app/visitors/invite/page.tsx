@@ -1,11 +1,12 @@
 "use client";
 
-import { Suspense, useRef, useEffect, useState } from "react";
+import { Suspense, useRef, useEffect, useState, useCallback } from "react";
 import { useSearchParams } from "next/navigation";
 import { canInviteVisitor } from "@/lib/auth";
 import { useAuth } from "@/features/auth";
 import Link from "next/link";
-import { Alert, Button, Input, Select } from "@/components/ui";
+import { Alert, Button, Input, Select, PageHeader } from "@/components/ui";
+import { QRCodeSVG } from "qrcode.react";
 import {
   useBuildings,
   useInviteVisitor,
@@ -90,20 +91,62 @@ function InviteContent() {
   return (
     <PageWrapper width="narrower">
       <Link href="/visitors" className={`${theme.button.link} mb-3 inline-block ${theme.text.body}`}>← Back</Link>
-      <h1 className={`${theme.text.heading1} mb-0.5`}>Invite Visitor</h1>
-      <p className={`${theme.text.mutedSmall} mb-5`}>Pre-approve a visitor with QR code and OTP</p>
+      <PageHeader
+        title="Invite Visitor"
+        description="Pre-approve a visitor with QR code and OTP"
+      />
 
       {result ? (
-        <div className={`${theme.alert.base} ${theme.alert.info} p-4`}>
-          <h2 className={`${theme.sectionTitle} text-primary mb-2`}>Invitation created!</h2>
-          <p className={`${theme.text.mutedSmall} mb-2`}>Share with your visitor:</p>
-          <div className={`${theme.surface.card} p-3 space-y-1`}>
-            <p className={theme.text.body}><span className="font-medium">OTP:</span> <code className="font-mono">{result.otp}</code></p>
-            {result.qr_code && <p className={theme.text.body}><span className="font-medium">QR:</span> {result.qr_code}</p>}
+        <div className={`${theme.surface.card} p-5`}>
+          <h2 className={`${theme.sectionTitle} text-primary mb-1`}>Invitation Created</h2>
+          <p className={`${theme.text.mutedSmall} mb-4`}>Share the pass link with your visitor</p>
+
+          {result.qr_code && (
+            <div className="flex flex-col items-center mb-4">
+              <div className="bg-white p-3 rounded-lg shadow-sm">
+                <QRCodeSVG value={result.qr_code} size={220} level="M" />
+              </div>
+              <p className={`${theme.text.mutedSmall} mt-2`}>Scan at gate for check-in</p>
+            </div>
+          )}
+
+          <div className="mb-4 text-center">
+            <p className={`${theme.text.mutedSmall} mb-1`}>Share pass link</p>
+            <p className="text-xs text-blue-600 break-all font-mono">
+              {typeof window !== "undefined" ? `${window.location.origin}/pass/${result.id}` : `/pass/${result.id}`}
+            </p>
           </div>
-          <Button size="sm" onClick={() => { setResult(null); setName(""); setPhone(""); setPurpose(""); setExpectedArrival(""); }} className="mt-3">
-            Invite another
-          </Button>
+
+          <div className={`${theme.text.mutedSmall} space-y-1 mb-4`}>
+            <p><span className="font-medium">Visitor:</span> {result.visitor_name}</p>
+            <p><span className="font-medium">Phone:</span> {result.visitor_phone}</p>
+            {result.purpose && <p><span className="font-medium">Purpose:</span> {result.purpose}</p>}
+          </div>
+
+          {result.otp && (
+            <p className="text-xs text-gray-400 text-center mb-4">Backup code: {result.otp}</p>
+          )}
+
+          <div className="flex gap-2">
+            <Button size="sm" variant="secondary" onClick={() => { setResult(null); setName(""); setPhone(""); setPurpose(""); setExpectedArrival(""); }} className="flex-1">
+              Invite Another
+            </Button>
+            <Button size="sm" onClick={() => {
+              const passUrl = `${window.location.origin}/pass/${result.id}`;
+              navigator.clipboard?.writeText(passUrl);
+            }} className="flex-1">
+              Copy Link
+            </Button>
+            <Button size="sm" onClick={() => {
+              const passUrl = `${window.location.origin}/pass/${result.id}`;
+              const msg = `Hi ${result.visitor_name || ""},\n\nYou have been invited for a visit.\n\nOpen your visitor pass:\n${passUrl}\n\nShow the QR code at the gate for entry.`;
+              const phone = (result.visitor_phone || "").replace(/\D/g, "");
+              const waPhone = phone.length === 10 ? `91${phone}` : phone;
+              window.open(`https://wa.me/${waPhone}?text=${encodeURIComponent(msg)}`, "_blank");
+            }} className="flex-1" style={{ backgroundColor: "#25D366", borderColor: "#25D366" }}>
+              WhatsApp
+            </Button>
+          </div>
         </div>
       ) : (
         <form onSubmit={handleSubmit} className={`${theme.surface.card} p-4 ${theme.space.formStack}`}>

@@ -35,6 +35,7 @@ export const API = {
     list: "/notifications",
     markRead: (id: string) => `/notifications/${id}/read`,
     createSocietyNotice: "/notifications/society",
+    generateNoticeMessage: "/notifications/society/generate-message",
   },
   societyComplaints: {
     list: "/society/complaints",
@@ -57,5 +58,47 @@ export const API = {
     get: (id: string) => `/society/staff/${id}`,
     update: (id: string) => `/society/staff/${id}`,
     delete: (id: string) => `/society/staff/${id}`,
+  },
+  meetings: {
+    list: "/meetings",
+    create: "/meetings",
+    get: (id: string) => `/meetings/${id}`,
+    addTranscript: (id: string) => `/meetings/${id}/transcripts`,
+    summarize: (id: string) => `/meetings/${id}/summarize`,
+    uploadAudio: (id: string) => `/meetings/${id}/audio`,
+    getAudio: (meetingId: string, transcriptId: string) =>
+      `/meetings/${meetingId}/audio/${transcriptId}`,
+    query: "/meetings/query",
+    delete: (id: string) => `/meetings/${id}`,
+  },
+  nearbyPlaces: {
+    list: "/nearby-places",
+    categories: "/nearby-places/categories",
+  },
+  flats: {
+    list: "/flats",
+    create: "/flats",
+    bulkCreate: "/flats/bulk",
+    update: (id: string) => `/flats/${id}`,
+    members: (id: string) => `/flats/${id}/members`,
+    member: (flatId: string, memberId: string) => `/flats/${flatId}/members/${memberId}`,
+    migrate: "/flats/migrate",
+  },
+  maintenance: {
+    myBills: "/maintenance/my-bills",
+    mySummary: "/maintenance/my-summary",
+    list: "/maintenance",
+    create: "/maintenance",
+    bulkCreate: "/maintenance/bulk",
+    update: (id: string) => `/maintenance/${id}`,
+  },
+  residentComplaints: {
+    my: "/complaints/my",
+    create: "/complaints",
+    get: (id: string) => `/complaints/${id}`,
+    comments: (id: string) => `/complaints/${id}/comments`,
+  },
+  public: {
+    visitPass: (visitId: string) => `/public/pass/${visitId}`,
   },
 } as const;

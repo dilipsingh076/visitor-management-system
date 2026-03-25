@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useAuth } from "@/features/auth";
 import { PageHeader, LinkButton, Card, Button } from "@/components/ui";
 import { useVisitorsPage } from "@/features/visitors";
@@ -9,6 +10,7 @@ import { theme } from "@/lib/theme";
 
 export function VisitorsPageContent() {
   const { user, loading: authLoading } = useAuth({ requireAuth: true });
+  const router = useRouter();
   const {
     visits,
     notifications,
@@ -62,7 +64,7 @@ export function VisitorsPageContent() {
             </thead>
             <tbody className={`divide-y divide-border bg-card ${theme.list.rowHoverLight}`}>
               {visits.map((v) => (
-                <tr key={v.id}>
+                <tr key={v.id} className="cursor-pointer" onClick={() => router.push(`/visitors/${v.id}`)}>
                   <td className={`px-3 py-2 ${theme.text.body} font-medium text-foreground`}>{v.visitor_name}</td>
                   <td className={`px-3 py-2 ${theme.text.body} text-muted`}>{v.visitor_phone}</td>
                   <td className="px-3 py-2">
@@ -70,18 +72,38 @@ export function VisitorsPageContent() {
                   </td>
                   <td className={`px-3 py-2 ${theme.text.body} text-muted hidden sm:table-cell`}>{v.purpose || "—"}</td>
                   <td className={`px-3 py-2 ${theme.text.mutedSmall} hidden md:table-cell`}>{new Date(v.created_at).toLocaleString()}</td>
-                  <td className="px-3 py-2">
-                    {v.status === "pending" && canInvite && (
-                      <Button
-                        size="xs"
-                        variant="primary"
-                        onClick={() => approve(v.id)}
-                        disabled={approvingId === v.id}
-                      >
-                        {approvingId === v.id ? "…" : "Approve"}
-                      </Button>
-                    )}
-                    {v.status === "approved" && v.otp && <span className={theme.text.mutedSmall}>OTP: {v.otp}</span>}
+                  <td className="px-3 py-2" onClick={(e) => e.stopPropagation()}>
+                    <div className="flex items-center gap-2">
+                      {v.status === "pending" && canInvite && (
+                        <Button
+                          size="xs"
+                          variant="primary"
+                          onClick={() => approve(v.id)}
+                          disabled={approvingId === v.id}
+                        >
+                          {approvingId === v.id ? "…" : "Approve"}
+                        </Button>
+                      )}
+                      {(v.status === "approved" || v.status === "pending") && v.qr_code && (
+                        <button
+                          type="button"
+                          className="text-xs font-medium px-2 py-1 rounded"
+                          style={{ backgroundColor: "#25D366", color: "#fff" }}
+                          onClick={() => {
+                            const passUrl = `${window.location.origin}/pass/${v.id}`;
+                            const msg = `Hi ${v.visitor_name || ""},\n\nYou have been invited for a visit.\n\nOpen your visitor pass:\n${passUrl}\n\nShow the QR code at the gate for entry.`;
+                            const phone = (v.visitor_phone || "").replace(/\D/g, "");
+                            const waPhone = phone.length === 10 ? `91${phone}` : phone;
+                            window.open(`https://wa.me/${waPhone}?text=${encodeURIComponent(msg)}`, "_blank");
+                          }}
+                        >
+                          Share
+                        </button>
+                      )}
+                      <Link href={`/visitors/${v.id}`} className="text-xs text-primary hover:underline">
+                        View
+                      </Link>
+                    </div>
                   </td>
                 </tr>
               ))}

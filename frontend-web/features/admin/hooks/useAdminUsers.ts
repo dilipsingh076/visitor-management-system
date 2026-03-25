@@ -29,7 +29,7 @@ export function useCreateAdminUser() {
 export function useUpdateAdminUser() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ userId, body }: { userId: string; body: { roles?: string[]; full_name?: string; phone?: string; flat_number?: string } }) =>
+    mutationFn: ({ userId, body }: { userId: string; body: { roles?: string[]; full_name?: string; phone?: string; flat_number?: string; building_id?: string; flat_id?: string } }) =>
       updateUserEntity(userId, body),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: adminKeys.all });

@@ -209,6 +209,7 @@ async def get_current_user_info(current_user: dict = Depends(get_current_user), 
                 payload["username"] = user.full_name
                 payload["society_id"] = str(user.society_id) if user.society_id else None
                 payload["building_id"] = str(user.building_id) if user.building_id else None
+                payload["flat_id"] = str(user.flat_id) if user.flat_id else None
                 payload["flat_number"] = user.flat_number
                 payload["phone"] = user.phone
                 if user.society_id:

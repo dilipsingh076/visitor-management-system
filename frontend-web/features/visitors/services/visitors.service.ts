@@ -5,7 +5,7 @@
 import { apiClient } from "@/lib/api";
 import { API } from "@/lib/api/endpoints";
 import type { Visit } from "@/types";
-import type { VisitorsScope, VisitorsStatusFilter } from "../types";
+import type { VisitorsScope, VisitorsStatusFilter, InviteVisitorResult } from "../types";
 
 function normalizeVisit(raw: Record<string, unknown>): Visit {
   return {
@@ -72,8 +72,8 @@ export interface InviteVisitorPayload {
 
 export async function inviteVisitor(
   payload: InviteVisitorPayload
-): Promise<{ visit_id: string; otp?: string; message?: string; qr_code?: string }> {
-  const res = await apiClient.post<{ visit_id: string; otp?: string; message?: string; qr_code?: string }>(
+): Promise<InviteVisitorResult> {
+  const res = await apiClient.post<InviteVisitorResult>(
     API.visitors.invite,
     {
       visitor_name: payload.visitor_name.trim(),

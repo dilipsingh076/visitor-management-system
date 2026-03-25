@@ -14,15 +14,19 @@ import {
   canAccessWalkin,
   canAccessPlatform,
   canAccessSocietyManagement,
+  canAccessMeetingsAI,
 } from "@/lib/auth";
 import { useAuthContext } from "@/features/auth";
-import { Badge, Button, Container, LinkButton, NavLink } from "@/components/ui";
+import { Badge, Button, Container, LinkButton, NavLink, NavDropdown } from "@/components/ui";
 import { NotificationBell } from "./NotificationBell";
 
-type NavItem = {
-  href: string;
-  label: string;
-};
+type NavItem =
+  | { href: string; label: string }
+  | { label: string; children: { href: string; label: string }[] };
+
+function isDropdown(item: NavItem): item is { label: string; children: { href: string; label: string }[] } {
+  return "children" in item;
+}
 
 function getNavItemsForUser(user: Parameters<typeof getPrimaryRole>[0] | null): NavItem[] {
   if (!user) {
@@ -46,28 +50,53 @@ function getNavItemsForUser(user: Parameters<typeof getPrimaryRole>[0] | null): 
 
   const items: NavItem[] = [
     { href: "/dashboard", label: "Dashboard" },
-    { href: "/visitors", label: "Visitors" },
-    { href: "/notifications", label: "Notifications" },
   ];
 
+  // Visitors group: always includes Visitors, conditionally Check-in and Walk-in
+  const visitorsChildren: { href: string; label: string }[] = [
+    { href: "/visitors", label: "Visitors" },
+  ];
   if (canAccessCheckin(user)) {
-    items.push({ href: "/checkin", label: "Check-in" });
+    visitorsChildren.push({ href: "/checkin", label: "Check-in" });
   }
   if (canAccessWalkin(user)) {
-    items.push({ href: "/checkin/walkin", label: "Walk-in" });
+    visitorsChildren.push({ href: "/checkin/walkin", label: "Walk-in" });
   }
+  // Only show as dropdown if there are sub-items beyond Visitors
+  if (visitorsChildren.length > 1) {
+    items.push({ label: "Visitors", children: visitorsChildren });
+  } else {
+    items.push({ href: "/visitors", label: "Visitors" });
+  }
+
   if (canAccessGuardPage(user)) {
     items.push({ href: "/guard", label: "Guard" });
-    items.push({ href: "/blacklist", label: "Blacklist" });
   }
+
+  items.push({ href: "/flat", label: "My Flat" });
+  items.push({ href: "/notifications", label: "Notifications" });
+
+  // Society group for committee members
   if (canAccessSocietyManagement(user)) {
-    items.push({ href: "/admin/users", label: "Management" });
-    items.push({ href: "/admin/buildings", label: "Buildings" });
-    items.push({ href: "/admin/amenities", label: "Amenities" });
-    items.push({ href: "/admin/staff", label: "Staff" });
-    items.push({ href: "/admin/complaints", label: "Complaints" });
-    items.push({ href: "/admin/settings", label: "Settings" });
+    items.push({
+      label: "Society",
+      children: [
+        { href: "/admin/users", label: "Management" },
+        { href: "/admin/buildings", label: "Buildings" },
+        { href: "/admin/amenities", label: "Amenities" },
+        { href: "/admin/staff", label: "Staff" },
+        { href: "/admin/complaints", label: "Complaints" },
+        { href: "/admin/settings", label: "Settings" },
+      ],
+    });
   }
+
+  if (canAccessMeetingsAI(user)) {
+    items.push({ href: "/admin/meetings", label: "Meetings AI" });
+  }
+
+  items.push({ href: "/admin/nearby-places", label: "Nearby" });
+
   if (canAccessPlatform(user)) {
     items.push({ href: "/platform", label: "Platform Admin" });
   }
@@ -114,11 +143,15 @@ export default function Header() {
 
             {/* Desktop nav */}
             <nav className="hidden md:flex flex-wrap items-center gap-0.5">
-              {navItems.map((item) => (
-                <NavLink key={item.href} href={item.href}>
-                  {item.label}
-                </NavLink>
-              ))}
+              {navItems.map((item) =>
+                isDropdown(item) ? (
+                  <NavDropdown key={item.label} label={item.label} children={item.children} />
+                ) : (
+                  <NavLink key={item.href} href={item.href}>
+                    {item.label}
+                  </NavLink>
+                )
+              )}
             </nav>
           </div>
 
@@ -173,11 +206,24 @@ export default function Header() {
         {mobileOpen && (
           <div className="md:hidden border-t border-border pt-2 pb-3 space-y-2">
             <nav className="flex flex-col gap-1">
-              {navItems.map((item) => (
-                <NavLink key={item.href} href={item.href} className="w-full justify-start">
-                  {item.label}
-                </NavLink>
-              ))}
+              {navItems.map((item) =>
+                isDropdown(item) ? (
+                  <div key={item.label}>
+                    <p className="px-3.5 pt-3 pb-1 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                      {item.label}
+                    </p>
+                    {item.children.map((child) => (
+                      <NavLink key={child.href} href={child.href} className="w-full justify-start pl-6">
+                        {child.label}
+                      </NavLink>
+                    ))}
+                  </div>
+                ) : (
+                  <NavLink key={item.href} href={item.href} className="w-full justify-start">
+                    {item.label}
+                  </NavLink>
+                )
+              )}
             </nav>
             {authenticated && user && (
               <div className="mt-2 flex items-center justify-between gap-2 text-sm text-muted-foreground">

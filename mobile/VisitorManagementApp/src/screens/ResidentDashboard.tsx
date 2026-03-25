@@ -168,12 +168,15 @@ export default function ResidentDashboard({navigation}: ResidentDashboardProps) 
           </TouchableOpacity>
           <TouchableOpacity
             style={styles.actionCard}
-            onPress={() => navigation.navigate('MyVisitors')}
+            onPress={() => navigation.navigate('VisitorsList')}
             activeOpacity={0.8}>
             <Text style={styles.actionIcon}>👥</Text>
-            <Text style={[styles.actionLabel, {color: colors.text}]}>My Visitors</Text>
+            <Text style={[styles.actionLabel, {color: colors.text}]}>All Visitors</Text>
           </TouchableOpacity>
         </View>
+        <TouchableOpacity onPress={() => navigation.navigate('More')} style={styles.moreLink}>
+          <Text style={styles.moreLinkText}>Open all mobile features</Text>
+        </TouchableOpacity>
 
         {/* Pending Approvals or friendly empty state */}
         {pendingApprovals.length > 0 ? (
@@ -514,5 +517,14 @@ const styles = StyleSheet.create({
     fontSize: theme.fontSize.sm,
     color: colors.textSecondary,
     lineHeight: 20,
+  },
+  moreLink: {
+    alignItems: 'center',
+    marginTop: -8,
+    marginBottom: theme.spacing.lg,
+  },
+  moreLinkText: {
+    color: colors.primary,
+    fontWeight: '700',
   },
 });

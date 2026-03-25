@@ -180,6 +180,24 @@ def _migrate_postgres_columns_sync(connection):
             logger.debug("Added column to blacklist (pg)", column=col_name)
         except Exception as e:
             logger.debug("blacklist column may exist", column=col_name, error=str(e))
+    # Transcripts: add audio columns if missing
+    for col_name, col_type in [
+        ("audio_file_key", "VARCHAR NULL"),
+        ("transcription_status", "VARCHAR NOT NULL DEFAULT 'completed'"),
+    ]:
+        try:
+            connection.execute(text(
+                f"ALTER TABLE transcripts ADD COLUMN IF NOT EXISTS {col_name} {col_type}"
+            ))
+            logger.debug("Added column to transcripts (pg)", column=col_name)
+        except Exception as e:
+            logger.debug("transcripts column may exist", column=col_name, error=str(e))
+    # Make transcripts.content nullable for audio transcripts
+    try:
+        connection.execute(text("ALTER TABLE transcripts ALTER COLUMN content DROP NOT NULL"))
+        logger.debug("Made transcripts.content nullable (pg)")
+    except Exception as e:
+        logger.debug("transcripts.content nullable skipped", error=str(e))
 
 
 async def init_db():

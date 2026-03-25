@@ -200,6 +200,8 @@ export function useUserManagement(): UseUserManagementReturn {
       password: newUserForm.password,
       phone: newUserForm.phone?.trim() || undefined,
       flat_number: newUserForm.flat_number?.trim() || undefined,
+      building_id: newUserForm.building_id || undefined,
+      flat_id: newUserForm.flat_id || undefined,
     });
     if (result.error) {
       setAddError(result.error);
@@ -219,6 +221,8 @@ export function useUserManagement(): UseUserManagementReturn {
         full_name: selectedUser.username,
         phone: selectedUser.phone || undefined,
         flat_number: selectedUser.flat_number || undefined,
+        building_id: selectedUser.building_id || undefined,
+        flat_id: selectedUser.flat_id || undefined,
       },
     });
     if (result.error) {

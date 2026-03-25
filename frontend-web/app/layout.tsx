@@ -47,7 +47,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={plusJakarta.variable}>
+    <html lang="en" suppressHydrationWarning className={plusJakarta.variable}>
       <head>
         {/* Preconnect to external resources for faster loading */}
         <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -59,7 +59,7 @@ export default function RootLayout({
         {/* DNS prefetch for API */}
         <link rel="dns-prefetch" href="//api.vms.in" />
       </head>
-      <body className="font-sans antialiased min-h-screen bg-background overflow-x-hidden">
+      <body suppressHydrationWarning className="font-sans antialiased min-h-screen bg-background overflow-x-hidden">
         <ClientProviders>
           <ConditionalShell>{children}</ConditionalShell>
         </ClientProviders>

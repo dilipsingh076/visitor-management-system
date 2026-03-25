@@ -2,9 +2,10 @@
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { Notification } from "@/types";
-import { getNotifications, getUnreadNotifications, markNotificationRead, createSocietyNotice } from "../services";
+import { getNotifications, getUnreadNotifications, markNotificationRead, createSocietyNotice, generateNoticeMessage } from "../services";
 import { notificationsKeys } from "./keys";
 import { useEffect } from "react";
+import { ensureValidAccessToken } from "@/lib/auth";
 
 export function useUnreadNotifications(enabled: boolean) {
   return useQuery({
@@ -30,21 +31,25 @@ export function useNotificationsStream(enabled: boolean) {
   useEffect(() => {
     if (!enabled) return;
 
-    const token = typeof window !== "undefined" ? localStorage.getItem("access_token") : null;
-    if (!token) return;
-
     const wsUrl = getNotificationsWsUrl();
     if (!wsUrl) return;
 
-    const url = `${wsUrl}?token=${encodeURIComponent(token)}`;
     let ws: WebSocket | null = null;
     let reconnectTimeout: ReturnType<typeof setTimeout> | null = null;
     let cancelled = false;
     let reconnectDelay = 1000;
     const maxReconnectDelay = 30000;
 
-    function connect() {
+    async function connect() {
       if (cancelled) return;
+      // Same as apiClient: refresh access token if expired / near expiry, so WS query token stays valid.
+      await ensureValidAccessToken();
+      const token = typeof window !== "undefined" ? localStorage.getItem("access_token") : null;
+      if (!token) {
+        scheduleReconnect();
+        return;
+      }
+      const url = `${wsUrl}?token=${encodeURIComponent(token)}`;
       try {
         ws = new WebSocket(url);
       } catch {
@@ -54,13 +59,25 @@ export function useNotificationsStream(enabled: boolean) {
 
       ws.onopen = () => {
         reconnectDelay = 1000;
+        // On (re)connect, refresh all data to catch anything missed while disconnected
+        queryClient.invalidateQueries({ queryKey: notificationsKeys.all });
+        queryClient.invalidateQueries({ queryKey: ["visitors"] });
+        queryClient.invalidateQueries({ queryKey: ["guard"] });
+        queryClient.invalidateQueries({ queryKey: ["dashboard"] });
       };
 
       ws.onmessage = (event) => {
         try {
           const data = JSON.parse(event.data as string);
           if (data?.event === "notification" || data?.payload?.event === "notification") {
+            // Notifications update instantly
             queryClient.invalidateQueries({ queryKey: notificationsKeys.all });
+            // Slight delay for data queries so the DB transaction commits first
+            setTimeout(() => {
+              queryClient.invalidateQueries({ queryKey: ["visitors"] });
+              queryClient.invalidateQueries({ queryKey: ["guard"] });
+              queryClient.invalidateQueries({ queryKey: ["dashboard"] });
+            }, 600);
           }
         } catch {
           // ignore parse errors
@@ -81,12 +98,12 @@ export function useNotificationsStream(enabled: boolean) {
       if (cancelled) return;
       reconnectTimeout = setTimeout(() => {
         reconnectTimeout = null;
-        connect();
+        void connect();
         reconnectDelay = Math.min(reconnectDelay * 2, maxReconnectDelay);
       }, reconnectDelay);
     }
 
-    connect();
+    void connect();
 
     return () => {
       cancelled = true;
@@ -141,6 +158,12 @@ export function useCreateSocietyNotice() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: notificationsKeys.all });
     },
+  });
+}
+
+export function useGenerateNoticeMessage() {
+  return useMutation({
+    mutationFn: generateNoticeMessage,
   });
 }
 

@@ -18,7 +18,7 @@ from app.models.user import User
 from app.models.notification import Notification
 from app.models.society import Building
 from app.services.blacklist_service import is_visitor_blacklisted_for_society
-from app.core.notification_ws import broadcast_to_user
+from app.core.notification_ws import broadcast_to_user, broadcast_visit_event
 
 
 async def ensure_user_in_society(
@@ -51,12 +51,27 @@ async def ensure_building_in_society(
 async def get_resident_by_building_and_flat(
     db: AsyncSession,
     society_id: UUID,
-    building_id: UUID,
-    flat_number: str,
+    building_id: UUID | None = None,
+    flat_number: str | None = None,
+    flat_id: UUID | None = None,
 ) -> Optional[User]:
-    """Find resident (host) by tower/building and flat number within a society. Returns first match."""
+    """Find resident (host) by flat_id or by tower/building + flat number within a society."""
+    if flat_id:
+        result = await db.execute(
+            select(User)
+            .options(selectinload(User.building))
+            .where(
+                User.society_id == society_id,
+                User.flat_id == flat_id,
+                User.role.in_(RESIDENT_HOST_ROLES),
+                User.is_active == True,
+            )
+            .limit(1)
+        )
+        return result.scalar_one_or_none()
+
     flat_clean = (flat_number or "").strip()
-    if not flat_clean:
+    if not flat_clean or not building_id:
         return None
     result = await db.execute(
         select(User)
@@ -93,7 +108,7 @@ async def get_or_create_visitor(
     if visitor:
         if full_name and visitor.full_name != full_name:
             visitor.full_name = full_name
-        if email is not None:
+        if email is not None and visitor.email != email:
             visitor.email = email
         await db.flush()
         return visitor
@@ -124,7 +139,10 @@ async def create_invitation(
     visit = Visit(
         visitor_id=visitor.id,
         host_id=host_id,
-        status=VisitStatus.PENDING,
+        flat_id=host.flat_id if host else None,
+        visitor_name=visitor_name,
+        visitor_phone=visitor_phone,
+        status=VisitStatus.APPROVED,  # Auto-approved: resident invited them
         purpose=purpose,
         expected_arrival=expected_arrival,
         qr_code=_generate_qr(),
@@ -133,6 +151,8 @@ async def create_invitation(
     )
     db.add(visit)
     await db.flush()
+    if host and host.society_id:
+        asyncio.create_task(broadcast_visit_event(host.society_id, host_id, {"event": "notification"}))
     return visit
 
 
@@ -161,6 +181,9 @@ async def create_walkin_visit(
     visit = Visit(
         visitor_id=visitor.id,
         host_id=host_id,
+        flat_id=host.flat_id if host else None,
+        visitor_name=visitor_name,
+        visitor_phone=visitor_phone,
         status=VisitStatus.PENDING,  # Wait for resident approval
         purpose=purpose or "Walk-in",
         qr_code=None,  # No QR/OTP for walk-in; guard will check-in by visit_id after approval
@@ -179,21 +202,47 @@ async def create_walkin_visit(
         if parts:
             notif_body += f" Flat: {' - '.join(parts)}."
     notif_body += " Approve or reject from the app."
-    notif = Notification(
+    extra = json.dumps({
+        "visit_id": str(visit.id),
+        "visitor_name": visitor.full_name,
+        "visitor_phone": visitor.phone,
+    })
+    # Notification for the host resident
+    db.add(Notification(
         user_id=host_id,
         type="walkin_pending",
         title="Visitor at gate",
         body=notif_body,
         read=False,
-        extra_data=json.dumps({
-            "visit_id": str(visit.id),
-            "visitor_name": visitor.full_name,
-            "visitor_phone": visitor.phone,
-        }),
-    )
-    db.add(notif)
+        extra_data=extra,
+    ))
+    # Also notify committee members (chairman, secretary, treasurer) in the same society
+    if host and host.society_id:
+        from app.core.roles import SOCIETY_ADMIN_ROLES
+        result = await db.execute(
+            select(User.id).where(
+                User.society_id == host.society_id,
+                User.role.in_(SOCIETY_ADMIN_ROLES),
+                User.is_active == True,
+                User.id != host_id,  # avoid duplicate if host is committee
+            )
+        )
+        admin_ids = [row[0] for row in result.all()]
+        host_name = host.full_name or "Resident"
+        flat_info = f" ({' - '.join(p for p in [building_name, flat_number] if p)})" if (building_name or flat_number) else ""
+        admin_body = f"{visitor.full_name} is at the gate to meet {host_name}{flat_info}."
+        for uid in admin_ids:
+            db.add(Notification(
+                user_id=uid,
+                type="walkin_pending",
+                title="Walk-in visitor",
+                body=admin_body,
+                read=False,
+                extra_data=extra,
+            ))
     await db.flush()
-    asyncio.create_task(broadcast_to_user(host_id, {"event": "notification"}))
+    if host and host.society_id:
+        asyncio.create_task(broadcast_visit_event(host.society_id, host_id, {"event": "notification"}))
     return visit
 
 
@@ -244,15 +293,19 @@ def _validate_arrival_window(visit: Visit) -> None:
     if not visit.expected_arrival:
         return
     now = datetime.utcnow()
+    expected = visit.expected_arrival
+    # Strip timezone info if present to avoid naive vs aware comparison errors
+    if hasattr(expected, 'tzinfo') and expected.tzinfo is not None:
+        expected = expected.replace(tzinfo=None)
     window = timedelta(minutes=ARRIVAL_WINDOW_MINUTES)
-    if now < visit.expected_arrival - window:
+    if now < expected - window:
         raise ValueError(
-            f"Check-in too early. Expected arrival: {visit.expected_arrival.strftime('%H:%M')}. "
+            f"Check-in too early. Expected arrival: {expected.strftime('%H:%M')}. "
             f"You can check in up to {ARRIVAL_WINDOW_MINUTES} minutes before."
         )
-    if now > visit.expected_arrival + window:
+    if now > expected + window:
         raise ValueError(
-            f"Check-in window expired. Expected arrival: {visit.expected_arrival.strftime('%H:%M')}. "
+            f"Check-in window expired. Expected arrival: {expected.strftime('%H:%M')}. "
             f"Check-in allowed up to {ARRIVAL_WINDOW_MINUTES} minutes after."
         )
 
@@ -299,13 +352,14 @@ async def checkin_visit(
         user_id=visit.host_id,
         type="visitor_arrived",
         title="Visitor checked in",
-        body=f"{visit.visitor.full_name} has checked in.",
+        body=f"{visit.visitor_name or visit.visitor.full_name} has checked in.",
         read=False,
-        extra_data=json.dumps({"visit_id": str(visit.id), "visitor_name": visit.visitor.full_name}),
+        extra_data=json.dumps({"visit_id": str(visit.id), "visitor_name": visit.visitor_name or visit.visitor.full_name}),
     )
     db.add(notif)
     await db.flush()
-    asyncio.create_task(broadcast_to_user(visit.host_id, {"event": "notification"}))
+    if visit.host and visit.host.society_id:
+        asyncio.create_task(broadcast_visit_event(visit.host.society_id, visit.host_id, {"event": "notification"}))
     return visit
 
 
@@ -318,6 +372,9 @@ async def approve_visit(db: AsyncSession, visit: Visit) -> Visit:
         raise ValueError(f"Cannot approve visit with status {visit.status.value}")
     visit.status = VisitStatus.APPROVED
     await db.flush()
+    await db.refresh(visit, ["host"])
+    if visit.host and visit.host.society_id:
+        asyncio.create_task(broadcast_visit_event(visit.host.society_id, visit.host_id, {"event": "notification"}))
 
     # Walk-in: resident approved = allow entry; auto check-in so guard does not need a separate action
     extra = visit.extra_data or {}
@@ -330,11 +387,40 @@ async def approve_visit(db: AsyncSession, visit: Visit) -> Visit:
     return visit
 
 
+async def reject_visit(db: AsyncSession, visit: Visit) -> Visit:
+    """Reject a pending visit (resident or admin)."""
+    if visit.status != VisitStatus.PENDING:
+        raise ValueError(f"Cannot reject visit with status {visit.status.value}")
+    visit.status = VisitStatus.CANCELLED
+    await db.flush()
+    await db.refresh(visit, ["host"])
+    if visit.host and visit.host.society_id:
+        asyncio.create_task(broadcast_visit_event(visit.host.society_id, visit.host_id, {"event": "notification"}))
+    return visit
+
+
 async def checkout_visit(db: AsyncSession, visit: Visit) -> Visit:
-    """Check-out a visit."""
+    """Check-out a visit. Notifies host."""
     visit.status = VisitStatus.CHECKED_OUT
     visit.actual_departure = datetime.utcnow()
     await db.flush()
+
+    # Notify host that visitor has left
+    await db.refresh(visit, ["visitor", "host"])
+    visitor_name = visit.visitor_name or (visit.visitor.full_name if visit.visitor else "Visitor")
+    import json
+    notif = Notification(
+        user_id=visit.host_id,
+        type="visitor_checked_out",
+        title="Visitor checked out",
+        body=f"{visitor_name} has checked out.",
+        read=False,
+        extra_data=json.dumps({"visit_id": str(visit.id), "visitor_name": visitor_name}),
+    )
+    db.add(notif)
+    await db.flush()
+    if visit.host and visit.host.society_id:
+        asyncio.create_task(broadcast_visit_event(visit.host.society_id, visit.host_id, {"event": "notification"}))
     return visit
 
 

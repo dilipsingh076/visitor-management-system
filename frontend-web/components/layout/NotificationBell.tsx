@@ -1,17 +1,17 @@
 "use client";
 
-import { useRef, useEffect, useState } from "react";
+import { useRef, useEffect, useState, useCallback } from "react";
 import Link from "next/link";
 import { Bell } from "lucide-react";
 import { getPrimaryRole, isCommittee } from "@/lib/auth";
 import type { User } from "@/lib/auth";
-import { useUnreadNotifications, useMarkNotificationRead, useNotificationsStream } from "@/features/visitors";
+import { useUnreadNotifications, useMarkNotificationRead, useNotificationsStream, useApproveVisit, useRejectVisit } from "@/features/visitors";
 import { Button } from "@/components/ui";
 
 function canReceiveNotifications(user: User | null): boolean {
   if (!user) return false;
   const role = getPrimaryRole(user);
-  return role === "resident" || isCommittee(role);
+  return role === "resident" || role === "guard" || isCommittee(role);
 }
 
 export function NotificationBell({ user }: { user: User | null }) {
@@ -23,7 +23,20 @@ export function NotificationBell({ user }: { user: User | null }) {
   useNotificationsStream(enabled);
   const { data: notifications = [] } = useUnreadNotifications(enabled);
   const markRead = useMarkNotificationRead();
+  const approveMutation = useApproveVisit();
+  const rejectMutation = useRejectVisit();
+  const [actionedIds, setActionedIds] = useState<Set<string>>(new Set());
   const count = notifications.length;
+
+  const getVisitId = useCallback((extraData?: string | null): string | null => {
+    if (!extraData) return null;
+    try {
+      const parsed = JSON.parse(extraData);
+      return typeof parsed.visit_id === "string" ? parsed.visit_id : null;
+    } catch {
+      return null;
+    }
+  }, []);
 
   useEffect(() => {
     if (!open) return;
@@ -79,27 +92,70 @@ export function NotificationBell({ user }: { user: User | null }) {
             <p className="text-xs text-muted-foreground">Visitor alerts — approve or dismiss</p>
           </div>
           <ul className="divide-y divide-border max-h-64 overflow-y-auto">
-            {notifications.map((n) => (
-              <li key={n.id} className="px-3 py-2.5">
-                <div className="flex items-start justify-between gap-2">
-                  <div className="min-w-0">
-                    <p className="text-sm font-medium text-foreground truncate">{n.title}</p>
-                    <p className="text-xs text-muted-foreground line-clamp-2">{n.body}</p>
+            {notifications.map((n) => {
+              const visitId = getVisitId(n.extra_data);
+              const canAction = n.type === "walkin_pending" && visitId && !actionedIds.has(n.id);
+              return (
+                <li key={n.id} className="px-3 py-2.5">
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium text-foreground truncate">{n.title}</p>
+                      <p className="text-xs text-muted-foreground line-clamp-2">{n.body}</p>
+                    </div>
+                    <Button
+                      size="xs"
+                      variant="secondary"
+                      onClick={() => {
+                        markRead.mutate(n.id);
+                        if (notifications.length <= 1) setOpen(false);
+                      }}
+                      disabled={markRead.isPending}
+                    >
+                      Dismiss
+                    </Button>
                   </div>
-                  <Button
-                    size="xs"
-                    variant="secondary"
-                    onClick={() => {
-                      markRead.mutate(n.id);
-                      if (notifications.length <= 1) setOpen(false);
-                    }}
-                    disabled={markRead.isPending}
-                  >
-                    Dismiss
-                  </Button>
-                </div>
-              </li>
-            ))}
+                  {canAction && (
+                    <div className="flex gap-1.5 mt-1.5">
+                      <Button
+                        size="xs"
+                        variant="primary"
+                        onClick={() => {
+                          approveMutation.mutate(visitId, {
+                            onSuccess: () => {
+                              setActionedIds((prev) => new Set(prev).add(n.id));
+                              markRead.mutate(n.id);
+                              if (notifications.length <= 1) setOpen(false);
+                            },
+                          });
+                        }}
+                        disabled={approveMutation.isPending}
+                      >
+                        {approveMutation.isPending ? "…" : "Approve"}
+                      </Button>
+                      <Button
+                        size="xs"
+                        variant="danger"
+                        onClick={() => {
+                          rejectMutation.mutate(visitId, {
+                            onSuccess: () => {
+                              setActionedIds((prev) => new Set(prev).add(n.id));
+                              markRead.mutate(n.id);
+                              if (notifications.length <= 1) setOpen(false);
+                            },
+                          });
+                        }}
+                        disabled={rejectMutation.isPending}
+                      >
+                        {rejectMutation.isPending ? "…" : "Reject"}
+                      </Button>
+                    </div>
+                  )}
+                  {actionedIds.has(n.id) && (
+                    <span className="text-xs text-success mt-1 block">Done</span>
+                  )}
+                </li>
+              );
+            })}
           </ul>
           <div className="border-t border-border px-3 py-2 bg-muted-bg/30">
             <Link

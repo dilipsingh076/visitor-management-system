@@ -55,6 +55,7 @@ def _user_to_response(user: User, society: Optional[Society] = None) -> dict:
         "role": roles[0] if roles else user.role,
         "phone": user.phone,
         "flat_number": user.flat_number,
+        "flat_id": str(user.flat_id) if user.flat_id else None,
         "society_id": str(user.society_id) if user.society_id else None,
         "building_id": str(user.building_id) if user.building_id else None,
     }
@@ -232,6 +233,41 @@ async def signup(
         if not result.scalar_one_or_none():
             raise ValueError("Building not found or does not belong to society")
 
+    # Resolve flat_id and validate occupancy (one account per flat)
+    from app.models.society import Flat
+    resolved_flat_id = None
+    resolved_flat_number = flat_number.strip() if flat_number else None
+    if building_id_uuid and resolved_flat_number:
+        result = await db.execute(
+            select(Flat).where(
+                Flat.building_id == building_id_uuid,
+                Flat.flat_number == resolved_flat_number,
+            )
+        )
+        flat = result.scalar_one_or_none()
+        if flat:
+            if flat.occupancy_status == "occupied":
+                # Check if another user already owns this flat
+                result = await db.execute(
+                    select(User).where(User.flat_id == flat.id, User.is_active == True)
+                )
+                existing_owner = result.scalar_one_or_none()
+                if existing_owner:
+                    raise ValueError(f"Flat {resolved_flat_number} is already occupied by another resident. Contact your society admin.")
+            resolved_flat_id = flat.id
+            flat.occupancy_status = "occupied"
+            db.add(flat)
+        else:
+            # Auto-create flat record
+            flat = Flat(
+                building_id=building_id_uuid,
+                flat_number=resolved_flat_number,
+                occupancy_status="occupied",
+            )
+            db.add(flat)
+            await db.flush()
+            resolved_flat_id = flat.id
+
     user = User(
         email=email.strip().lower(),
         full_name=full_name.strip(),
@@ -243,6 +279,7 @@ async def signup(
         password_hash=hash_password(password),
         society_id=society.id,
         building_id=building_id_uuid,
+        flat_id=resolved_flat_id,
         keycloak_id=None,
     )
     db.add(user)

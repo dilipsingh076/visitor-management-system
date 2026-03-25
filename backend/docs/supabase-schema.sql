@@ -57,6 +57,44 @@ CREATE INDEX IF NOT EXISTS idx_buildings_name ON buildings(name);
 CREATE INDEX IF NOT EXISTS idx_buildings_code ON buildings(code);
 
 -- ----------------------------------------------------------------
+-- 2b. Flats (individual units within buildings)
+-- ----------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS flats (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  building_id UUID NOT NULL REFERENCES buildings(id) ON DELETE CASCADE,
+  flat_number VARCHAR(50) NOT NULL,
+  floor INTEGER,
+  flat_type VARCHAR(50),
+  occupancy_status VARCHAR(30) NOT NULL DEFAULT 'vacant',
+  owner_name VARCHAR(255),
+  is_active BOOLEAN NOT NULL DEFAULT true,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  UNIQUE (building_id, flat_number)
+);
+
+CREATE INDEX IF NOT EXISTS ix_flats_building_id ON flats(building_id);
+
+-- ----------------------------------------------------------------
+-- 2c. Flat Members (family/occupant data — not user accounts)
+-- ----------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS flat_members (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  flat_id UUID NOT NULL REFERENCES flats(id) ON DELETE CASCADE,
+  full_name VARCHAR(255) NOT NULL,
+  phone VARCHAR(20),
+  relation VARCHAR(50) NOT NULL,
+  date_of_birth DATE,
+  photo_url VARCHAR(500),
+  id_proof_type VARCHAR(50),
+  id_proof_number VARCHAR(255),
+  is_active BOOLEAN NOT NULL DEFAULT true,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS ix_flat_members_flat_id ON flat_members(flat_id);
+
+-- ----------------------------------------------------------------
 -- 3. Users (residents, guards, admins)
 -- Email is unique globally for login.
 -- ----------------------------------------------------------------
@@ -64,6 +102,7 @@ CREATE TABLE IF NOT EXISTS users (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   society_id UUID REFERENCES societies(id) ON DELETE SET NULL,
   building_id UUID REFERENCES buildings(id) ON DELETE SET NULL,
+  flat_id UUID REFERENCES flats(id) ON DELETE SET NULL,
   keycloak_id VARCHAR(255) UNIQUE,
   email VARCHAR(255) NOT NULL UNIQUE,
   password_hash VARCHAR(255),
@@ -113,6 +152,7 @@ CREATE TABLE IF NOT EXISTS visits (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   visitor_id UUID NOT NULL REFERENCES visitors(id) ON DELETE CASCADE,
   host_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  flat_id UUID REFERENCES flats(id) ON DELETE SET NULL,
   status VARCHAR(20) NOT NULL DEFAULT 'pending',
   purpose VARCHAR(255),
   expected_arrival TIMESTAMPTZ,

@@ -1,13 +1,25 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useCallback } from "react";
 import Link from "next/link";
-import { PageHeader, Card, CardHeader, CardContent, Button, Input, Tabs, TabsList, TabsTrigger, TabsContent, Badge } from "@/components/ui";
+import {
+  PageHeader,
+  Card,
+  CardHeader,
+  CardContent,
+  Button,
+  Input,
+  Tabs,
+  TabsList,
+  TabsTrigger,
+  TabsContent,
+  Badge,
+  FilterChip,
+} from "@/components/ui";
 import { PageWrapper } from "@/components/common";
-import { theme } from "@/lib/theme";
 import { useAuth } from "@/features/auth";
 import { getPrimaryRole, isCommittee } from "@/lib/auth";
-import { useNotifications, useMarkNotificationRead, useCreateSocietyNotice, useNotificationsStream } from "@/features/visitors";
+import { useNotifications, useMarkNotificationRead, useCreateSocietyNotice, useGenerateNoticeMessage, useNotificationsStream, useApproveVisit, useRejectVisit } from "@/features/visitors";
 
 type NotificationCategory = "all" | "visitor" | "society" | "security" | "payments" | "other";
 
@@ -43,6 +55,7 @@ export function NotificationsPageContent() {
   const listQ = useNotifications({ enabled: Boolean(user), unreadOnly });
   const markRead = useMarkNotificationRead();
   const createNotice = useCreateSocietyNotice();
+  const generateMessage = useGenerateNoticeMessage();
 
   const notifications = listQ.data ?? [];
   const loading = authLoading || listQ.isLoading;
@@ -56,6 +69,17 @@ export function NotificationsPageContent() {
     if (category === "all") return mapped;
     return mapped.filter((n) => n.category === category);
   }, [notifications, category]);
+
+  const handleGenerateMessage = async () => {
+    const t = title.trim();
+    if (!t) return;
+    try {
+      const message = await generateMessage.mutateAsync({ title: t });
+      setBody(message);
+    } catch {
+      // Error shown via generateMessage.isError
+    }
+  };
 
   const submitNotice = async () => {
     const t = title.trim();
@@ -88,13 +112,37 @@ export function NotificationsPageContent() {
               onChange={(e) => setTitle(e.target.value)}
               placeholder="e.g. Water supply maintenance tomorrow 10 AM"
             />
-            <Input
-              id="noticeBody"
-              label="Message (optional)"
-              value={body}
-              onChange={(e) => setBody(e.target.value)}
-              placeholder="Add details (time, building, contact person)…"
-            />
+            <div className="mb-4">
+              <label htmlFor="noticeBody" className="block text-sm font-medium text-foreground mb-1">Message (optional)</label>
+              <textarea
+                id="noticeBody"
+                value={body}
+                onChange={(e) => setBody(e.target.value)}
+                placeholder="Add details (time, building, contact person)…"
+                rows={5}
+                className="w-full px-4 py-3 rounded-xl border border-border bg-card text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-primary/30 focus:border-primary outline-none transition text-sm resize-y"
+              />
+            </div>
+            <div className="flex items-center gap-2">
+              <Button
+                size="xs"
+                variant="outline"
+                onClick={handleGenerateMessage}
+                disabled={!title.trim() || generateMessage.isPending}
+              >
+                {generateMessage.isPending ? (
+                  <>
+                    <span className="inline-block w-3 h-3 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                    Generating...
+                  </>
+                ) : (
+                  "Generate with AI"
+                )}
+              </Button>
+              {generateMessage.isError && (
+                <span className="text-xs text-destructive">AI unavailable. Please write manually.</span>
+              )}
+            </div>
             <div className="flex items-center gap-2">
               <Button size="sm" onClick={submitNotice} loading={createNotice.isPending} disabled={!title.trim()}>
                 Post notice
@@ -115,11 +163,11 @@ export function NotificationsPageContent() {
 
         <TabsContent value="unread" className="mt-4">
           <CategoryFilter category={category} setCategory={setCategory} />
-          <NotificationsList loading={loading} items={items} markRead={markRead} />
+          <NotificationsList loading={loading} items={items} markRead={markRead} showActions />
         </TabsContent>
         <TabsContent value="all" className="mt-4">
           <CategoryFilter category={category} setCategory={setCategory} />
-          <NotificationsList loading={loading} items={items} markRead={markRead} />
+          <NotificationsList loading={loading} items={items} markRead={markRead} showActions />
         </TabsContent>
       </Tabs>
     </PageWrapper>
@@ -137,16 +185,11 @@ function CategoryFilter(props: { category: NotificationCategory; setCategory: (c
     { id: "other", label: "Other" },
   ];
   return (
-    <div className="flex gap-1.5 mb-3 flex-wrap">
+    <div className="mb-3 flex flex-wrap gap-1.5">
       {options.map((o) => (
-        <button
-          key={o.id}
-          type="button"
-          onClick={() => setCategory(o.id)}
-          className={`${theme.filterPill.base} ${category === o.id ? theme.filterPill.active : theme.filterPill.inactive}`}
-        >
+        <FilterChip key={o.id} selected={category === o.id} onClick={() => setCategory(o.id)}>
           {o.label}
-        </button>
+        </FilterChip>
       ))}
     </div>
   );
@@ -156,8 +199,17 @@ function NotificationsList(props: {
   loading: boolean;
   items: Array<{ id: string; type: string; title: string; body: string; read: boolean; created_at: string; visitId: string | null }>;
   markRead: ReturnType<typeof useMarkNotificationRead>;
+  showActions?: boolean;
 }) {
-  const { loading, items, markRead } = props;
+  const { loading, items, markRead, showActions } = props;
+  const [expandedId, setExpandedId] = useState<string | null>(null);
+  const approveMutation = useApproveVisit();
+  const rejectMutation = useRejectVisit();
+  const [actionedIds, setActionedIds] = useState<Set<string>>(new Set());
+
+  const toggleExpand = useCallback((id: string) => {
+    setExpandedId((prev) => (prev === id ? null : id));
+  }, []);
 
   if (loading) {
     return (
@@ -178,32 +230,85 @@ function NotificationsList(props: {
   return (
     <Card className="overflow-hidden rounded-lg">
       <div className="divide-y divide-border">
-        {items.map((n) => (
-          <div key={n.id} className="px-4 py-3 flex items-start justify-between gap-3">
-            <div className="min-w-0">
-              <div className="flex items-center gap-2">
-                <p className="text-sm font-medium text-foreground truncate">{n.title}</p>
-                {!n.read && <Badge variant="primary" size="sm">New</Badge>}
-              </div>
-              <p className="text-xs text-muted-foreground mt-0.5">{new Date(n.created_at).toLocaleString()}</p>
-              <p className="text-sm text-muted-foreground mt-1 line-clamp-2">{n.body}</p>
-              {n.visitId && (
-                <div className="mt-2">
-                  <Link href={`/visitors/${encodeURIComponent(n.visitId)}`} className="text-sm font-medium text-primary hover:underline">
-                    Open visit →
-                  </Link>
+        {items.map((n) => {
+          const isExpanded = expandedId === n.id;
+          return (
+            <div key={n.id} className="px-4 py-3">
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-2">
+                    <p className={`text-sm font-medium text-foreground ${isExpanded ? "" : "truncate"}`}>{n.title}</p>
+                    {!n.read && <Badge variant="primary" size="sm">New</Badge>}
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-0.5">{new Date(n.created_at).toLocaleString()}</p>
+                  {n.body && (
+                    <p className={`text-sm text-muted-foreground mt-1 ${isExpanded ? "whitespace-pre-wrap" : "line-clamp-2"}`}>{n.body}</p>
+                  )}
+                  {n.visitId && (
+                    <div className="mt-2 flex items-center gap-2 flex-wrap">
+                      <Link href={`/visitors/${encodeURIComponent(n.visitId)}`} className="text-sm font-medium text-primary hover:underline">
+                        Open visit →
+                      </Link>
+                      {showActions && n.type === "walkin_pending" && !n.read && !actionedIds.has(n.id) && (
+                        <>
+                          <Button
+                            size="xs"
+                            variant="primary"
+                            onClick={() => {
+                              approveMutation.mutate(n.visitId!, {
+                                onSuccess: () => {
+                                  setActionedIds((prev) => new Set(prev).add(n.id));
+                                  markRead.mutate(n.id);
+                                },
+                              });
+                            }}
+                            disabled={approveMutation.isPending}
+                          >
+                            {approveMutation.isPending ? "…" : "Approve"}
+                          </Button>
+                          <Button
+                            size="xs"
+                            variant="danger"
+                            onClick={() => {
+                              rejectMutation.mutate(n.visitId!, {
+                                onSuccess: () => {
+                                  setActionedIds((prev) => new Set(prev).add(n.id));
+                                  markRead.mutate(n.id);
+                                },
+                              });
+                            }}
+                            disabled={rejectMutation.isPending}
+                          >
+                            {rejectMutation.isPending ? "…" : "Reject"}
+                          </Button>
+                        </>
+                      )}
+                      {actionedIds.has(n.id) && (
+                        <span className="text-xs text-muted-foreground">Done</span>
+                      )}
+                    </div>
+                  )}
                 </div>
+                <div className="shrink-0 flex gap-2">
+                  {!n.read && (
+                    <Button size="xs" variant="secondary" onClick={() => markRead.mutate(n.id)} disabled={markRead.isPending}>
+                      Mark read
+                    </Button>
+                  )}
+                </div>
+              </div>
+              {n.body && (
+                <button
+                  type="button"
+                  onClick={() => toggleExpand(n.id)}
+                  className="text-xs font-medium text-primary hover:underline mt-1"
+                >
+                  {isExpanded ? "Show less" : "View full"}
+                </button>
               )}
             </div>
-            <div className="shrink-0 flex gap-2">
-              {!n.read && (
-                <Button size="xs" variant="secondary" onClick={() => markRead.mutate(n.id)} disabled={markRead.isPending}>
-                  Mark read
-                </Button>
-              )}
-            </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
     </Card>
   );

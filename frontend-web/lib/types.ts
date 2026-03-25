@@ -102,8 +102,72 @@ export interface Resident {
   email: string;
   phone?: string;
   flat_no?: string;
+  flat_id?: string | null;
   building_id?: string | null;
   building_name?: string | null;
+}
+
+export interface Flat {
+  id: string;
+  building_id: string;
+  flat_number: string;
+  floor?: number | null;
+  flat_type?: string | null;
+  occupancy_status: string;
+  owner_name?: string | null;
+  registered_owner?: string | null;
+  is_active: boolean;
+  resident_count: number;
+  created_at: string;
+}
+
+export interface FlatMember {
+  id: string;
+  flat_id: string;
+  full_name: string;
+  phone?: string | null;
+  relation: string;
+  date_of_birth?: string | null;
+  photo_url?: string | null;
+  id_proof_type?: string | null;
+  id_proof_number?: string | null;
+  is_active: boolean;
+}
+
+export interface MaintenanceBill {
+  id: string;
+  society_id: string;
+  flat_id: string;
+  flat_number: string | null;
+  amount: number;
+  due_date: string;
+  period: string;
+  description: string | null;
+  status: string; // pending, paid, overdue
+  paid_date: string | null;
+  payment_method: string | null;
+  payment_reference: string | null;
+  created_at: string;
+}
+
+export interface MaintenanceSummary {
+  total_due: number;
+  total_paid: number;
+  pending_count: number;
+  overdue_count: number;
+}
+
+export interface ResidentComplaint {
+  id: string;
+  title: string;
+  description: string;
+  category: string;
+  priority: string;
+  status: string;
+  resolution_notes: string | null;
+  resolved_at: string | null;
+  created_at: string;
+  updated_at: string;
 }
 
 export interface DashboardStats {

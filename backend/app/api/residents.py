@@ -56,6 +56,7 @@ async def list_residents(
             "email": u.email,
             "phone": u.phone or "",
             "flat_no": getattr(u, "flat_number", None) or (u.extra_data or {}).get("flat_no", ""),
+            "flat_id": str(u.flat_id) if u.flat_id else None,
             "building_id": str(u.building_id) if u.building_id else None,
             "building_name": u.building.name if u.building else None,
         }

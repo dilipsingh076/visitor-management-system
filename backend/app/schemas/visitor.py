@@ -1,7 +1,7 @@
 """
 Pydantic schemas for visitor and visit operations.
 """
-from pydantic import BaseModel, EmailStr, Field, model_validator
+from pydantic import BaseModel, EmailStr, Field, field_validator, model_validator
 from typing import Optional
 from datetime import datetime
 from uuid import UUID
@@ -40,23 +40,36 @@ class VisitCreate(BaseModel):
     purpose: Optional[str] = None
     expected_arrival: Optional[datetime] = None
 
+    @field_validator("expected_arrival", mode="before")
+    @classmethod
+    def strip_tz(cls, v: Optional[datetime]) -> Optional[datetime]:
+        if isinstance(v, datetime) and v.tzinfo is not None:
+            return v.replace(tzinfo=None)
+        if isinstance(v, str):
+            dt = datetime.fromisoformat(v)
+            return dt.replace(tzinfo=None) if dt.tzinfo else dt
+        return v
+
 
 class WalkInCreate(BaseModel):
     """Schema for guard manual/walk-in registration. Resident identified by host_id OR by building + flat (tower/flat)."""
     visitor_phone: str = Field(..., min_length=10, max_length=20)
     visitor_name: str = Field(..., min_length=1, max_length=255)
     purpose: Optional[str] = None
-    host_id: Optional[UUID] = None  # Resident to notify (optional if building_id + flat_number provided)
-    building_id: Optional[UUID] = None  # Tower/building – use with flat_number to find resident
+    host_id: Optional[UUID] = None  # Resident to notify (optional if building_id + flat provided)
+    building_id: Optional[UUID] = None  # Tower/building – use with flat_number or flat_id to find resident
     flat_number: Optional[str] = None  # Flat no – use with building_id to find resident
+    flat_id: Optional[UUID] = None  # Flat UUID – use with building_id to find resident
 
     @model_validator(mode="after")
     def require_host_or_building_flat(self):
         if self.host_id is not None:
             return self
+        if self.flat_id is not None:
+            return self
         if self.building_id is not None and self.flat_number and str(self.flat_number).strip():
             return self
-        raise ValueError("Provide either host_id or both building_id and flat_number (tower + flat)")
+        raise ValueError("Provide host_id, flat_id, or both building_id and flat_number")
 
 
 class VisitResponse(BaseModel):

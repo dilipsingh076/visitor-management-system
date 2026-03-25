@@ -7,7 +7,7 @@ import {createNativeStackNavigator} from '@react-navigation/native-stack';
 import {View, Text, StyleSheet} from 'react-native';
 
 import {colors} from '../theme/colors';
-import {isAuthenticated, getCachedUser, getPrimaryRole, User} from '../config/auth';
+import {isAuthenticated, getCachedUser, getPrimaryRole, canAccessCommitteeFeatures, User} from '../config/auth';
 
 // Screens
 import LoginScreen from '../screens/LoginScreen';
@@ -22,6 +22,23 @@ import QRScannerScreen from '../screens/QRScannerScreen';
 import WalkInScreen from '../screens/WalkInScreen';
 import ScanHistoryScreen from '../screens/ScanHistoryScreen';
 import ScanDetailsScreen from '../screens/ScanDetailsScreen';
+import VisitorsListScreen from '../screens/VisitorsListScreen';
+import VisitorDetailScreen from '../screens/VisitorDetailScreen';
+import FrequentVisitorsScreen from '../screens/FrequentVisitorsScreen';
+import VisitPassScreen from '../screens/VisitPassScreen';
+import NotificationsScreen from '../screens/NotificationsScreen';
+import MyFlatScreen from '../screens/MyFlatScreen';
+import ProfileScreen from '../screens/ProfileScreen';
+import AmenitiesScreen from '../screens/AmenitiesScreen';
+import ComplaintsAdminScreen from '../screens/ComplaintsAdminScreen';
+import StaffDirectoryScreen from '../screens/StaffDirectoryScreen';
+import BuildingsScreen from '../screens/BuildingsScreen';
+import NearbyPlacesScreen from '../screens/NearbyPlacesScreen';
+import MeetingsScreen from '../screens/MeetingsScreen';
+import MeetingDetailScreen from '../screens/MeetingDetailScreen';
+import SocietySettingsScreen from '../screens/SocietySettingsScreen';
+import NoticeCreationScreen from '../screens/NoticeCreationScreen';
+import MoreScreen from '../screens/MoreScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -63,6 +80,7 @@ function MainNavigator() {
   const role = getPrimaryRole(user);
   const isGuard = role === 'guard';
   const isResident = role === 'resident';
+  const isCommittee = canAccessCommitteeFeatures(user);
 
   return (
     <Stack.Navigator screenOptions={screenOptions}>
@@ -143,6 +161,27 @@ function MainNavigator() {
         component={DashboardScreen}
         options={{title: 'Dashboard'}}
       />
+      <Stack.Screen name="VisitorsList" component={VisitorsListScreen} options={{title: 'Visitors'}} />
+      <Stack.Screen name="VisitorDetail" component={VisitorDetailScreen} options={{title: 'Visitor Detail'}} />
+      <Stack.Screen name="FrequentVisitors" component={FrequentVisitorsScreen} options={{title: 'Frequent Visitors'}} />
+      <Stack.Screen name="VisitPass" component={VisitPassScreen} options={{title: 'Visit Pass'}} />
+      <Stack.Screen name="Notifications" component={NotificationsScreen} options={{title: 'Notifications'}} />
+      <Stack.Screen name="MyFlat" component={MyFlatScreen} options={{title: 'My Flat'}} />
+      <Stack.Screen name="Profile" component={ProfileScreen} options={{title: 'Profile'}} />
+      {isCommittee && (
+        <>
+          <Stack.Screen name="Amenities" component={AmenitiesScreen} options={{title: 'Amenities'}} />
+          <Stack.Screen name="ComplaintsAdmin" component={ComplaintsAdminScreen} options={{title: 'Complaints'}} />
+          <Stack.Screen name="StaffDirectory" component={StaffDirectoryScreen} options={{title: 'Staff'}} />
+          <Stack.Screen name="Buildings" component={BuildingsScreen} options={{title: 'Buildings'}} />
+          <Stack.Screen name="NearbyPlaces" component={NearbyPlacesScreen} options={{title: 'Nearby Places'}} />
+          <Stack.Screen name="Meetings" component={MeetingsScreen} options={{title: 'Meetings'}} />
+          <Stack.Screen name="MeetingDetail" component={MeetingDetailScreen} options={{title: 'Meeting Detail'}} />
+          <Stack.Screen name="SocietySettings" component={SocietySettingsScreen} options={{title: 'Settings'}} />
+          <Stack.Screen name="NoticeCreation" component={NoticeCreationScreen} options={{title: 'Create Notice'}} />
+        </>
+      )}
+      <Stack.Screen name="More" component={MoreScreen} options={{title: 'All Features'}} />
     </Stack.Navigator>
   );
 }

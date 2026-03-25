@@ -8,7 +8,7 @@ import {
 } from "@/features/staff";
 import { useBuildings } from "@/features/visitors";
 import { useAuthContext } from "@/features/auth";
-import { Badge, Button, Card, CardContent, CardHeader, StatCardSkeleton } from "@/components/ui";
+import { Badge, Button, Card, CardContent, CardHeader, StatCardSkeleton, PageHeader, Alert } from "@/components/ui";
 import { PageWrapper } from "@/components/common";
 import { theme } from "@/lib/theme";
 import {
@@ -139,9 +139,7 @@ export function StaffPageContent() {
   if (!societyId) {
     return (
       <PageWrapper width="wide">
-        <div className="bg-warning/10 text-warning px-4 py-3 rounded-lg text-sm">
-          You are not associated with a society.
-        </div>
+        <Alert variant="warning">You are not associated with a society.</Alert>
       </PageWrapper>
     );
   }
@@ -149,9 +147,7 @@ export function StaffPageContent() {
   if (error) {
     return (
       <PageWrapper width="wide">
-        <div className="bg-error/10 text-error px-4 py-3 rounded-lg text-sm">
-          Failed to load staff: {(error as Error).message}
-        </div>
+        <Alert variant="error">Failed to load staff: {(error as Error).message}</Alert>
       </PageWrapper>
     );
   }
@@ -159,16 +155,23 @@ export function StaffPageContent() {
   return (
     <PageWrapper width="wide">
       <div className="space-y-6">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div>
-            <h1 className={theme.text.heading2}>Maintenance Staff</h1>
-            <p className={theme.text.subtitle}>Manage plumbers, electricians, housekeeping, and more</p>
-          </div>
-          <Button size="sm" onClick={() => { setShowForm(true); setEditingId(null); resetForm(); }}>
-            <Plus className="w-4 h-4 mr-2" />
-            Add Staff
-          </Button>
-        </div>
+        <PageHeader
+          title="Maintenance Staff"
+          description="Manage plumbers, electricians, housekeeping, and more"
+          action={
+            <Button
+              size="sm"
+              onClick={() => {
+                setShowForm(true);
+                setEditingId(null);
+                resetForm();
+              }}
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              Add Staff
+            </Button>
+          }
+        />
 
         <div className="flex items-center gap-2">
           <span className="text-sm text-muted-foreground">Role:</span>

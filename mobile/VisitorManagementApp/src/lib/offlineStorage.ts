@@ -130,7 +130,11 @@ export async function syncQueuedActions(): Promise<void> {
 export async function cacheData(key: keyof CachedData, data: unknown): Promise<void> {
   try {
     const cached = await getCachedData();
-    cached[key] = data as CachedData[keyof CachedData];
+    if (key === 'visits') {
+      cached.visits = Array.isArray(data) ? data : [];
+    } else if (key === 'dashboard') {
+      cached.dashboard = data;
+    }
     cached.lastSync = Date.now();
     await AsyncStorage.setItem(CACHED_DATA_KEY, JSON.stringify(cached));
   } catch (error) {

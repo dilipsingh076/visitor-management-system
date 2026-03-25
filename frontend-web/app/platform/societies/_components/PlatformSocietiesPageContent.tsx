@@ -3,7 +3,7 @@
 import { canAccessPlatform } from "@/lib/auth";
 import { useAuth } from "@/features/auth";
 import { usePlatformSocietiesPage } from "@/features/platform";
-import { Button } from "@/components/ui";
+import { Button, PageHeader, Input, Alert } from "@/components/ui";
 import { PageWrapper, PageLoadingSkeleton } from "@/components/common";
 import { theme } from "@/lib/theme";
 import { StatusBadge } from "@/components/common";
@@ -49,46 +49,47 @@ export function PlatformSocietiesPageContent() {
 
   return (
     <PageWrapper width="narrow">
-      <div className="flex items-center justify-between mb-4">
-        <h1 className={theme.text.heading1}>Platform — Societies</h1>
-        <Button variant="primary" size="sm" onClick={() => setCreating((v) => !v)}>
-          {creating ? "Cancel" : "Add Society"}
-        </Button>
-      </div>
+      <PageHeader
+        title="Platform — Societies"
+        description="Create and manage societies on the platform."
+        action={
+          <Button variant="primary" size="sm" onClick={() => setCreating((v) => !v)}>
+            {creating ? "Cancel" : "Add Society"}
+          </Button>
+        }
+      />
       {creating && (
         <form onSubmit={handleCreate} className={`mb-5 p-4 ${theme.surface.card} ${theme.space.formStack}`}>
           <h2 className={theme.sectionTitle}>Create society</h2>
-          {createError && <p className={theme.auth.alertError}>{createError}</p>}
-          <div>
-            <label className={theme.label}>Name *</label>
-            <input
-              type="text"
-              value={createName}
-              onChange={(e) => setCreateName(e.target.value)}
-              placeholder="Green Valley Apartments"
-              className={theme.input.base}
-            />
-          </div>
-          <div>
-            <label className={theme.label}>Slug (code) *</label>
-            <input
-              type="text"
-              value={createSlug}
-              onChange={(e) => setCreateSlug(e.target.value)}
-              placeholder="green-valley"
-              className={theme.input.base}
-            />
-          </div>
-          <div>
-            <label className={theme.label}>Contact email *</label>
-            <input
-              type="email"
-              value={createEmail}
-              onChange={(e) => setCreateEmail(e.target.value)}
-              placeholder="admin@greenvalley.com"
-              className={theme.input.base}
-            />
-          </div>
+          {createError && (
+            <Alert variant="error" className="text-sm">
+              {createError}
+            </Alert>
+          )}
+          <Input
+            id="platform-create-name"
+            label="Name *"
+            type="text"
+            value={createName}
+            onChange={(e) => setCreateName(e.target.value)}
+            placeholder="Green Valley Apartments"
+          />
+          <Input
+            id="platform-create-slug"
+            label="Slug (code) *"
+            type="text"
+            value={createSlug}
+            onChange={(e) => setCreateSlug(e.target.value)}
+            placeholder="green-valley"
+          />
+          <Input
+            id="platform-create-email"
+            label="Contact email *"
+            type="email"
+            value={createEmail}
+            onChange={(e) => setCreateEmail(e.target.value)}
+            placeholder="admin@greenvalley.com"
+          />
           <Button type="submit" variant="primary" size="sm" disabled={createMutation.isPending}>
             {createMutation.isPending ? "Creating..." : "Create"}
           </Button>

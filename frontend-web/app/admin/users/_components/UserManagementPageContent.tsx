@@ -2,13 +2,30 @@
 
 import { useState } from "react";
 import { Plus, Pencil, Ban, CheckCircle, Trash2 } from "lucide-react";
-import { Avatar, Button, Input, Badge, Modal, ConfirmDialog, Select, PageHeader, EmptyState, EmptyIllustration, Alert, RoleBadge } from "@/components/ui";
+import {
+  Avatar,
+  Button,
+  Input,
+  Badge,
+  Modal,
+  ConfirmDialog,
+  Select,
+  PageHeader,
+  EmptyState,
+  EmptyIllustration,
+  Alert,
+  RoleBadge,
+  StatCard,
+} from "@/components/ui";
 import {
   useUserManagement,
   ROLE_OPTIONS,
   COMMITTEE_ROLES,
   shouldShowFlatForRole,
+  useFlats,
 } from "@/features/admin";
+import { useBuildings } from "@/features/visitors";
+import { useAuthContext } from "@/features/auth";
 import { PageWrapper, PageLoadingSkeleton, SearchInput } from "@/components/common";
 import { theme } from "@/lib/theme";
 
@@ -75,22 +92,10 @@ export function UserManagementPageContent() {
       />
 
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-4">
-        <div className={theme.statCard.root}>
-          <p className={theme.statCard.label}>Total</p>
-          <p className={theme.statCard.value}>{stats.total}</p>
-        </div>
-        <div className={theme.statCard.root}>
-          <p className={theme.statCard.label}>Committee</p>
-          <p className={theme.statCard.valueSuccess}>{stats.committee}</p>
-        </div>
-        <div className={theme.statCard.root}>
-          <p className={theme.statCard.label}>Residents</p>
-          <p className={theme.statCard.valueInfo}>{stats.residents}</p>
-        </div>
-        <div className={theme.statCard.root}>
-          <p className={theme.statCard.label}>Guards</p>
-          <p className={theme.statCard.valueWarning}>{stats.guards}</p>
-        </div>
+        <StatCard label="Total" value={stats.total} variant="primary" />
+        <StatCard label="Committee" value={stats.committee} variant="success" />
+        <StatCard label="Residents" value={stats.residents} />
+        <StatCard label="Guards" value={stats.guards} variant="warning" />
       </div>
 
       <div className="flex flex-col md:flex-row gap-3 mb-4">
@@ -240,13 +245,29 @@ function AddUserForm({
   onSubmit,
   isSubmitting,
 }: {
-  form: { email: string; username: string; role: string; flat_number: string; phone: string; password: string };
+  form: { email: string; username: string; role: string; flat_number: string; phone: string; password: string; building_id: string; flat_id: string };
   onFieldChange: (field: keyof typeof form, value: string) => void;
   error: string;
   onCancel: () => void;
   onSubmit: () => void;
   isSubmitting: boolean;
 }) {
+  const { user } = useAuthContext();
+  const { data: buildings } = useBuildings(user?.society_id);
+  const { data: flats } = useFlats(form.building_id || undefined);
+
+  const handleBuildingChange = (buildingId: string) => {
+    onFieldChange("building_id", buildingId);
+    onFieldChange("flat_id", "");
+    onFieldChange("flat_number", "");
+  };
+
+  const handleFlatChange = (flatId: string) => {
+    onFieldChange("flat_id", flatId);
+    const flat = flats?.find((f: { id: string }) => f.id === flatId);
+    if (flat) onFieldChange("flat_number", flat.flat_number);
+  };
+
   return (
     <div className={theme.space.formStack}>
       {error && <p className={theme.auth.alertError}>{error}</p>}
@@ -280,18 +301,45 @@ function AddUserForm({
           />
         </div>
       </div>
-      <div className={theme.grid.formTwoCol}>
+      <div>
         <div>
           <label className={theme.label}>Phone</label>
           <Input placeholder="10-digit phone" value={form.phone} onChange={(e) => onFieldChange("phone", e.target.value)} />
         </div>
-        {shouldShowFlatForRole(form.role) && (
+      </div>
+      {shouldShowFlatForRole(form.role) && (
+        <div className={theme.grid.formTwoCol}>
+          <div>
+            <label className={theme.label}>Building</label>
+            <select
+              className={theme.input.base}
+              value={form.building_id}
+              onChange={(e) => handleBuildingChange(e.target.value)}
+            >
+              <option value="">Select building</option>
+              {buildings?.map((b) => (
+                <option key={b.id} value={b.id}>{b.name}</option>
+              ))}
+            </select>
+          </div>
           <div>
             <label className={theme.label}>Flat / Unit</label>
-            <Input placeholder="e.g., 101, A-201" value={form.flat_number} onChange={(e) => onFieldChange("flat_number", e.target.value)} />
+            <select
+              className={theme.input.base}
+              value={form.flat_id}
+              onChange={(e) => handleFlatChange(e.target.value)}
+              disabled={!form.building_id}
+            >
+              <option value="">{form.building_id ? "Select flat" : "Select building first"}</option>
+              {flats?.map((f: { id: string; flat_number: string; occupancy_status: string }) => (
+                <option key={f.id} value={f.id}>
+                  {f.flat_number}{f.occupancy_status === "occupied" ? " (occupied)" : ""}
+                </option>
+              ))}
+            </select>
           </div>
-        )}
-      </div>
+        </div>
+      )}
       <div className="flex gap-2 justify-end pt-4">
         <Button variant="secondary" onClick={onCancel}>Cancel</Button>
         <Button onClick={onSubmit} loading={isSubmitting} disabled={!form.email || !form.username || !form.password}>
@@ -316,13 +364,17 @@ function EditUserForm({
   onSubmit,
   isSubmitting,
 }: {
-  user: { id: string; email: string; username: string; role: string; roles: string[]; phone?: string; flat_number?: string };
+  user: { id: string; email: string; username: string; role: string; roles: string[]; phone?: string; flat_number?: string; building_id?: string; flat_id?: string };
   onUserChange: (patch: Partial<typeof user>) => void;
   error: string;
   onCancel: () => void;
   onSubmit: () => void;
   isSubmitting: boolean;
 }) {
+  const { user: authUser } = useAuthContext();
+  const { data: buildings } = useBuildings(authUser?.society_id);
+  const { data: flats } = useFlats(user.building_id || undefined);
+
   const roles = user.roles ?? [user.role];
   const signupRoles = roles.filter((r) => r === "resident" || r === "guard");
   const toggleCommitteeRole = (role: string, checked: boolean) => {
@@ -331,6 +383,15 @@ function EditUserForm({
     const newCommittee = checked ? [...committee, role] : committee.filter((x) => x !== role);
     const next = [...others, ...newCommittee];
     onUserChange({ roles: next, role: next[0] ?? user.role });
+  };
+
+  const handleBuildingChange = (buildingId: string) => {
+    onUserChange({ building_id: buildingId, flat_id: "", flat_number: "" });
+  };
+
+  const handleFlatChange = (flatId: string) => {
+    const flat = flats?.find((f: { id: string }) => f.id === flatId);
+    onUserChange({ flat_id: flatId, flat_number: flat?.flat_number ?? "" });
   };
 
   return (
@@ -373,9 +434,36 @@ function EditUserForm({
         <Input value={user.phone ?? ""} onChange={(e) => onUserChange({ phone: e.target.value })} />
       </div>
       {shouldShowFlatForRole(user.role) && (
-        <div>
-          <label className={theme.label}>Flat / Unit</label>
-          <Input value={user.flat_number ?? ""} onChange={(e) => onUserChange({ flat_number: e.target.value })} />
+        <div className={theme.grid.formTwoCol}>
+          <div>
+            <label className={theme.label}>Building</label>
+            <select
+              className={theme.input.base}
+              value={user.building_id ?? ""}
+              onChange={(e) => handleBuildingChange(e.target.value)}
+            >
+              <option value="">Select building</option>
+              {buildings?.map((b) => (
+                <option key={b.id} value={b.id}>{b.name}</option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className={theme.label}>Flat / Unit</label>
+            <select
+              className={theme.input.base}
+              value={user.flat_id ?? ""}
+              onChange={(e) => handleFlatChange(e.target.value)}
+              disabled={!user.building_id}
+            >
+              <option value="">{user.building_id ? "Select flat" : "Select building first"}</option>
+              {flats?.map((f: { id: string; flat_number: string; occupancy_status: string }) => (
+                <option key={f.id} value={f.id}>
+                  {f.flat_number}{f.occupancy_status === "occupied" ? " (occupied)" : ""}
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
       )}
       <div className="flex gap-2 justify-end pt-4">

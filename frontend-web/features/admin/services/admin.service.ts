@@ -15,13 +15,15 @@ export async function createUserEntity(body: {
   password: string;
   phone?: string;
   flat_number?: string;
+  building_id?: string;
+  flat_id?: string;
 }): Promise<{ user: UserListItem | null; error?: string }> {
   return createUser(body);
 }
 
 export async function updateUserEntity(
   userId: string,
-  body: { roles?: string[]; full_name?: string; phone?: string; flat_number?: string }
+  body: { roles?: string[]; full_name?: string; phone?: string; flat_number?: string; building_id?: string; flat_id?: string }
 ): Promise<{ user: UserListItem | null; error?: string }> {
   return updateUser(userId, body);
 }

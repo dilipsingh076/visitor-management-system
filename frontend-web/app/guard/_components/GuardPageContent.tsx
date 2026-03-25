@@ -17,7 +17,7 @@ import {
   useGuardExportMuster,
 } from "@/features/guard";
 import { PageWrapper } from "@/components/common";
-import { Button } from "@/components/ui";
+import { Button, PageHeader } from "@/components/ui";
 import { theme } from "@/lib/theme";
 
 export function GuardPageContent() {
@@ -92,26 +92,17 @@ export function GuardPageContent() {
 
   return (
     <PageWrapper width="narrow">
-      <header className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-5">
-        <div>
-          <h1 className={theme.text.heading1}>
-            Guard Dashboard
-          </h1>
-          <p className={`${theme.text.mutedSmall} mt-0.5`}>
-            Walk-ins and visit status at the gate
-          </p>
-        </div>
-        <div className="flex flex-wrap gap-2">
-          <Button
-            type="button"
-            variant="secondary"
-            size="sm"
-            onClick={() => exportMuster()}
-          >
-            Export Muster (CSV)
-          </Button>
-        </div>
-      </header>
+      <div className="mb-5">
+        <PageHeader
+          title="Guard Dashboard"
+          description="Walk-ins and visit status at the gate"
+          action={
+            <Button type="button" variant="secondary" size="sm" onClick={() => exportMuster()}>
+              Export Muster (CSV)
+            </Button>
+          }
+        />
+      </div>
 
       {loading ? (
         <div className={`py-8 text-center ${theme.text.muted}`}>

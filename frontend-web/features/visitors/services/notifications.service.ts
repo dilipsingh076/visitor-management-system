@@ -30,3 +30,14 @@ export async function createSocietyNotice(payload: { title: string; body?: strin
   if (res.error) throw new Error(res.error);
   return (res.data ?? { created: 0 }) as { created: number };
 }
+
+/** Local LLM (Ollama) can take minutes on cold start; default API client timeout is 30s. */
+const NOTICE_AI_TIMEOUT_MS = 300_000;
+
+export async function generateNoticeMessage(payload: { title: string }): Promise<string> {
+  const res = await apiClient.post<{ message: string }>(API.notifications.generateNoticeMessage, payload, {
+    timeout: NOTICE_AI_TIMEOUT_MS,
+  });
+  if (res.error) throw new Error(res.error);
+  return res.data?.message ?? "";
+}

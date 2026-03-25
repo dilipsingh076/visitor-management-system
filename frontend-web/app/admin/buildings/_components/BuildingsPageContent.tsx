@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api";
-import { Button, Card, CardContent, CardHeader, Badge } from "@/components/ui";
+import { Button, Card, CardContent, CardHeader, Badge, PageHeader, Alert } from "@/components/ui";
 import { PageWrapper } from "@/components/common/PageWrapper";
 import { useAuthContext } from "@/features/auth";
 import { theme } from "@/lib/theme";
@@ -16,7 +16,10 @@ import {
   Users,
   X,
   Save,
+  ChevronDown,
+  ChevronUp,
 } from "lucide-react";
+import { FlatsPanel } from "./FlatsPanel";
 
 interface Building {
   id: string;
@@ -25,6 +28,7 @@ interface Building {
   code: string | null;
   sort_order: number;
   is_active: boolean;
+  flat_count: number;
 }
 
 export function BuildingsPageContent() {
@@ -34,6 +38,7 @@ export function BuildingsPageContent() {
 
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [expandedBuildingId, setExpandedBuildingId] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     name: "",
     code: "",
@@ -90,9 +95,7 @@ export function BuildingsPageContent() {
   if (!societyId) {
     return (
       <PageWrapper width="wide">
-        <div className="bg-warning/10 text-warning px-4 py-3 rounded-lg text-sm">
-          You are not associated with a society.
-        </div>
+        <Alert variant="warning">You are not associated with a society.</Alert>
       </PageWrapper>
     );
   }
@@ -100,9 +103,7 @@ export function BuildingsPageContent() {
   if (error) {
     return (
       <PageWrapper width="wide">
-        <div className="bg-error/10 text-error px-4 py-3 rounded-lg text-sm">
-          Failed to load buildings: {(error as Error).message}
-        </div>
+        <Alert variant="error">Failed to load buildings: {(error as Error).message}</Alert>
       </PageWrapper>
     );
   }
@@ -110,20 +111,16 @@ export function BuildingsPageContent() {
   return (
     <PageWrapper width="wide">
       <div className="space-y-6 max-w-4xl">
-        {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div>
-            <h1 className={theme.text.heading2}>Buildings</h1>
-            <p className={theme.text.subtitle}>Manage buildings in your society</p>
-          </div>
-          <Button
-            size="sm"
-            onClick={() => setShowCreateForm(!showCreateForm)}
-          >
-            <Plus className="w-4 h-4 mr-2" />
-            Add Building
-          </Button>
-        </div>
+        <PageHeader
+          title="Buildings"
+          description="Manage buildings in your society"
+          action={
+            <Button size="sm" onClick={() => setShowCreateForm(!showCreateForm)}>
+              <Plus className="w-4 h-4 mr-2" />
+              Add Building
+            </Button>
+          }
+        />
 
         {/* Stats */}
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
@@ -157,7 +154,9 @@ export function BuildingsPageContent() {
                 <Users className="w-5 h-5 text-info" />
               </div>
               <div>
-                <p className="text-2xl font-bold text-foreground">—</p>
+                <p className="text-2xl font-bold text-foreground">
+                  {buildings?.reduce((sum, b) => sum + (b.flat_count || 0), 0) ?? 0}
+                </p>
                 <p className="text-xs text-muted-foreground">Total Flats</p>
               </div>
             </CardContent>
@@ -261,6 +260,9 @@ export function BuildingsPageContent() {
                           {!building.is_active && (
                             <Badge variant="warning">Inactive</Badge>
                           )}
+                          <Badge variant="secondary" size="sm">
+                            {building.flat_count || 0} flats
+                          </Badge>
                         </div>
                         <p className="text-sm text-muted-foreground mt-0.5">
                           Sort Order: {building.sort_order}
@@ -275,9 +277,26 @@ export function BuildingsPageContent() {
                       >
                         <Edit2 className="w-3 h-3" />
                       </Button>
+                      <Button
+                        size="xs"
+                        variant="secondary"
+                        onClick={() => setExpandedBuildingId(
+                          expandedBuildingId === building.id ? null : building.id
+                        )}
+                      >
+                        {expandedBuildingId === building.id ? (
+                          <ChevronUp className="w-3 h-3" />
+                        ) : (
+                          <ChevronDown className="w-3 h-3" />
+                        )}
+                        <span className="ml-1 text-xs">Flats</span>
+                      </Button>
                     </div>
                   </div>
                 </CardContent>
+                {expandedBuildingId === building.id && (
+                  <FlatsPanel buildingId={building.id} />
+                )}
               </Card>
             ))
           )}

@@ -25,6 +25,7 @@ from app.services.visit_service import (
     ensure_building_in_society,
     list_visits,
     approve_visit,
+    reject_visit,
 )
 from app.models.visitor import Visit
 
@@ -35,6 +36,9 @@ def _visit_to_response(v: Visit) -> dict:
     """Convert Visit model to response dict."""
     host_name = v.host.full_name if v.host else ""
     is_walkin = (v.extra_data or {}).get("walkin", False)
+    # Use visit-level snapshot if available, fall back to visitor record
+    visitor_name = v.visitor_name or (v.visitor.full_name if v.visitor else "")
+    visitor_phone = v.visitor_phone or (v.visitor.phone if v.visitor else "")
     return {
         "id": str(v.id),
         "visitor_id": str(v.visitor_id),
@@ -43,8 +47,8 @@ def _visit_to_response(v: Visit) -> dict:
         "is_walkin": is_walkin,
         "status": v.status.value if hasattr(v.status, "value") else v.status,
         "purpose": v.purpose,
-        "visitor_name": v.visitor.full_name,
-        "visitor_phone": v.visitor.phone,
+        "visitor_name": visitor_name,
+        "visitor_phone": visitor_phone,
         "expected_arrival": v.expected_arrival.isoformat() if v.expected_arrival else None,
         "actual_arrival": v.actual_arrival.isoformat() if v.actual_arrival else None,
         "actual_departure": v.actual_departure.isoformat() if v.actual_departure else None,
@@ -78,23 +82,34 @@ async def invite_visitor(
         # Eager-load host & visitor to avoid async lazy-load (MissingGreenlet)
         await db.refresh(visit, ["visitor", "host"])
 
-        await log_admin_action(
-            db, current_user_id, current_user,
-            "invite_visitor", request.url.path, request.method,
-            {"visit_id": str(visit.id), "visitor_phone": visit_data.visitor_phone},
-        )
+        try:
+            await log_admin_action(
+                db, current_user_id, current_user,
+                "invite_visitor", request.url.path, request.method,
+                {"visit_id": str(visit.id), "visitor_phone": visit_data.visitor_phone},
+            )
+        except Exception:
+            pass  # audit log should not block invite
 
-        from app.services.waha_service import send_invite_whatsapp
-        await send_invite_whatsapp(
-            visit_data.visitor_phone,
-            visit_data.visitor_name,
-            visit.otp or "",
-            visit.qr_code,
-        )
+        try:
+            from app.services.waha_service import send_invite_whatsapp
+            await send_invite_whatsapp(
+                visit_data.visitor_phone,
+                visit_data.visitor_name,
+                visit.otp or "",
+                visit.qr_code,
+                visit_id=visit.id,
+            )
+        except Exception:
+            pass  # WhatsApp is optional
 
         return _visit_to_response(visit)
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+    except Exception as e:
+        import traceback, structlog
+        structlog.get_logger().error("invite_visitor_error", error=str(e), tb=traceback.format_exc())
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 @router.post("/walkin")
@@ -125,12 +140,21 @@ async def walkin_visitor(
         if data.host_id is not None:
             await ensure_user_in_society(db, data.host_id, sid)
             host_id = data.host_id
+        elif data.flat_id is not None:
+            resident = await get_resident_by_building_and_flat(
+                db, sid, flat_id=data.flat_id
+            )
+            if not resident:
+                raise ValueError("No resident found for this flat.")
+            host_id = resident.id
+            flat_number = (resident.flat_number or "").strip()
+            building_name = resident.building.name if resident.building else None
         else:
             if not data.building_id or not data.flat_number:
-                raise ValueError("Provide either host_id or both building_id and flat_number")
+                raise ValueError("Provide host_id, flat_id, or both building_id and flat_number")
             await ensure_building_in_society(db, data.building_id, sid)
             resident = await get_resident_by_building_and_flat(
-                db, sid, data.building_id, data.flat_number
+                db, sid, building_id=data.building_id, flat_number=data.flat_number
             )
             if not resident:
                 raise ValueError(
@@ -138,10 +162,7 @@ async def walkin_visitor(
                 )
             host_id = resident.id
             flat_number = (data.flat_number or "").strip()
-            if resident.building:
-                building_name = resident.building.name
-            else:
-                building_name = None
+            building_name = resident.building.name if resident.building else None
 
         if data.host_id is not None and (building_name is None and flat_number is None):
             from app.models.user import User
@@ -237,6 +258,36 @@ async def approve_visit_api(
         await log_admin_action(
             db, current_user_id, current_user,
             "approve_visit", request.url.path, request.method,
+            {"visit_id": str(visit_id)},
+        )
+        return _visit_to_response(visit)
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+
+
+@router.patch("/{visit_id}/reject")
+async def reject_visit_api(
+    request: Request,
+    visit_id: UUID,
+    db: AsyncSession = Depends(get_db),
+    current_user: dict = Depends(get_current_resident_or_admin),
+    current_user_id: UUID = Depends(get_current_user_id),
+):
+    """Resident or admin rejects a pending visit."""
+    visit = await get_visit_by_id(db, visit_id)
+    if not visit:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Visit not found")
+    if not is_admin(current_user) and visit.host_id != current_user_id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Not authorized to reject this visit. Only the host may reject.",
+        )
+    try:
+        visit = await reject_visit(db, visit)
+        await db.refresh(visit, ["visitor"])
+        await log_admin_action(
+            db, current_user_id, current_user,
+            "reject_visit", request.url.path, request.method,
             {"visit_id": str(visit_id)},
         )
         return _visit_to_response(visit)

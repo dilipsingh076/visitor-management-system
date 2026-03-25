@@ -22,6 +22,8 @@ export const INITIAL_NEW_USER_FORM = {
   flat_number: "",
   phone: "",
   password: "",
+  building_id: "",
+  flat_id: "",
 } as const;
 
 export type NewUserFormState = {
@@ -31,6 +33,8 @@ export type NewUserFormState = {
   flat_number: string;
   phone: string;
   password: string;
+  building_id: string;
+  flat_id: string;
 };
 
 export const DEFAULT_NEW_USER: NewUserFormState = {
@@ -40,6 +44,8 @@ export const DEFAULT_NEW_USER: NewUserFormState = {
   flat_number: "",
   phone: "",
   password: "",
+  building_id: "",
+  flat_id: "",
 };
 
 /** Roles that should show flat/unit field in forms. */

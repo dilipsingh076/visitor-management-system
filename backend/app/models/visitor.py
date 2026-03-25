@@ -75,8 +75,13 @@ class Visit(Base):
     id = Column(GUID(), primary_key=True, default=uuid.uuid4)
     visitor_id = Column(GUID(), ForeignKey("visitors.id"), nullable=False, index=True)
     host_id = Column(GUID(), ForeignKey("users.id"), nullable=False, index=True)
+    flat_id = Column(GUID(), ForeignKey("flats.id", ondelete="SET NULL"), nullable=True, index=True)
     status = Column(VisitStatusType(), default=VisitStatus.PENDING, nullable=False, index=True)
     
+    # Denormalized visitor info (snapshot at time of visit — not affected by later name changes)
+    visitor_name = Column(String(255), nullable=True)
+    visitor_phone = Column(String(20), nullable=True)
+
     # Visit details
     purpose = Column(String(255), nullable=True)
     expected_arrival = Column(DateTime, nullable=True)

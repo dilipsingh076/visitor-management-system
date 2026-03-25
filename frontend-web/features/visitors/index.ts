@@ -21,6 +21,7 @@ export {
   useNotificationsStream,
   useMarkNotificationRead,
   useCreateSocietyNotice,
+  useGenerateNoticeMessage,
 } from "./hooks/useUnreadNotifications";
 export { useApproveVisit, useRejectVisit } from "./hooks/useVisitActions";
 export { useInviteVisitor } from "./hooks/useInviteVisitor";

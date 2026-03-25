@@ -17,6 +17,7 @@ import {
   Shield,
   LogOut,
   TrendingUp,
+  Brain,
 } from "lucide-react";
 import { useState } from "react";
 import { removeToken } from "@/lib/auth";
@@ -37,6 +38,7 @@ const NAV_ITEMS: NavItem[] = [
   { label: "Support", href: "/platform/support", icon: HelpCircle },
   { label: "Audit Logs", href: "/platform/audit-logs", icon: FileText },
   { label: "Announcements", href: "/platform/announcements", icon: Bell },
+  { label: "Meetings AI", href: "/platform/meetings", icon: Brain },
   { label: "Settings", href: "/platform/settings", icon: Settings },
 ];
 

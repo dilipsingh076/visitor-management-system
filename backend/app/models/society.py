@@ -1,7 +1,7 @@
 """
-Society and Building models for multi-society support.
+Society, Building, Flat, and FlatMember models for multi-society support.
 """
-from sqlalchemy import Column, String, Boolean, DateTime, ForeignKey, Integer
+from sqlalchemy import Column, String, Boolean, DateTime, Date, ForeignKey, Integer, UniqueConstraint, Index
 from sqlalchemy.orm import relationship
 from datetime import datetime
 import uuid
@@ -59,9 +59,64 @@ class Building(Base):
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
 
     society = relationship("Society", back_populates="buildings")
+    flats = relationship("Flat", back_populates="building", cascade="all, delete-orphan")
 
     def __repr__(self):
         return f"<Building(id={self.id}, name={self.name}, society_id={self.society_id})>"
+
+
+class Flat(Base):
+    """
+    Individual flat/unit within a building. First-class entity with UUID.
+    One user account (owner) per flat; flat members are data records.
+    """
+    __tablename__ = "flats"
+    __table_args__ = (
+        UniqueConstraint("building_id", "flat_number", name="uq_flats_building_flat_number"),
+        Index("ix_flats_building_id", "building_id"),
+    )
+
+    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
+    building_id = Column(GUID(), ForeignKey("buildings.id", ondelete="CASCADE"), nullable=False)
+    flat_number = Column(String(50), nullable=False)
+    floor = Column(Integer, nullable=True)
+    flat_type = Column(String(50), nullable=True)  # 1BHK, 2BHK, 3BHK, shop, office
+    occupancy_status = Column(String(30), nullable=False, default="vacant")  # vacant, occupied
+    owner_name = Column(String(255), nullable=True)
+    is_active = Column(Boolean, default=True, nullable=False)
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
+
+    building = relationship("Building", back_populates="flats")
+    members = relationship("FlatMember", back_populates="flat", cascade="all, delete-orphan")
+
+    def __repr__(self):
+        return f"<Flat(id={self.id}, flat_number={self.flat_number}, building_id={self.building_id})>"
+
+
+class FlatMember(Base):
+    """
+    Family member / occupant data for a flat. NOT a user account — just informational.
+    Managed by the flat owner (resident).
+    """
+    __tablename__ = "flat_members"
+
+    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
+    flat_id = Column(GUID(), ForeignKey("flats.id", ondelete="CASCADE"), nullable=False, index=True)
+    full_name = Column(String(255), nullable=False)
+    phone = Column(String(20), nullable=True)
+    relation = Column(String(50), nullable=False)  # spouse, parent, child, sibling, other
+    date_of_birth = Column(Date, nullable=True)
+    photo_url = Column(String(500), nullable=True)
+    id_proof_type = Column(String(50), nullable=True)  # aadhaar, pan, etc. (optional)
+    id_proof_number = Column(String(255), nullable=True)  # optional
+    is_active = Column(Boolean, default=True, nullable=False)
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+
+    flat = relationship("Flat", back_populates="members")
+
+    def __repr__(self):
+        return f"<FlatMember(id={self.id}, full_name={self.full_name}, flat_id={self.flat_id})>"
 
 
 class Amenity(Base):

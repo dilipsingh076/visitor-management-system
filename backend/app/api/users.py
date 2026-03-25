@@ -12,6 +12,7 @@ import structlog
 from app.core.dependencies import get_db, get_current_admin
 from app.core.roles import SOCIETY_ADMIN_ROLES, JOIN_SOCIETY_ROLES
 from app.models.user import User
+from app.models.society import Flat
 from app.core.security import hash_password
 
 log = structlog.get_logger()
@@ -36,6 +37,8 @@ class CreateUserRequest(BaseModel):
     password: str = Field(..., min_length=6)
     phone: str | None = None
     flat_number: str | None = None
+    flat_id: UUID | None = None
+    building_id: UUID | None = None
 
 
 class UpdateUserRequest(BaseModel):
@@ -44,6 +47,8 @@ class UpdateUserRequest(BaseModel):
     full_name: str | None = Field(None, min_length=1)
     phone: str | None = None
     flat_number: str | None = None
+    flat_id: UUID | None = None
+    building_id: UUID | None = None
 
 
 @router.get("/")
@@ -87,7 +92,7 @@ async def list_users(
     rows = []
     try:
         raw_sql = text("""
-            SELECT id, email, full_name, phone, flat_number, is_active, role, roles, created_at, last_login
+            SELECT id, email, full_name, phone, flat_number, flat_id, building_id, is_active, role, roles, created_at, last_login
             FROM users
             WHERE society_id::text = :sid AND is_active = true
             ORDER BY full_name
@@ -97,7 +102,7 @@ async def list_users(
     except Exception:
         await db.rollback()
         raw_sql = text("""
-            SELECT id, email, full_name, phone, flat_number, is_active, role, roles, created_at, last_login
+            SELECT id, email, full_name, phone, flat_number, flat_id, building_id, is_active, role, roles, created_at, last_login
             FROM users
             WHERE society_id = :sid AND is_active = 1
             ORDER BY full_name
@@ -130,6 +135,8 @@ async def list_users(
                 "roles": _roles_from_row(row),
                 "phone": row.get("phone"),
                 "flat_number": row.get("flat_number"),
+                "flat_id": str(row["flat_id"]) if row.get("flat_id") else None,
+                "building_id": str(row["building_id"]) if row.get("building_id") else None,
                 "is_active": bool(row.get("is_active", True)),
                 "created_at": row["created_at"].isoformat() if row.get("created_at") else None,
                 "last_login": row["last_login"].isoformat() if row.get("last_login") else None,
@@ -158,11 +165,70 @@ async def create_user(
     result = await db.execute(select(User).where(User.email == body.email.strip().lower()))
     if result.scalar_one_or_none():
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Email already registered")
+    # Resolve flat_id: explicit flat_id > find-or-create from building_id + flat_number
+    resolved_flat_id = None
+    resolved_flat_number = body.flat_number.strip() if body.flat_number else None
+    resolved_building_id = body.building_id
+
+    if body.flat_id:
+        result = await db.execute(select(Flat).where(Flat.id == body.flat_id))
+        flat = result.scalar_one_or_none()
+        if flat:
+            # Check if another user already owns this flat
+            if flat.occupancy_status == "occupied":
+                result = await db.execute(
+                    select(User).where(User.flat_id == flat.id, User.is_active == True)
+                )
+                existing_owner = result.scalar_one_or_none()
+                if existing_owner:
+                    raise HTTPException(
+                        status_code=status.HTTP_400_BAD_REQUEST,
+                        detail=f"Flat {flat.flat_number} is already occupied by {existing_owner.full_name}. Each flat can have only one account.",
+                    )
+            resolved_flat_id = flat.id
+            resolved_flat_number = flat.flat_number
+            resolved_building_id = flat.building_id
+            flat.occupancy_status = "occupied"
+            db.add(flat)
+    elif resolved_flat_number and resolved_building_id:
+        result = await db.execute(
+            select(Flat).where(
+                Flat.building_id == resolved_building_id,
+                Flat.flat_number == resolved_flat_number,
+            )
+        )
+        flat = result.scalar_one_or_none()
+        if flat:
+            if flat.occupancy_status == "occupied":
+                result = await db.execute(
+                    select(User).where(User.flat_id == flat.id, User.is_active == True)
+                )
+                existing_owner = result.scalar_one_or_none()
+                if existing_owner:
+                    raise HTTPException(
+                        status_code=status.HTTP_400_BAD_REQUEST,
+                        detail=f"Flat {flat.flat_number} is already occupied by {existing_owner.full_name}. Each flat can have only one account.",
+                    )
+            resolved_flat_id = flat.id
+            flat.occupancy_status = "occupied"
+            db.add(flat)
+        else:
+            flat = Flat(
+                building_id=resolved_building_id,
+                flat_number=resolved_flat_number,
+                occupancy_status="occupied",
+            )
+            db.add(flat)
+            await db.flush()
+            resolved_flat_id = flat.id
+
     user = User(
         email=body.email.strip().lower(),
         full_name=body.full_name.strip(),
         phone=body.phone.strip() if body.phone else None,
-        flat_number=body.flat_number.strip() if body.flat_number else None,
+        flat_number=resolved_flat_number,
+        flat_id=resolved_flat_id,
+        building_id=resolved_building_id,
         role=body.role,
         roles=[body.role],
         is_active=True,
@@ -183,6 +249,8 @@ async def create_user(
             "roles": roles,
             "phone": user.phone,
             "flat_number": user.flat_number,
+            "flat_id": str(user.flat_id) if user.flat_id else None,
+            "building_id": str(user.building_id) if user.building_id else None,
             "is_active": user.is_active,
             "created_at": user.created_at.isoformat() if user.created_at else None,
         },
@@ -229,8 +297,38 @@ async def update_user(
         user.full_name = body.full_name.strip()
     if body.phone is not None:
         user.phone = body.phone.strip() or None
-    if body.flat_number is not None:
+    if body.flat_id is not None:
+        result = await db.execute(select(Flat).where(Flat.id == body.flat_id))
+        flat = result.scalar_one_or_none()
+        if flat:
+            user.flat_id = flat.id
+            user.flat_number = flat.flat_number
+            user.building_id = flat.building_id
+            if flat.occupancy_status == "vacant":
+                flat.occupancy_status = "occupied"
+                db.add(flat)
+    elif body.flat_number is not None:
         user.flat_number = body.flat_number.strip() or None
+        if body.building_id is not None:
+            user.building_id = body.building_id
+        # Find or create flat if both building + flat_number provided
+        if user.flat_number and user.building_id:
+            result = await db.execute(
+                select(Flat).where(Flat.building_id == user.building_id, Flat.flat_number == user.flat_number)
+            )
+            flat = result.scalar_one_or_none()
+            if flat:
+                user.flat_id = flat.id
+                if flat.occupancy_status == "vacant":
+                    flat.occupancy_status = "occupied"
+                    db.add(flat)
+            else:
+                flat = Flat(building_id=user.building_id, flat_number=user.flat_number, occupancy_status="occupied")
+                db.add(flat)
+                await db.flush()
+                user.flat_id = flat.id
+    elif body.building_id is not None:
+        user.building_id = body.building_id
     db.add(user)
     await db.flush()
     roles = _user_roles(user)
@@ -244,6 +342,8 @@ async def update_user(
             "roles": roles,
             "phone": user.phone,
             "flat_number": user.flat_number,
+            "flat_id": str(user.flat_id) if user.flat_id else None,
+            "building_id": str(user.building_id) if user.building_id else None,
             "is_active": user.is_active,
             "created_at": user.created_at.isoformat() if user.created_at else None,
             "last_login": user.last_login.isoformat() if user.last_login else None,

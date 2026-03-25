@@ -73,6 +73,23 @@ class Settings(BaseSettings):
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
     REFRESH_TOKEN_EXPIRE_DAYS: int = 30
 
+    # Meeting AI (Ollama)
+    OLLAMA_BASE_URL: str = "http://localhost:11434"
+    OLLAMA_CHAT_MODEL: str = "llama3.2"
+    OLLAMA_EMBED_MODEL: str = "nomic-embed-text"
+    FAISS_INDEX_PATH: str = str(_BASE_DIR / "data" / "faiss_index")
+
+    # Ola Maps
+    OLA_MAPS_API_KEY: str = ""
+
+    # Audio Transcription (faster-whisper)
+    WHISPER_MODEL_SIZE: str = "large-v3"
+    WHISPER_DEVICE: str = "cpu"
+    WHISPER_COMPUTE_TYPE: str = "int8"
+    AUDIO_MAX_SIZE_MB: int = 100
+    WHISPER_LANGUAGE: str = "hi"  # "hi" for Hindi, "en" for English, "" for auto-detect
+    AUDIO_STORAGE_PATH: str = str(_BASE_DIR / "data" / "audio_uploads")
+
     # Rate Limiting
     RATE_LIMIT_ENABLED: bool = True
     RATE_LIMIT_PER_MINUTE: int = 60

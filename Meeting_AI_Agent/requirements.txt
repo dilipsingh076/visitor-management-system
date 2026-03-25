@@ -1,0 +1,19 @@
+# Core framework
+fastapi==0.115.6
+uvicorn[standard]==0.34.0
+pydantic==2.10.4
+pydantic-settings==2.7.1
+
+# Database
+sqlalchemy==2.0.36
+
+# LLM and RAG
+langchain==0.3.14
+langchain-ollama>=0.3.0
+langchain-community==0.3.14
+
+# Vector store
+faiss-cpu==1.9.0.post1
+
+# Environment
+python-dotenv==1.0.1

@@ -46,16 +46,23 @@ async def checkin_otp(
         visit = await checkin_visit(db, visit)
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=str(e))
-    await log_admin_action(
-        db, current_user_id, current_user,
-        "checkin_otp", request.url.path, request.method,
-        {"visit_id": str(visit.id)},
-    )
+    try:
+        await log_admin_action(
+            db, current_user_id, current_user,
+            "checkin_otp", request.url.path, request.method,
+            {"visit_id": str(visit.id)},
+        )
+    except Exception:
+        pass
     await db.refresh(visit, ["visitor", "host"])
     building_name = None
     try:
-        if visit.host and getattr(visit.host, "building", None):
-            building_name = getattr(visit.host.building, "name", None)
+        if visit.host and visit.host.building_id:
+            from app.models.society import Building
+            from sqlalchemy import select
+            bld = await db.execute(select(Building).where(Building.id == visit.host.building_id))
+            bld_obj = bld.scalar_one_or_none()
+            building_name = bld_obj.name if bld_obj else None
     except Exception:
         building_name = None
     return CheckInResponse(
@@ -63,11 +70,11 @@ async def checkin_otp(
         status="checked_in",
         checkin_time=visit.actual_arrival or datetime.utcnow(),
         message="Check-in successful",
-        visitor_name=getattr(visit.visitor, "full_name", None) if visit.visitor else None,
-        visitor_phone=getattr(visit.visitor, "phone", None) if visit.visitor else None,
-        purpose=getattr(visit, "purpose", None),
-        host_name=getattr(visit.host, "full_name", None) if visit.host else None,
-        host_flat_number=getattr(visit.host, "flat_number", None) if visit.host else None,
+        visitor_name=visit.visitor_name or (visit.visitor.full_name if visit.visitor else None),
+        visitor_phone=visit.visitor_phone or (visit.visitor.phone if visit.visitor else None),
+        purpose=visit.purpose,
+        host_name=visit.host.full_name if visit.host else None,
+        host_flat_number=visit.host.flat_number if visit.host else None,
         building_name=building_name,
     )
 
@@ -100,16 +107,23 @@ async def checkin_qr(
         visit = await checkin_visit(db, visit)
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=str(e))
-    await log_admin_action(
-        db, current_user_id, current_user,
-        "checkin_qr", request.url.path, request.method,
-        {"visit_id": str(visit.id)},
-    )
+    try:
+        await log_admin_action(
+            db, current_user_id, current_user,
+            "checkin_qr", request.url.path, request.method,
+            {"visit_id": str(visit.id)},
+        )
+    except Exception:
+        pass
     await db.refresh(visit, ["visitor", "host"])
     building_name = None
     try:
-        if visit.host and getattr(visit.host, "building", None):
-            building_name = getattr(visit.host.building, "name", None)
+        if visit.host and visit.host.building_id:
+            from app.models.society import Building
+            from sqlalchemy import select
+            bld = await db.execute(select(Building).where(Building.id == visit.host.building_id))
+            bld_obj = bld.scalar_one_or_none()
+            building_name = bld_obj.name if bld_obj else None
     except Exception:
         building_name = None
     return CheckInResponse(
@@ -117,11 +131,11 @@ async def checkin_qr(
         status="checked_in",
         checkin_time=visit.actual_arrival or datetime.utcnow(),
         message="Check-in successful",
-        visitor_name=getattr(visit.visitor, "full_name", None) if visit.visitor else None,
-        visitor_phone=getattr(visit.visitor, "phone", None) if visit.visitor else None,
-        purpose=getattr(visit, "purpose", None),
-        host_name=getattr(visit.host, "full_name", None) if visit.host else None,
-        host_flat_number=getattr(visit.host, "flat_number", None) if visit.host else None,
+        visitor_name=visit.visitor_name or (visit.visitor.full_name if visit.visitor else None),
+        visitor_phone=visit.visitor_phone or (visit.visitor.phone if visit.visitor else None),
+        purpose=visit.purpose,
+        host_name=visit.host.full_name if visit.host else None,
+        host_flat_number=visit.host.flat_number if visit.host else None,
         building_name=building_name,
     )
 

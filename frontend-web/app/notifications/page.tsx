@@ -1,6 +1,6 @@
-import { NotificationsPageContent } from "./_components/NotificationsPageContent";
+import { NotificationsPageClient } from "./_components/NotificationsPageClient";
 
 export default function NotificationsPage() {
-  return <NotificationsPageContent />;
+  return <NotificationsPageClient />;
 }
 

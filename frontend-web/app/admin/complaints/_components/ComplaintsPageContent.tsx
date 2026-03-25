@@ -7,7 +7,18 @@ import {
   useCreateSocietyComplaint,
   useUpdateSocietyComplaint,
 } from "@/features/complaints";
-import { Avatar, Badge, Button, Card, CardContent, CardHeader, StatCard, StatCardSkeleton } from "@/components/ui";
+import {
+  Avatar,
+  Badge,
+  Button,
+  Card,
+  CardContent,
+  CardHeader,
+  StatCard,
+  StatCardSkeleton,
+  PageHeader,
+  Alert,
+} from "@/components/ui";
 import { SearchInput } from "@/components/common/SearchInput";
 import { PageWrapper } from "@/components/common/PageWrapper";
 import { theme } from "@/lib/theme";
@@ -120,9 +131,7 @@ export function ComplaintsPageContent() {
   if (error) {
     return (
       <PageWrapper width="wide">
-        <div className="bg-error/10 text-error px-4 py-3 rounded-lg text-sm">
-          Failed to load complaints: {error.message}
-        </div>
+        <Alert variant="error">Failed to load complaints: {error.message}</Alert>
       </PageWrapper>
     );
   }
@@ -130,20 +139,16 @@ export function ComplaintsPageContent() {
   return (
     <PageWrapper width="wide">
       <div className="space-y-6">
-        {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div>
-            <h1 className={theme.text.heading2}>Society Complaints</h1>
-            <p className={theme.text.subtitle}>Manage and track complaints in your society</p>
-          </div>
-          <Button
-            size="sm"
-            onClick={() => setShowCreateForm(!showCreateForm)}
-          >
-            <Plus className="w-4 h-4 mr-2" />
-            New Complaint
-          </Button>
-        </div>
+        <PageHeader
+          title="Society Complaints"
+          description="Manage and track complaints in your society"
+          action={
+            <Button size="sm" onClick={() => setShowCreateForm(!showCreateForm)}>
+              <Plus className="w-4 h-4 mr-2" />
+              New Complaint
+            </Button>
+          }
+        />
 
         {/* Stats */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">

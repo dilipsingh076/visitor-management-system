@@ -24,6 +24,8 @@ export interface User {
   username: string;
   society_id?: string;
   building_id?: string;
+  flat_id?: string;
+  flat_number?: string;
   society?: SocietySummary;
 }
 
@@ -128,6 +130,12 @@ export function canAccessWalkin(user: User | null): boolean {
 /** Committee (Chairman/Secretary/Treasurer) can access Society Management — users, settings */
 export function canAccessSocietyManagement(user: User | null): boolean {
   return isCommittee(getPrimaryRole(user));
+}
+
+/** Chairman, Secretary, Treasurer, or Platform Admin can access Meetings AI */
+export function canAccessMeetingsAI(user: User | null): boolean {
+  const role = getPrimaryRole(user);
+  return isCommittee(role) || role === "platform_admin";
 }
 
 export const authConfig = {

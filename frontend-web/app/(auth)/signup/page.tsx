@@ -72,7 +72,7 @@ export default function SignupPage() {
       return;
     }
     if (buildings.length > 0 && selectedRole === "resident" && !flatNumber.trim()) {
-      setError("Please enter your flat / unit number.");
+      setError("Please select your flat / unit.");
       setLoading(false);
       return;
     }

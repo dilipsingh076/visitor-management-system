@@ -13,6 +13,7 @@ import {
   removeRefreshToken,
 } from '../lib/secureStorage';
 import { apiClient } from './api';
+type AuthJson = Record<string, unknown>;
 
 function getBaseUrl() {
   if (__DEV__) {
@@ -82,6 +83,24 @@ export function canAccessGuardFeatures(user: User | null): boolean {
   return role === 'guard';
 }
 
+export function canAccessCommitteeFeatures(user: User | null): boolean {
+  if (!user) return false;
+  const roles = user.roles || [];
+  const role = user.role || '';
+  return (
+    roles.includes('chairman') ||
+    roles.includes('secretary') ||
+    roles.includes('treasurer') ||
+    roles.includes('admin') ||
+    roles.includes('platform_admin') ||
+    role === 'chairman' ||
+    role === 'secretary' ||
+    role === 'treasurer' ||
+    role === 'admin' ||
+    role === 'platform_admin'
+  );
+}
+
 /**
  * Sign up a new user.
  */
@@ -103,22 +122,24 @@ export async function signup(data: {
     });
 
     if (!response.ok) {
-      const err = await response.json().catch(() => ({}));
-      return { user: null, error: err.detail || 'Signup failed' };
+      const err = (await response.json().catch(() => ({}))) as AuthJson;
+      const detail = typeof err.detail === 'string' ? err.detail : 'Signup failed';
+      return { user: null, error: detail };
     }
 
-    const result = await response.json();
+    const result = (await response.json()) as AuthJson;
 
-    if (result.access_token) {
+    if (typeof result.access_token === 'string') {
       await setSecureToken(result.access_token);
     }
-    if (result.refresh_token) {
+    if (typeof result.refresh_token === 'string') {
       await setRefreshToken(result.refresh_token);
     }
 
     if (result.user) {
-      await setUserData(result.user);
-      return { user: result.user };
+      const user = result.user as User;
+      await setUserData(user);
+      return { user };
     }
 
     return { user: null, error: 'Invalid response' };
@@ -145,22 +166,24 @@ export async function login(
     });
 
     if (!response.ok) {
-      const err = await response.json().catch(() => ({}));
-      return { user: null, error: err.detail || 'Login failed' };
+      const err = (await response.json().catch(() => ({}))) as AuthJson;
+      const detail = typeof err.detail === 'string' ? err.detail : 'Login failed';
+      return { user: null, error: detail };
     }
 
-    const data = await response.json();
+    const data = (await response.json()) as AuthJson;
 
-    if (data.access_token) {
+    if (typeof data.access_token === 'string') {
       await setSecureToken(data.access_token);
     }
-    if (data.refresh_token) {
+    if (typeof data.refresh_token === 'string') {
       await setRefreshToken(data.refresh_token);
     }
 
     if (data.user) {
-      await setUserData(data.user);
-      return { user: data.user };
+      const user = data.user as User;
+      await setUserData(user);
+      return { user };
     }
 
     return { user: null, error: 'Invalid response' };

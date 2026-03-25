@@ -6,7 +6,7 @@ import {
   useCreateSocietyAmenity,
   useUpdateSocietyAmenity,
 } from "@/features/amenities";
-import { Badge, Button, Card, CardContent, CardHeader, StatCardSkeleton } from "@/components/ui";
+import { Badge, Button, Card, CardContent, CardHeader, StatCardSkeleton, PageHeader, Alert } from "@/components/ui";
 import { PageWrapper } from "@/components/common";
 import { theme } from "@/lib/theme";
 import {
@@ -140,9 +140,7 @@ export function AmenitiesPageContent() {
   if (error) {
     return (
       <PageWrapper width="wide">
-        <div className="bg-error/10 text-error px-4 py-3 rounded-lg text-sm">
-          Failed to load amenities: {(error as Error).message}
-        </div>
+        <Alert variant="error">Failed to load amenities: {(error as Error).message}</Alert>
       </PageWrapper>
     );
   }
@@ -150,16 +148,23 @@ export function AmenitiesPageContent() {
   return (
     <PageWrapper width="wide">
       <div className="space-y-6">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div>
-            <h1 className={theme.text.heading2}>Society Amenities</h1>
-            <p className={theme.text.subtitle}>Manage amenities like pool, gym, clubhouse</p>
-          </div>
-          <Button size="sm" onClick={() => { setShowForm(true); setEditingId(null); setFormData({ name: "", code: "", description: "", status: "operational", sort_order: 0 }); }}>
-            <Plus className="w-4 h-4 mr-2" />
-            Add Amenity
-          </Button>
-        </div>
+        <PageHeader
+          title="Society Amenities"
+          description="Manage amenities like pool, gym, clubhouse"
+          action={
+            <Button
+              size="sm"
+              onClick={() => {
+                setShowForm(true);
+                setEditingId(null);
+                setFormData({ name: "", code: "", description: "", status: "operational", sort_order: 0 });
+              }}
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              Add Amenity
+            </Button>
+          }
+        />
 
         <div className="flex items-center gap-2">
           <span className="text-sm text-muted-foreground">Filter:</span>

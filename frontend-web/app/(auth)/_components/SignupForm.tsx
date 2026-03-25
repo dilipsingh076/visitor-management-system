@@ -1,5 +1,6 @@
 import { Input, Select } from "@/components/ui";
 import { ROLE_LABELS } from "@/lib/auth";
+import { useAvailableFlats } from "@/features/admin";
 import { theme } from "@/lib/theme";
 
 const JOIN_SOCIETY_ROLES = ["resident", "guard"] as const;
@@ -94,31 +95,15 @@ export function SignupForm({
         </div>
       </div>
 
-      {/* Building + Flat (after society is loaded) */}
-      {buildings.length > 0 && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-3 rounded-lg bg-muted-bg/50 border border-border">
-          <Select
-            id="building"
-            label="Building *"
-            value={selectedBuildingId}
-            onChange={(e) => onBuildingChange(e.target.value)}
-            options={[
-              { value: "", label: "— Select your building —" },
-              ...buildings.map((b) => ({
-                value: b.id,
-                label: b.code ? `${b.name} (${b.code})` : b.name,
-              })),
-            ]}
-          />
-          <Input
-            id="flatNumber"
-            label="Flat / unit *"
-            value={flatNumber}
-            onChange={(e) => onFlatNumberChange(e.target.value)}
-            placeholder="e.g. 101, A-201"
-            noMargin
-          />
-        </div>
+      {/* Building + Flat (residents only, after society is loaded) */}
+      {buildings.length > 0 && selectedRole === "resident" && (
+        <BuildingFlatSelector
+          buildings={buildings}
+          selectedBuildingId={selectedBuildingId}
+          onBuildingChange={onBuildingChange}
+          flatNumber={flatNumber}
+          onFlatNumberChange={onFlatNumberChange}
+        />
       )}
 
       {/* Name + Email */}
@@ -181,6 +166,75 @@ export function SignupForm({
         placeholder="1234567890"
         noMargin
       />
+    </div>
+  );
+}
+
+/** Building + Flat dropdown selector. Loads flats when a building is selected. */
+function BuildingFlatSelector({
+  buildings,
+  selectedBuildingId,
+  onBuildingChange,
+  flatNumber,
+  onFlatNumberChange,
+}: {
+  buildings: Building[];
+  selectedBuildingId: string;
+  onBuildingChange: (value: string) => void;
+  flatNumber: string;
+  onFlatNumberChange: (value: string) => void;
+}) {
+  const { data: flats } = useAvailableFlats(selectedBuildingId || undefined);
+
+  const handleBuildingChange = (value: string) => {
+    onBuildingChange(value);
+    onFlatNumberChange("");
+  };
+
+  const handleFlatChange = (flatId: string) => {
+    const flat = flats?.find((f: { id: string }) => f.id === flatId);
+    onFlatNumberChange(flat?.flat_number ?? "");
+  };
+
+  return (
+    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-3 rounded-lg bg-muted-bg/50 border border-border">
+      <Select
+        id="building"
+        label="Building *"
+        value={selectedBuildingId}
+        onChange={(e) => handleBuildingChange(e.target.value)}
+        options={[
+          { value: "", label: "— Select your building —" },
+          ...buildings.map((b) => ({
+            value: b.id,
+            label: b.code ? `${b.name} (${b.code})` : b.name,
+          })),
+        ]}
+      />
+      {selectedBuildingId && flats && flats.length > 0 ? (
+        <Select
+          id="flatNumber"
+          label="Flat / unit *"
+          value={flats.find((f: { flat_number: string }) => f.flat_number === flatNumber)?.id ?? ""}
+          onChange={(e) => handleFlatChange(e.target.value)}
+          options={[
+            { value: "", label: "— Select your flat —" },
+            ...flats.map((f: { id: string; flat_number: string }) => ({
+              value: f.id,
+              label: f.flat_number,
+            })),
+          ]}
+        />
+      ) : (
+        <Select
+          id="flatNumber"
+          label="Flat / unit *"
+          value=""
+          onChange={() => {}}
+          options={[{ value: "", label: selectedBuildingId ? "No vacant flats available" : "Select building first" }]}
+          disabled
+        />
+      )}
     </div>
   );
 }

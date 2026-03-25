@@ -13,6 +13,8 @@ export interface UserData {
   roles: string[];
   phone?: string;
   flat_number?: string;
+  building_id?: string;
+  flat_id?: string;
   status: "active" | "inactive";
   created_at?: string;
   last_login?: string;
@@ -27,6 +29,8 @@ export function mapUserListItemToUserData(item: UserListItem): UserData {
     roles: item.roles ?? [item.role],
     phone: item.phone ?? undefined,
     flat_number: item.flat_number ?? undefined,
+    building_id: item.building_id ?? undefined,
+    flat_id: item.flat_id ?? undefined,
     status: item.is_active ? "active" : "inactive",
     created_at: item.created_at ?? undefined,
     last_login: item.last_login ?? undefined,

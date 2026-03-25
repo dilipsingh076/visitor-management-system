@@ -7,7 +7,7 @@ export type VisitorsScope = "all" | "me";
 
 export type VisitorsStatusFilter = VisitStatus | "";
 
-export type InviteVisitorResult = { visit_id: string; otp?: string; message?: string; qr_code?: string };
+export type InviteVisitorResult = { id: string; visit_id?: string; otp?: string; message?: string; qr_code?: string; visitor_name?: string; visitor_phone?: string; purpose?: string };
 
 export interface FrequentVisitor {
   id: string;

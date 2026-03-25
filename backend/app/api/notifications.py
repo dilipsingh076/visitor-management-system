@@ -6,6 +6,7 @@ from pydantic import BaseModel, Field
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from fastapi.responses import StreamingResponse
+from starlette.concurrency import run_in_threadpool
 import asyncio
 import json
 from datetime import datetime
@@ -15,6 +16,7 @@ from app.core.dependencies import (
     get_db,
     get_current_user_id,
     get_current_resident_or_admin,
+    get_current_any_role,
     get_current_admin,
     get_current_society_id,
 )
@@ -31,14 +33,18 @@ class SocietyNoticeCreate(BaseModel):
     body: str | None = Field(default=None, max_length=2000)
 
 
+class GenerateNoticeMessageRequest(BaseModel):
+    title: str = Field(..., min_length=1, max_length=255)
+
+
 @router.get("/")
 async def list_notifications(
     db: AsyncSession = Depends(get_db),
-    current_user: dict = Depends(get_current_resident_or_admin),
+    current_user: dict = Depends(get_current_any_role),
     user_id: UUID = Depends(get_current_user_id),
     unread_only: bool = Query(False),
 ):
-    """List notifications for current user (host). Resident or admin only."""
+    """List notifications for current user. Any authenticated role."""
     q = select(Notification).where(Notification.user_id == user_id).order_by(Notification.created_at.desc())
     if unread_only:
         q = q.where(Notification.read == False)
@@ -62,10 +68,10 @@ async def list_notifications(
 async def mark_read(
     notification_id: UUID,
     db: AsyncSession = Depends(get_db),
-    current_user: dict = Depends(get_current_resident_or_admin),
+    current_user: dict = Depends(get_current_any_role),
     user_id: UUID = Depends(get_current_user_id),
 ):
-    """Mark notification as read. Resident or admin only; only own notifications."""
+    """Mark notification as read. Any role; only own notifications."""
     result = await db.execute(
         select(Notification).where(
             Notification.id == notification_id,
@@ -83,7 +89,7 @@ async def mark_read(
 @router.get("/stream")
 async def stream_notifications(
     db: AsyncSession = Depends(get_db),
-    current_user: dict = Depends(get_current_resident_or_admin),
+    current_user: dict = Depends(get_current_any_role),
     user_id: UUID = Depends(get_current_user_id),
 ):
     """
@@ -148,7 +154,13 @@ async def websocket_notifications(
         await websocket.close(code=4008)
         return
 
-    await register(websocket, user_id)
+    # Look up user's society_id and role for scoped broadcasts
+    society_id = user.get("society_id")
+    sid = UUID(society_id) if society_id else None
+    # Role is stored as realm_access.roles (list) in JWT; pick the primary role
+    roles = (user.get("realm_access") or {}).get("roles") or []
+    role = roles[0] if roles else ""
+    await register(websocket, user_id, society_id=sid, role=role)
     try:
         # Send initial connected message
         await websocket.send_text(json.dumps({"event": "connected", "user_id": str(user_id)}))
@@ -163,6 +175,35 @@ async def websocket_notifications(
     finally:
         if user_id is not None:
             await unregister(websocket, user_id)
+
+
+@router.post("/society/generate-message")
+async def generate_notice_message(
+    payload: GenerateNoticeMessageRequest,
+    current_user: dict = Depends(get_current_admin),
+):
+    """Generate an AI-drafted society notice message from a title. Committee only."""
+    try:
+        from app.services.notice_ai import generate_notice_body
+
+        body = await run_in_threadpool(generate_notice_body, payload.title)
+        return {"message": body}
+    except ModuleNotFoundError as e:
+        logger.error(
+            "AI notice generation missing dependency",
+            error=str(e),
+            hint="Install langchain-ollama in the same Python env as uvicorn (pip install langchain-ollama)",
+        )
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="AI service unavailable. Please write the message manually.",
+        )
+    except Exception as e:
+        logger.error("AI notice generation failed", error=str(e), exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="AI service unavailable. Please write the message manually.",
+        )
 
 
 @router.post("/society", status_code=status.HTTP_201_CREATED)

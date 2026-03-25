@@ -64,6 +64,9 @@ export type { DividerProps } from "./Divider";
 export { NavLink } from "./NavLink";
 export type { NavLinkProps } from "./NavLink";
 
+export { NavDropdown } from "./NavDropdown";
+export type { NavDropdownProps } from "./NavDropdown";
+
 export { StyledLink } from "./StyledLink";
 export type { StyledLinkProps } from "./StyledLink";
 
@@ -74,6 +77,15 @@ export { RoleBadge } from "./Badge";
 
 export { ConfirmDialog } from "./Modal";
 export type { ConfirmDialogProps } from "./Modal";
+
+export { Switch } from "./Switch";
+export type { SwitchProps } from "./Switch";
+
+export { SettingsRow } from "./SettingsRow";
+export type { SettingsRowProps } from "./SettingsRow";
+
+export { FilterChip } from "./FilterChip";
+export type { FilterChipProps } from "./FilterChip";
 
 export { HeroIllustration } from "./HeroIllustration";
 export { WelcomeIllustration } from "./WelcomeIllustration";

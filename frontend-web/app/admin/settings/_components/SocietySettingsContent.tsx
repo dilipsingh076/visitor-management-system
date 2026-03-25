@@ -1,7 +1,17 @@
 "use client";
 
 import { useState } from "react";
-import { Button, Card, CardContent, CardHeader } from "@/components/ui";
+import {
+  Button,
+  Card,
+  CardContent,
+  CardHeader,
+  PageHeader,
+  Switch,
+  SettingsRow,
+  Select,
+  Text,
+} from "@/components/ui";
 import { PageWrapper } from "@/components/common/PageWrapper";
 import { theme } from "@/lib/theme";
 import { useAuthContext } from "@/features/auth";
@@ -16,83 +26,6 @@ import {
   Eye,
   EyeOff,
 } from "lucide-react";
-
-interface SettingToggleProps {
-  label: string;
-  description: string;
-  checked: boolean;
-  onChange: (checked: boolean) => void;
-  icon?: React.ReactNode;
-}
-
-function SettingToggle({ label, description, checked, onChange, icon }: SettingToggleProps) {
-  return (
-    <div className="flex items-start justify-between gap-4 py-3 border-b border-border last:border-0">
-      <div className="flex items-start gap-3">
-        {icon && (
-          <div className="w-8 h-8 rounded-lg bg-muted-bg flex items-center justify-center shrink-0 mt-0.5">
-            {icon}
-          </div>
-        )}
-        <div>
-          <p className="text-sm font-medium text-foreground">{label}</p>
-          <p className="text-xs text-muted-foreground mt-0.5">{description}</p>
-        </div>
-      </div>
-      <button
-        type="button"
-        onClick={() => onChange(!checked)}
-        className={`relative w-11 h-6 rounded-full transition-colors ${
-          checked ? "bg-primary" : "bg-muted-bg border border-border"
-        }`}
-      >
-        <span
-          className={`absolute top-0.5 w-5 h-5 rounded-full bg-white shadow-sm transition-transform ${
-            checked ? "translate-x-5" : "translate-x-0.5"
-          }`}
-        />
-      </button>
-    </div>
-  );
-}
-
-interface SettingSelectProps {
-  label: string;
-  description: string;
-  value: string;
-  options: { value: string; label: string }[];
-  onChange: (value: string) => void;
-  icon?: React.ReactNode;
-}
-
-function SettingSelect({ label, description, value, options, onChange, icon }: SettingSelectProps) {
-  return (
-    <div className="flex items-start justify-between gap-4 py-3 border-b border-border last:border-0">
-      <div className="flex items-start gap-3 flex-1">
-        {icon && (
-          <div className="w-8 h-8 rounded-lg bg-muted-bg flex items-center justify-center shrink-0 mt-0.5">
-            {icon}
-          </div>
-        )}
-        <div className="flex-1">
-          <p className="text-sm font-medium text-foreground">{label}</p>
-          <p className="text-xs text-muted-foreground mt-0.5">{description}</p>
-        </div>
-      </div>
-      <select
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        className="px-3 py-1.5 text-sm bg-card border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20"
-      >
-        {options.map((opt) => (
-          <option key={opt.value} value={opt.value}>
-            {opt.label}
-          </option>
-        ))}
-      </select>
-    </div>
-  );
-}
 
 export function SocietySettingsContent() {
   const { user } = useAuthContext();
@@ -127,22 +60,16 @@ export function SocietySettingsContent() {
   return (
     <PageWrapper width="wide">
       <div className="space-y-6 max-w-3xl">
-        {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div>
-            <h1 className={theme.text.heading2}>Society Settings</h1>
-            <p className={theme.text.subtitle}>Configure your society&apos;s visitor management preferences</p>
-          </div>
-          <Button
-            size="sm"
-            onClick={handleSave}
-            disabled={!hasChanges}
-            loading={saving}
-          >
-            <Save className="w-4 h-4 mr-2" />
-            Save Changes
-          </Button>
-        </div>
+        <PageHeader
+          title="Society Settings"
+          description="Configure your society's visitor management preferences"
+          action={
+            <Button size="sm" onClick={handleSave} disabled={!hasChanges} loading={saving}>
+              <Save className="w-4 h-4 mr-2" />
+              Save Changes
+            </Button>
+          }
+        />
 
         {/* Society Info */}
         <Card variant="outlined">
@@ -153,14 +80,18 @@ export function SocietySettingsContent() {
             </span>
           </CardHeader>
           <CardContent className="py-4">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div>
-                <label className={theme.label}>Society Name</label>
-                <p className="text-foreground font-medium">{user?.society?.name || "—"}</p>
+                <Text variant="label" as="p" className="mb-1">
+                  Society Name
+                </Text>
+                <p className="font-medium text-foreground">{user?.society?.name || "—"}</p>
               </div>
               <div>
-                <label className={theme.label}>Your Role</label>
-                <p className="text-foreground font-medium capitalize">
+                <Text variant="label" as="p" className="mb-1">
+                  Your Role
+                </Text>
+                <p className="font-medium capitalize text-foreground">
                   {user?.roles?.[0]?.replace(/_/g, " ") || "—"}
                 </p>
               </div>
@@ -177,45 +108,65 @@ export function SocietySettingsContent() {
             </span>
           </CardHeader>
           <CardContent className="py-2">
-            <SettingToggle
-              label="Walk-in Notifications"
+            <SettingsRow
+              title="Walk-in Notifications"
               description="Notify residents when a walk-in visitor arrives for them"
-              checked={notifyOnWalkin}
-              onChange={(v) => {
-                setNotifyOnWalkin(v);
-                setHasChanges(true);
-              }}
-              icon={<Bell className="w-4 h-4 text-muted-foreground" />}
+              icon={<Bell className="h-4 w-4 text-muted-foreground" />}
+              action={
+                <Switch
+                  aria-label="Walk-in Notifications"
+                  checked={notifyOnWalkin}
+                  onCheckedChange={(v) => {
+                    setNotifyOnWalkin(v);
+                    setHasChanges(true);
+                  }}
+                />
+              }
             />
-            <SettingToggle
-              label="Invite Confirmations"
+            <SettingsRow
+              title="Invite Confirmations"
               description="Send confirmation when an invite is created"
-              checked={notifyOnInvite}
-              onChange={(v) => {
-                setNotifyOnInvite(v);
-                setHasChanges(true);
-              }}
-              icon={<Bell className="w-4 h-4 text-muted-foreground" />}
+              icon={<Bell className="h-4 w-4 text-muted-foreground" />}
+              action={
+                <Switch
+                  aria-label="Invite Confirmations"
+                  checked={notifyOnInvite}
+                  onCheckedChange={(v) => {
+                    setNotifyOnInvite(v);
+                    setHasChanges(true);
+                  }}
+                />
+              }
             />
-            <SettingToggle
-              label="Checkout Notifications"
+            <SettingsRow
+              title="Checkout Notifications"
               description="Notify when visitors check out"
-              checked={notifyOnCheckout}
-              onChange={(v) => {
-                setNotifyOnCheckout(v);
-                setHasChanges(true);
-              }}
-              icon={<Bell className="w-4 h-4 text-muted-foreground" />}
+              icon={<Bell className="h-4 w-4 text-muted-foreground" />}
+              action={
+                <Switch
+                  aria-label="Checkout Notifications"
+                  checked={notifyOnCheckout}
+                  onCheckedChange={(v) => {
+                    setNotifyOnCheckout(v);
+                    setHasChanges(true);
+                  }}
+                />
+              }
             />
-            <SettingToggle
-              label="Committee Alerts"
+            <SettingsRow
+              title="Committee Alerts"
               description="Send alerts to committee members for important events"
-              checked={notifyCommittee}
-              onChange={(v) => {
-                setNotifyCommittee(v);
-                setHasChanges(true);
-              }}
-              icon={<Users className="w-4 h-4 text-muted-foreground" />}
+              icon={<Users className="h-4 w-4 text-muted-foreground" />}
+              action={
+                <Switch
+                  aria-label="Committee Alerts"
+                  checked={notifyCommittee}
+                  onCheckedChange={(v) => {
+                    setNotifyCommittee(v);
+                    setHasChanges(true);
+                  }}
+                />
+              }
             />
           </CardContent>
         </Card>
@@ -229,51 +180,72 @@ export function SocietySettingsContent() {
             </span>
           </CardHeader>
           <CardContent className="py-2">
-            <SettingToggle
-              label="Require Approval"
+            <SettingsRow
+              title="Require Approval"
               description="All walk-in visitors require resident/committee approval"
-              checked={requireApproval}
-              onChange={(v) => {
-                setRequireApproval(v);
-                setHasChanges(true);
-              }}
-              icon={<Shield className="w-4 h-4 text-muted-foreground" />}
+              icon={<Shield className="h-4 w-4 text-muted-foreground" />}
+              action={
+                <Switch
+                  aria-label="Require Approval"
+                  checked={requireApproval}
+                  onCheckedChange={(v) => {
+                    setRequireApproval(v);
+                    setHasChanges(true);
+                  }}
+                />
+              }
             />
-            <SettingToggle
-              label="Auto-approve Pre-approved Visitors"
+            <SettingsRow
+              title="Auto-approve Pre-approved Visitors"
               description="Visitors with valid invites are automatically approved"
-              checked={autoApprovePreapproved}
-              onChange={(v) => {
-                setAutoApprovePreapproved(v);
-                setHasChanges(true);
-              }}
-              icon={<Shield className="w-4 h-4 text-muted-foreground" />}
+              icon={<Shield className="h-4 w-4 text-muted-foreground" />}
+              action={
+                <Switch
+                  aria-label="Auto-approve Pre-approved Visitors"
+                  checked={autoApprovePreapproved}
+                  onCheckedChange={(v) => {
+                    setAutoApprovePreapproved(v);
+                    setHasChanges(true);
+                  }}
+                />
+              }
             />
-            <SettingToggle
-              label="Allow Walk-ins"
+            <SettingsRow
+              title="Allow Walk-ins"
               description="Allow visitors without prior invitation"
-              checked={allowWalkins}
-              onChange={(v) => {
-                setAllowWalkins(v);
-                setHasChanges(true);
-              }}
-              icon={<Users className="w-4 h-4 text-muted-foreground" />}
+              icon={<Users className="h-4 w-4 text-muted-foreground" />}
+              action={
+                <Switch
+                  aria-label="Allow Walk-ins"
+                  checked={allowWalkins}
+                  onCheckedChange={(v) => {
+                    setAllowWalkins(v);
+                    setHasChanges(true);
+                  }}
+                />
+              }
             />
-            <SettingSelect
-              label="Visitor Timeout"
+            <SettingsRow
+              title="Visitor Timeout"
               description="Auto-checkout visitors after this duration (hours)"
-              value={visitorTimeout}
-              options={[
-                { value: "4", label: "4 hours" },
-                { value: "8", label: "8 hours" },
-                { value: "12", label: "12 hours" },
-                { value: "24", label: "24 hours" },
-              ]}
-              onChange={(v) => {
-                setVisitorTimeout(v);
-                setHasChanges(true);
-              }}
-              icon={<Clock className="w-4 h-4 text-muted-foreground" />}
+              icon={<Clock className="h-4 w-4 text-muted-foreground" />}
+              action={
+                <Select
+                  id="visitor-timeout"
+                  value={visitorTimeout}
+                  onChange={(e) => {
+                    setVisitorTimeout(e.target.value);
+                    setHasChanges(true);
+                  }}
+                  options={[
+                    { value: "4", label: "4 hours" },
+                    { value: "8", label: "8 hours" },
+                    { value: "12", label: "12 hours" },
+                    { value: "24", label: "24 hours" },
+                  ]}
+                  className="min-w-[140px]"
+                />
+              }
             />
           </CardContent>
         </Card>
@@ -287,35 +259,56 @@ export function SocietySettingsContent() {
             </span>
           </CardHeader>
           <CardContent className="py-2">
-            <SettingToggle
-              label="Require OTP Verification"
+            <SettingsRow
+              title="Require OTP Verification"
               description="Visitors must verify their phone number via OTP"
-              checked={requireOTP}
-              onChange={(v) => {
-                setRequireOTP(v);
-                setHasChanges(true);
-              }}
-              icon={<Shield className="w-4 h-4 text-muted-foreground" />}
+              icon={<Shield className="h-4 w-4 text-muted-foreground" />}
+              action={
+                <Switch
+                  aria-label="Require OTP Verification"
+                  checked={requireOTP}
+                  onCheckedChange={(v) => {
+                    setRequireOTP(v);
+                    setHasChanges(true);
+                  }}
+                />
+              }
             />
-            <SettingToggle
-              label="Enable Blacklist"
+            <SettingsRow
+              title="Enable Blacklist"
               description="Block blacklisted visitors from entry"
-              checked={enableBlacklist}
-              onChange={(v) => {
-                setEnableBlacklist(v);
-                setHasChanges(true);
-              }}
-              icon={enableBlacklist ? <Eye className="w-4 h-4 text-muted-foreground" /> : <EyeOff className="w-4 h-4 text-muted-foreground" />}
+              icon={
+                enableBlacklist ? (
+                  <Eye className="h-4 w-4 text-muted-foreground" />
+                ) : (
+                  <EyeOff className="h-4 w-4 text-muted-foreground" />
+                )
+              }
+              action={
+                <Switch
+                  aria-label="Enable Blacklist"
+                  checked={enableBlacklist}
+                  onCheckedChange={(v) => {
+                    setEnableBlacklist(v);
+                    setHasChanges(true);
+                  }}
+                />
+              }
             />
-            <SettingToggle
-              label="Log All Activity"
+            <SettingsRow
+              title="Log All Activity"
               description="Keep detailed logs of all visitor activity"
-              checked={logAllActivity}
-              onChange={(v) => {
-                setLogAllActivity(v);
-                setHasChanges(true);
-              }}
-              icon={<Settings className="w-4 h-4 text-muted-foreground" />}
+              icon={<Settings className="h-4 w-4 text-muted-foreground" />}
+              action={
+                <Switch
+                  aria-label="Log All Activity"
+                  checked={logAllActivity}
+                  onCheckedChange={(v) => {
+                    setLogAllActivity(v);
+                    setHasChanges(true);
+                  }}
+                />
+              }
             />
           </CardContent>
         </Card>

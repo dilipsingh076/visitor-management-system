@@ -9,12 +9,13 @@ export interface PageHeaderProps {
   action?: ReactNode;
   /** Centered layout for marketing pages */
   centered?: boolean;
+  className?: string;
 }
 
-export function PageHeader({ title, description, action, centered }: PageHeaderProps) {
+export function PageHeader({ title, description, action, centered, className = "" }: PageHeaderProps) {
   return (
     <div
-      className={`flex ${centered ? "flex-col text-center items-center" : "flex-col sm:flex-row sm:justify-between sm:items-center"} mb-4 gap-3`}
+      className={`flex ${centered ? "flex-col text-center items-center" : "flex-col sm:flex-row sm:justify-between sm:items-center"} mb-4 gap-3 ${className}`.trim()}
     >
       <div className={centered ? "max-w-2xl" : "min-w-0"}>
         <Text variant="h1" as="h1" className="text-xl font-semibold">{title}</Text>
