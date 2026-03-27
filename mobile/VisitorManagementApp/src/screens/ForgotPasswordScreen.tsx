@@ -1,8 +1,7 @@
-import React, {useState} from 'react';
+import React, {useState, useMemo} from 'react';
 import {View, StyleSheet, KeyboardAvoidingView, Platform, ScrollView} from 'react-native';
 import {Input, Button, Screen, Text} from '../components/ui';
-import {theme} from '../theme';
-import {colors} from '../theme/colors';
+import {theme, useTheme} from '../theme';
 
 interface ForgotPasswordScreenProps {
   navigation: any;
@@ -11,10 +10,51 @@ interface ForgotPasswordScreenProps {
 export default function ForgotPasswordScreen({
   navigation,
 }: ForgotPasswordScreenProps) {
+  const {colors} = useTheme();
   const [email, setEmail] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
+
+  const styles = useMemo(
+    () =>
+      StyleSheet.create({
+        container: {flex: 1, backgroundColor: 'transparent'},
+        scrollContent: {
+          flexGrow: 1,
+          paddingHorizontal: theme.spacing.lg,
+          paddingTop: theme.spacing.xl,
+          paddingBottom: theme.spacing.xl,
+        },
+        header: {marginBottom: theme.spacing.lg},
+        form: {flex: 1},
+        errorContainer: {
+          backgroundColor: colors.error + '15',
+          borderRadius: theme.borderRadius.sm,
+          padding: theme.spacing.md,
+          marginTop: theme.spacing.md,
+        },
+        errorText: {
+          color: colors.error,
+          fontSize: theme.fontSize.sm,
+          textAlign: 'center',
+        },
+        infoContainer: {
+          backgroundColor: colors.primary + '10',
+          borderRadius: theme.borderRadius.sm,
+          padding: theme.spacing.md,
+          marginTop: theme.spacing.md,
+        },
+        infoText: {
+          color: colors.foreground,
+          fontSize: theme.fontSize.sm,
+          textAlign: 'center',
+        },
+        submitButton: {marginTop: theme.spacing.lg},
+        secondaryButton: {marginTop: theme.spacing.md},
+      }),
+    [colors],
+  );
 
   const handleSubmit = async () => {
     if (!email.trim()) {
@@ -110,51 +150,4 @@ export default function ForgotPasswordScreen({
     </Screen>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: 'transparent',
-  },
-  scrollContent: {
-    flexGrow: 1,
-    paddingHorizontal: theme.spacing.lg,
-    paddingTop: theme.spacing.xl,
-    paddingBottom: theme.spacing.xl,
-  },
-  header: {
-    marginBottom: theme.spacing.lg,
-  },
-  form: {
-    flex: 1,
-  },
-  errorContainer: {
-    backgroundColor: colors.error + '15',
-    borderRadius: theme.borderRadius.sm,
-    padding: theme.spacing.md,
-    marginTop: theme.spacing.md,
-  },
-  errorText: {
-    color: colors.error,
-    fontSize: theme.fontSize.sm,
-    textAlign: 'center',
-  },
-  infoContainer: {
-    backgroundColor: colors.primary + '10',
-    borderRadius: theme.borderRadius.sm,
-    padding: theme.spacing.md,
-    marginTop: theme.spacing.md,
-  },
-  infoText: {
-    color: colors.foreground,
-    fontSize: theme.fontSize.sm,
-    textAlign: 'center',
-  },
-  submitButton: {
-    marginTop: theme.spacing.lg,
-  },
-  secondaryButton: {
-    marginTop: theme.spacing.md,
-  },
-});
 

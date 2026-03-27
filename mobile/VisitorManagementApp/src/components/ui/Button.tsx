@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {useMemo} from 'react';
 import {
   TouchableOpacity,
   Text,
@@ -6,7 +6,8 @@ import {
   TouchableOpacityProps,
   ActivityIndicator,
 } from 'react-native';
-import { colors } from '../../theme/colors';
+import {useTheme} from '../../theme';
+import {theme} from '../../theme';
 
 interface ButtonProps extends TouchableOpacityProps {
   title: string;
@@ -24,6 +25,31 @@ export function Button({
   style,
   ...props
 }: ButtonProps) {
+  const {colors} = useTheme();
+  const styles = useMemo(
+    () =>
+      StyleSheet.create({
+        base: {
+          paddingVertical: 14,
+          paddingHorizontal: 20,
+          borderRadius: theme.borderRadius.xl,
+          alignItems: 'center',
+          justifyContent: 'center',
+        },
+        primary: {backgroundColor: colors.primary},
+        secondary: {
+          backgroundColor: colors.card,
+          borderWidth: 1,
+          borderColor: colors.border,
+        },
+        fullWidth: {width: '100%'},
+        disabled: {opacity: 0.6},
+        text: {fontSize: 16, fontWeight: '600'},
+        primaryText: {color: '#fff'},
+        secondaryText: {color: colors.foreground},
+      }),
+    [colors],
+  );
   const isDisabled = disabled || loading;
 
   return (
@@ -48,20 +74,3 @@ export function Button({
     </TouchableOpacity>
   );
 }
-
-const styles = StyleSheet.create({
-  base: {
-    paddingVertical: 14,
-    paddingHorizontal: 20,
-    borderRadius: 12,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  primary: { backgroundColor: colors.primary },
-  secondary: { backgroundColor: colors.mutedBg },
-  fullWidth: { width: '100%' },
-  disabled: { opacity: 0.6 },
-  text: { fontSize: 16, fontWeight: '600' },
-  primaryText: { color: '#fff' },
-  secondaryText: { color: colors.foreground },
-});

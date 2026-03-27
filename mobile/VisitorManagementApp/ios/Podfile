@@ -8,11 +8,6 @@ require Pod::Executable.execute_command('node', ['-p',
 platform :ios, min_ios_version_supported
 prepare_react_native_project!
 
-# Enable modular headers so Swift pods that depend on
-# non-modular ObjC pods (like FirebaseCoreInternal -> GoogleUtilities)
-# can be integrated when building as static libraries.
-use_modular_headers!
-
 linkage = ENV['USE_FRAMEWORKS']
 if linkage != nil
   Pod::UI.puts "Configuring Pod with #{linkage}ally linked Frameworks".green
@@ -21,6 +16,12 @@ end
 
 target 'VisitorManagementApp' do
   config = use_native_modules!
+
+  # FirebaseCoreInternal (Swift) depends on GoogleUtilities; modular headers are
+  # required when integrating as static libraries.
+  pod 'GoogleUtilities', :modular_headers => true
+  pod 'FirebaseCore', :modular_headers => true
+  pod 'FirebaseCoreInternal', :modular_headers => true
 
   use_react_native!(
     :path => config[:reactNativePath],
@@ -35,5 +36,16 @@ target 'VisitorManagementApp' do
       :mac_catalyst_enabled => false,
       # :ccache_enabled => true
     )
+
+    # Xcode 16 + some RN/Firebase pod combinations can trigger
+    # non-modular include errors in framework modules during simulator builds.
+    installer.pods_project.targets.each do |target|
+      target.build_configurations.each do |build_configuration|
+        build_configuration.build_settings['CLANG_ALLOW_NON_MODULAR_INCLUDES_IN_FRAMEWORK_MODULES'] = 'YES'
+        build_configuration.build_settings['SWIFT_ENABLE_EXPLICIT_MODULES'] = 'NO'
+        build_configuration.build_settings['CLANG_WARN_NON_MODULAR_INCLUDE_IN_FRAMEWORK_MODULES'] = 'NO'
+        build_configuration.build_settings['GCC_TREAT_WARNINGS_AS_ERRORS'] = 'NO'
+      end
+    end
   end
 end

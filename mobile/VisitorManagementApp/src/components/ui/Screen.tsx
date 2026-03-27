@@ -1,12 +1,12 @@
-import React from 'react';
+import React, {useMemo} from 'react';
 import {
-  SafeAreaView,
   ScrollView,
   View,
   StyleSheet,
   ViewProps,
 } from 'react-native';
-import {colors} from '../../theme/colors';
+import {SafeAreaView} from 'react-native-safe-area-context';
+import {useTheme} from '../../theme';
 import {theme} from '../../theme';
 
 interface ScreenProps extends ViewProps {
@@ -16,6 +16,31 @@ interface ScreenProps extends ViewProps {
 }
 
 export function Screen({children, scroll, header, style, ...rest}: ScreenProps) {
+  const {colors} = useTheme();
+  const styles = useMemo(
+    () =>
+      StyleSheet.create({
+        safe: {
+          flex: 1,
+          backgroundColor: colors.background,
+        },
+        header: {
+          paddingHorizontal: theme.spacing.lg,
+          paddingTop: theme.spacing.lg,
+          paddingBottom: theme.spacing.md,
+        },
+        body: {
+          flex: 1,
+          paddingHorizontal: theme.spacing.lg,
+          paddingBottom: theme.spacing.xxl,
+        },
+        scrollContent: {
+          paddingHorizontal: theme.spacing.lg,
+          paddingBottom: theme.spacing.xxl,
+        },
+      }),
+    [colors],
+  );
   const content = scroll ? (
     <ScrollView
       contentContainerStyle={styles.scrollContent}
@@ -35,25 +60,3 @@ export function Screen({children, scroll, header, style, ...rest}: ScreenProps) 
     </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  safe: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
-  header: {
-    paddingHorizontal: theme.spacing.lg,
-    paddingTop: theme.spacing.lg,
-    paddingBottom: theme.spacing.md,
-  },
-  body: {
-    flex: 1,
-    paddingHorizontal: theme.spacing.lg,
-    paddingBottom: theme.spacing.xxl,
-  },
-  scrollContent: {
-    paddingHorizontal: theme.spacing.lg,
-    paddingBottom: theme.spacing.xxl,
-  },
-});
-

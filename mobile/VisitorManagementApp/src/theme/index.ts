@@ -1,5 +1,10 @@
 import { colors } from './colors';
 
+export { ThemeProvider, useTheme } from './ThemeContext';
+export type { ThemeMode } from './ThemeContext';
+export { lightPalette, darkPalette } from './colors';
+export type { ColorPalette } from './colors';
+
 export const theme = {
   colors,
   spacing: {
@@ -10,10 +15,11 @@ export const theme = {
     xl: 32,
     xxl: 40,
   },
+  // Match web: --radius-sm 0.5rem, md 0.75rem, lg 1rem, xl 1.5rem
   borderRadius: {
-    sm: 10,
-    md: 14,
-    lg: 20,
+    sm: 8,
+    md: 12,
+    lg: 16,
     xl: 24,
     full: 9999,
   },

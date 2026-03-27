@@ -2,13 +2,19 @@
  * Resident Dashboard Screen.
  * Shows pending approvals, quick actions, and visitor stats.
  */
-import React, {useState, useEffect, useCallback} from 'react';
-import {View, StyleSheet, ScrollView, TouchableOpacity, RefreshControl, Alert} from 'react-native';
-import {theme} from '../theme';
-import {colors} from '../theme/colors';
-import {Card, Screen, Text} from '../components/ui';
-import {apiClient} from '../config/api';
-import {getCachedUser, User, logout} from '../config/auth';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import {
+  Alert,
+  RefreshControl,
+  ScrollView,
+  StyleSheet,
+  TouchableOpacity,
+  View,
+} from 'react-native';
+import { Card, Screen, Text } from '../components/ui';
+import { apiClient } from '../config/api';
+import { User, getCachedUser, logout } from '../config/auth';
+import { theme, useTheme } from '../theme';
 
 interface ResidentDashboardProps {
   navigation: any;
@@ -27,10 +33,15 @@ interface PendingVisitor {
   is_walkin?: boolean;
 }
 
-export default function ResidentDashboard({navigation}: ResidentDashboardProps) {
+export default function ResidentDashboard({
+  navigation,
+}: ResidentDashboardProps) {
+  const { colors } = useTheme();
   const [user, setUser] = useState<User | null>(null);
   const [stats, setStats] = useState<Stats | null>(null);
-  const [pendingApprovals, setPendingApprovals] = useState<PendingVisitor[]>([]);
+  const [pendingApprovals, setPendingApprovals] = useState<PendingVisitor[]>(
+    [],
+  );
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [approving, setApproving] = useState<string | null>(null);
@@ -42,7 +53,9 @@ export default function ResidentDashboard({navigation}: ResidentDashboardProps) 
 
       const [statsRes, pendingRes] = await Promise.all([
         apiClient.get<Stats>('/dashboard/stats'),
-        apiClient.get<{count: number; visits: PendingVisitor[]}>('/dashboard/my-requests'),
+        apiClient.get<{ count: number; visits: PendingVisitor[] }>(
+          '/dashboard/my-requests',
+        ),
       ]);
 
       if (statsRes.data) setStats(statsRes.data);
@@ -68,9 +81,9 @@ export default function ResidentDashboard({navigation}: ResidentDashboardProps) 
     setApproving(visitId);
     try {
       await apiClient.post(`/visitors/${visitId}/approve`);
-      setPendingApprovals((prev) => prev.filter((v) => v.id !== visitId));
+      setPendingApprovals(prev => prev.filter(v => v.id !== visitId));
       if (stats) {
-        setStats({...stats, pending_approvals: stats.pending_approvals - 1});
+        setStats({ ...stats, pending_approvals: stats.pending_approvals - 1 });
       }
     } catch {
       Alert.alert('Error', 'Failed to approve visitor');
@@ -83,9 +96,9 @@ export default function ResidentDashboard({navigation}: ResidentDashboardProps) 
     setApproving(visitId);
     try {
       await apiClient.post(`/visitors/${visitId}/reject`);
-      setPendingApprovals((prev) => prev.filter((v) => v.id !== visitId));
+      setPendingApprovals(prev => prev.filter(v => v.id !== visitId));
       if (stats) {
-        setStats({...stats, pending_approvals: stats.pending_approvals - 1});
+        setStats({ ...stats, pending_approvals: stats.pending_approvals - 1 });
       }
     } catch {
       Alert.alert('Error', 'Failed to reject visitor');
@@ -96,13 +109,13 @@ export default function ResidentDashboard({navigation}: ResidentDashboardProps) 
 
   const handleLogout = async () => {
     Alert.alert('Logout', 'Are you sure you want to logout?', [
-      {text: 'Cancel', style: 'cancel'},
+      { text: 'Cancel', style: 'cancel' },
       {
         text: 'Logout',
         style: 'destructive',
         onPress: async () => {
           await logout();
-          navigation.reset({index: 0, routes: [{name: 'Login'}]});
+          navigation.reset({ index: 0, routes: [{ name: 'Login' }] });
         },
       },
     ]);
@@ -119,8 +132,275 @@ export default function ResidentDashboard({navigation}: ResidentDashboardProps) 
     if (!name) return '?';
     const parts = name.trim().split(/\s+/);
     if (parts.length === 1) return parts[0].charAt(0).toUpperCase();
-    return (parts[0].charAt(0) + parts[parts.length - 1].charAt(0)).toUpperCase();
+    return (
+      parts[0].charAt(0) + parts[parts.length - 1].charAt(0)
+    ).toUpperCase();
   };
+
+  const styles = useMemo(
+    () =>
+      StyleSheet.create({
+        contentContainer: {
+          paddingHorizontal: theme.spacing.lg,
+          paddingTop: theme.spacing.lg,
+          paddingBottom: theme.spacing.xxl,
+        },
+        loadingContainer: {
+          flex: 1,
+          justifyContent: 'center',
+          alignItems: 'center',
+          backgroundColor: colors.background,
+        },
+        loadingText: {
+          color: colors.textSecondary,
+          fontSize: theme.fontSize.md,
+        },
+        header: {
+          flexDirection: 'row',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          marginBottom: theme.spacing.xl,
+        },
+        headerLeft: {
+          flex: 1,
+          minWidth: 0,
+          paddingRight: theme.spacing.sm,
+        },
+        headerActions: {
+          flexDirection: 'row',
+          alignItems: 'center',
+          gap: theme.spacing.sm,
+          flexShrink: 0,
+        },
+        settingsButton: {
+          paddingVertical: 8,
+          paddingHorizontal: 12,
+        },
+        settingsButtonText: {
+          fontSize: theme.fontSize.sm,
+          fontWeight: '600',
+          color: colors.primary,
+        },
+        greeting: {
+          fontSize: theme.fontSize.md,
+          color: colors.textSecondary,
+        },
+        userName: {
+          fontSize: theme.fontSize.xl,
+          fontWeight: '700',
+          color: colors.text,
+        },
+        profileButton: {
+          width: 48,
+          height: 48,
+          borderRadius: 24,
+          backgroundColor: colors.primary,
+          justifyContent: 'center',
+          alignItems: 'center',
+        },
+        profileInitials: {
+          color: '#FFFFFF',
+          fontSize: theme.fontSize.md,
+          fontWeight: '700',
+        },
+        quickActions: {
+          flexDirection: 'row',
+          gap: theme.spacing.md,
+          marginBottom: theme.spacing.xl,
+        },
+        actionCard: {
+          flex: 1,
+          backgroundColor: colors.card,
+          borderRadius: theme.borderRadius.md,
+          padding: theme.spacing.lg,
+          alignItems: 'center',
+          borderWidth: 1,
+          borderColor: colors.border,
+        },
+        actionCardPrimary: {
+          backgroundColor: colors.primary,
+          borderColor: colors.primary,
+        },
+        actionIcon: {
+          fontSize: 32,
+          marginBottom: theme.spacing.sm,
+        },
+        actionLabel: {
+          fontSize: theme.fontSize.sm,
+          fontWeight: '600',
+          color: '#FFFFFF',
+        },
+        section: {
+          backgroundColor: colors.warning + '15',
+          borderRadius: theme.borderRadius.md,
+          padding: theme.spacing.md,
+          marginBottom: theme.spacing.xl,
+          borderWidth: 1,
+          borderColor: colors.warning + '30',
+        },
+        emptyState: {
+          alignItems: 'center',
+          justifyContent: 'center',
+          paddingVertical: theme.spacing.xl,
+          paddingHorizontal: theme.spacing.lg,
+          marginBottom: theme.spacing.lg,
+          backgroundColor: colors.successLight + '40',
+          borderRadius: theme.borderRadius.lg,
+          borderWidth: 1,
+          borderColor: colors.success + '25',
+        },
+        emptyStateIcon: {
+          fontSize: 36,
+          marginBottom: theme.spacing.sm,
+        },
+        emptyStateTitle: {
+          fontSize: theme.fontSize.lg,
+          fontWeight: '700',
+          color: colors.text,
+          marginBottom: theme.spacing.xs,
+        },
+        emptyStateText: {
+          fontSize: theme.fontSize.sm,
+          color: colors.textSecondary,
+          textAlign: 'center',
+          lineHeight: 20,
+        },
+        alertHeader: {
+          flexDirection: 'row',
+          alignItems: 'center',
+          gap: theme.spacing.sm,
+          marginBottom: theme.spacing.xs,
+        },
+        alertIcon: {
+          fontSize: 20,
+        },
+        alertTitle: {
+          fontSize: theme.fontSize.md,
+          fontWeight: '700',
+          color: colors.warning,
+        },
+        alertSubtitle: {
+          fontSize: theme.fontSize.sm,
+          color: colors.textSecondary,
+          marginBottom: theme.spacing.md,
+        },
+        approvalCard: {
+          backgroundColor: colors.card,
+          borderRadius: theme.borderRadius.sm,
+          padding: theme.spacing.md,
+          flexDirection: 'row',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          marginTop: theme.spacing.sm,
+        },
+        approvalInfo: {
+          flexDirection: 'row',
+          alignItems: 'center',
+          flex: 1,
+        },
+        avatar: {
+          width: 40,
+          height: 40,
+          borderRadius: 20,
+          backgroundColor: colors.primary + '20',
+          justifyContent: 'center',
+          alignItems: 'center',
+          marginRight: theme.spacing.sm,
+        },
+        avatarText: {
+          color: colors.primary,
+          fontWeight: '700',
+          fontSize: theme.fontSize.sm,
+        },
+        approvalDetails: {
+          flex: 1,
+        },
+        visitorName: {
+          fontSize: theme.fontSize.sm,
+          fontWeight: '600',
+          color: colors.text,
+        },
+        visitorPurpose: {
+          fontSize: theme.fontSize.xs,
+          color: colors.textSecondary,
+        },
+        approvalActions: {
+          flexDirection: 'row',
+          gap: theme.spacing.sm,
+        },
+        rejectButton: {
+          width: 36,
+          height: 36,
+          borderRadius: 18,
+          backgroundColor: colors.error + '15',
+          justifyContent: 'center',
+          alignItems: 'center',
+        },
+        rejectText: {
+          color: colors.error,
+          fontSize: 16,
+          fontWeight: '700',
+        },
+        approveButton: {
+          width: 36,
+          height: 36,
+          borderRadius: 18,
+          backgroundColor: colors.success,
+          justifyContent: 'center',
+          alignItems: 'center',
+        },
+        approveText: {
+          color: '#FFFFFF',
+          fontSize: 16,
+          fontWeight: '700',
+        },
+        sectionTitle: {
+          fontSize: theme.fontSize.lg,
+          fontWeight: '700',
+          color: colors.text,
+          marginBottom: theme.spacing.md,
+        },
+        statsGrid: {
+          flexDirection: 'row',
+          gap: theme.spacing.md,
+          marginBottom: theme.spacing.xl,
+        },
+        statCard: {
+          flex: 1,
+          backgroundColor: colors.card,
+          borderRadius: theme.borderRadius.md,
+          padding: theme.spacing.md,
+          alignItems: 'center',
+          borderWidth: 1,
+          borderColor: colors.border,
+        },
+        statValue: {
+          fontSize: theme.fontSize.xxl,
+          fontWeight: '700',
+          color: colors.primary,
+        },
+        statLabel: {
+          fontSize: theme.fontSize.xs,
+          color: colors.textSecondary,
+          marginTop: theme.spacing.xs,
+        },
+        tipCard: {
+          flexDirection: 'row',
+          alignItems: 'center',
+          gap: theme.spacing.md,
+        },
+        tipIcon: {
+          fontSize: 24,
+        },
+        tipText: {
+          flex: 1,
+          fontSize: theme.fontSize.sm,
+          color: colors.textSecondary,
+          lineHeight: 20,
+        },
+      }),
+    [colors],
+  );
 
   if (loading) {
     return (
@@ -141,20 +421,39 @@ export default function ResidentDashboard({navigation}: ResidentDashboardProps) 
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
         }
-        showsVerticalScrollIndicator={false}>
+        showsVerticalScrollIndicator={false}
+      >
         {/* Header */}
         <View style={styles.header}>
-          <View>
+          <View style={styles.headerLeft}>
             <Text muted style={styles.greeting}>
               {getGreeting()} 👋
             </Text>
-            <Text variant="title" style={styles.userName}>
+            <Text
+              variant="title"
+              style={styles.userName}
+              numberOfLines={1}
+              ellipsizeMode="tail"
+            >
               {user?.username || 'Resident'}
             </Text>
           </View>
-          <TouchableOpacity style={styles.profileButton} onPress={handleLogout}>
-            <Text style={styles.profileInitials}>{getInitials(user?.username)}</Text>
-          </TouchableOpacity>
+          <View style={styles.headerActions}>
+            <TouchableOpacity
+              onPress={() => navigation.navigate('Settings')}
+              style={styles.settingsButton}
+            >
+              <Text style={styles.settingsButtonText}>Settings</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.profileButton}
+              onPress={handleLogout}
+            >
+              <Text style={styles.profileInitials}>
+                {getInitials(user?.username)}
+              </Text>
+            </TouchableOpacity>
+          </View>
         </View>
 
         {/* Quick Actions */}
@@ -162,21 +461,22 @@ export default function ResidentDashboard({navigation}: ResidentDashboardProps) 
           <TouchableOpacity
             style={[styles.actionCard, styles.actionCardPrimary]}
             onPress={() => navigation.navigate('VisitorInvite')}
-            activeOpacity={0.8}>
+            activeOpacity={0.8}
+          >
             <Text style={styles.actionIcon}>➕</Text>
             <Text style={styles.actionLabel}>Invite Visitor</Text>
           </TouchableOpacity>
           <TouchableOpacity
             style={styles.actionCard}
-            onPress={() => navigation.navigate('VisitorsList')}
-            activeOpacity={0.8}>
+            onPress={() => navigation.navigate('MyVisitors')}
+            activeOpacity={0.8}
+          >
             <Text style={styles.actionIcon}>👥</Text>
-            <Text style={[styles.actionLabel, {color: colors.text}]}>All Visitors</Text>
+            <Text style={[styles.actionLabel, { color: colors.text }]}>
+              My Visitors
+            </Text>
           </TouchableOpacity>
         </View>
-        <TouchableOpacity onPress={() => navigation.navigate('More')} style={styles.moreLink}>
-          <Text style={styles.moreLinkText}>Open all mobile features</Text>
-        </TouchableOpacity>
 
         {/* Pending Approvals or friendly empty state */}
         {pendingApprovals.length > 0 ? (
@@ -196,10 +496,14 @@ export default function ResidentDashboard({navigation}: ResidentDashboardProps) 
               <View key={visitor.id} style={styles.approvalCard}>
                 <View style={styles.approvalInfo}>
                   <View style={styles.avatar}>
-                    <Text style={styles.avatarText}>{getInitials(visitor.visitor_name)}</Text>
+                    <Text style={styles.avatarText}>
+                      {getInitials(visitor.visitor_name)}
+                    </Text>
                   </View>
                   <View style={styles.approvalDetails}>
-                    <Text style={styles.visitorName}>{visitor.visitor_name}</Text>
+                    <Text style={styles.visitorName}>
+                      {visitor.visitor_name}
+                    </Text>
                     <Text style={styles.visitorPurpose}>
                       {visitor.purpose || 'Visit'}
                       {visitor.is_walkin && ' • Walk-in'}
@@ -210,13 +514,15 @@ export default function ResidentDashboard({navigation}: ResidentDashboardProps) 
                   <TouchableOpacity
                     style={styles.rejectButton}
                     onPress={() => handleReject(visitor.id)}
-                    disabled={approving === visitor.id}>
+                    disabled={approving === visitor.id}
+                  >
                     <Text style={styles.rejectText}>✕</Text>
                   </TouchableOpacity>
                   <TouchableOpacity
                     style={styles.approveButton}
                     onPress={() => handleApprove(visitor.id)}
-                    disabled={approving === visitor.id}>
+                    disabled={approving === visitor.id}
+                  >
                     <Text style={styles.approveText}>✓</Text>
                   </TouchableOpacity>
                 </View>
@@ -247,7 +553,10 @@ export default function ResidentDashboard({navigation}: ResidentDashboardProps) 
             </Text>
           </View>
           <View style={styles.statCard}>
-            <Text variant="title" style={[styles.statValue, {color: colors.warning}]}>
+            <Text
+              variant="title"
+              style={[styles.statValue, { color: colors.warning }]}
+            >
               {stats?.pending_approvals ?? 0}
             </Text>
             <Text variant="caption" muted style={styles.statLabel}>
@@ -255,7 +564,10 @@ export default function ResidentDashboard({navigation}: ResidentDashboardProps) 
             </Text>
           </View>
           <View style={styles.statCard}>
-            <Text variant="title" style={[styles.statValue, {color: colors.success}]}>
+            <Text
+              variant="title"
+              style={[styles.statValue, { color: colors.success }]}
+            >
               {stats?.checked_in ?? 0}
             </Text>
             <Text variant="caption" muted style={styles.statLabel}>
@@ -271,260 +583,11 @@ export default function ResidentDashboard({navigation}: ResidentDashboardProps) 
         <Card style={styles.tipCard}>
           <Text style={styles.tipIcon}>💡</Text>
           <Text style={styles.tipText}>
-            Add frequent visitors like your maid or driver to quickly invite them next time.
+            Add frequent visitors like your maid or driver to quickly invite
+            them next time.
           </Text>
         </Card>
       </ScrollView>
     </Screen>
   );
 }
-
-const styles = StyleSheet.create({
-  contentContainer: {
-    paddingHorizontal: theme.spacing.lg,
-    paddingTop: theme.spacing.lg,
-    paddingBottom: theme.spacing.xxl,
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: colors.background,
-  },
-  loadingText: {
-    color: colors.textSecondary,
-    fontSize: theme.fontSize.md,
-  },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: theme.spacing.xl,
-  },
-  greeting: {
-    fontSize: theme.fontSize.md,
-    color: colors.textSecondary,
-  },
-  userName: {
-    fontSize: theme.fontSize.xl,
-    fontWeight: '700',
-    color: colors.text,
-  },
-  profileButton: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: colors.primary,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  profileInitials: {
-    color: '#FFFFFF',
-    fontSize: theme.fontSize.md,
-    fontWeight: '700',
-  },
-  quickActions: {
-    flexDirection: 'row',
-    gap: theme.spacing.md,
-    marginBottom: theme.spacing.xl,
-  },
-  actionCard: {
-    flex: 1,
-    backgroundColor: colors.card,
-    borderRadius: theme.borderRadius.md,
-    padding: theme.spacing.lg,
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  actionCardPrimary: {
-    backgroundColor: colors.primary,
-    borderColor: colors.primary,
-  },
-  actionIcon: {
-    fontSize: 32,
-    marginBottom: theme.spacing.sm,
-  },
-  actionLabel: {
-    fontSize: theme.fontSize.sm,
-    fontWeight: '600',
-    color: '#FFFFFF',
-  },
-  section: {
-    backgroundColor: colors.warning + '15',
-    borderRadius: theme.borderRadius.md,
-    padding: theme.spacing.md,
-    marginBottom: theme.spacing.xl,
-    borderWidth: 1,
-    borderColor: colors.warning + '30',
-  },
-  emptyState: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: theme.spacing.xl,
-    paddingHorizontal: theme.spacing.lg,
-    marginBottom: theme.spacing.lg,
-    backgroundColor: colors.successLight + '40',
-    borderRadius: theme.borderRadius.lg,
-    borderWidth: 1,
-    borderColor: colors.success + '25',
-  },
-  emptyStateIcon: {
-    fontSize: 36,
-    marginBottom: theme.spacing.sm,
-  },
-  emptyStateTitle: {
-    fontSize: theme.fontSize.lg,
-    fontWeight: '700',
-    color: colors.text,
-    marginBottom: theme.spacing.xs,
-  },
-  emptyStateText: {
-    fontSize: theme.fontSize.sm,
-    color: colors.textSecondary,
-    textAlign: 'center',
-    lineHeight: 20,
-  },
-  alertHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: theme.spacing.sm,
-    marginBottom: theme.spacing.xs,
-  },
-  alertIcon: {
-    fontSize: 20,
-  },
-  alertTitle: {
-    fontSize: theme.fontSize.md,
-    fontWeight: '700',
-    color: colors.warning,
-  },
-  alertSubtitle: {
-    fontSize: theme.fontSize.sm,
-    color: colors.textSecondary,
-    marginBottom: theme.spacing.md,
-  },
-  approvalCard: {
-    backgroundColor: colors.card,
-    borderRadius: theme.borderRadius.sm,
-    padding: theme.spacing.md,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginTop: theme.spacing.sm,
-  },
-  approvalInfo: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flex: 1,
-  },
-  avatar: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: colors.primary + '20',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: theme.spacing.sm,
-  },
-  avatarText: {
-    color: colors.primary,
-    fontWeight: '700',
-    fontSize: theme.fontSize.sm,
-  },
-  approvalDetails: {
-    flex: 1,
-  },
-  visitorName: {
-    fontSize: theme.fontSize.sm,
-    fontWeight: '600',
-    color: colors.text,
-  },
-  visitorPurpose: {
-    fontSize: theme.fontSize.xs,
-    color: colors.textSecondary,
-  },
-  approvalActions: {
-    flexDirection: 'row',
-    gap: theme.spacing.sm,
-  },
-  rejectButton: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: colors.error + '15',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  rejectText: {
-    color: colors.error,
-    fontSize: 16,
-    fontWeight: '700',
-  },
-  approveButton: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: colors.success,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  approveText: {
-    color: '#FFFFFF',
-    fontSize: 16,
-    fontWeight: '700',
-  },
-  sectionTitle: {
-    fontSize: theme.fontSize.lg,
-    fontWeight: '700',
-    color: colors.text,
-    marginBottom: theme.spacing.md,
-  },
-  statsGrid: {
-    flexDirection: 'row',
-    gap: theme.spacing.md,
-    marginBottom: theme.spacing.xl,
-  },
-  statCard: {
-    flex: 1,
-    backgroundColor: colors.card,
-    borderRadius: theme.borderRadius.md,
-    padding: theme.spacing.md,
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  statValue: {
-    fontSize: theme.fontSize.xxl,
-    fontWeight: '700',
-    color: colors.primary,
-  },
-  statLabel: {
-    fontSize: theme.fontSize.xs,
-    color: colors.textSecondary,
-    marginTop: theme.spacing.xs,
-  },
-  tipCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: theme.spacing.md,
-  },
-  tipIcon: {
-    fontSize: 24,
-  },
-  tipText: {
-    flex: 1,
-    fontSize: theme.fontSize.sm,
-    color: colors.textSecondary,
-    lineHeight: 20,
-  },
-  moreLink: {
-    alignItems: 'center',
-    marginTop: -8,
-    marginBottom: theme.spacing.lg,
-  },
-  moreLinkText: {
-    color: colors.primary,
-    fontWeight: '700',
-  },
-});

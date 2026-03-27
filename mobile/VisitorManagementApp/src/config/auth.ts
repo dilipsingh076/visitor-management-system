@@ -15,12 +15,34 @@ import {
 import { apiClient } from './api';
 type AuthJson = Record<string, unknown>;
 
+function getDevServerHost(): string | null {
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    const { NativeModules } = require('react-native');
+    const scriptURL: string | undefined = NativeModules?.SourceCode?.scriptURL;
+    if (!scriptURL) return null;
+    const host = new URL(scriptURL).hostname;
+    if (!host) return null;
+    if (host === '::1' || host === '[::1]' || host === 'localhost') {
+      return '127.0.0.1';
+    }
+    if (host === '0.0.0.0') {
+      return '127.0.0.1';
+    }
+    return host;
+  } catch {
+    return null;
+  }
+}
+
 function getBaseUrl() {
   if (__DEV__) {
     if (Platform.OS === 'android') {
-      return 'http://10.0.2.2:8000/api/v1';
+      // Prefer localhost in Android dev with `adb reverse tcp:8003 tcp:8003`.
+      return 'http://localhost:8003/api/v1';
     }
-    return 'http://localhost:8000/api/v1';
+    const host = getDevServerHost() || '127.0.0.1';
+    return `http://${host}:8003/api/v1`;
   }
   return 'https://your-api-domain.com/api/v1';
 }
@@ -144,9 +166,15 @@ export async function signup(data: {
 
     return { user: null, error: 'Invalid response' };
   } catch (error) {
+    const url = `${API_BASE_URL}/auth/signup`;
     return {
       user: null,
-      error: error instanceof Error ? error.message : 'Network error',
+      error:
+        __DEV__ && error instanceof Error
+          ? `${error.message} (url: ${url})`
+          : error instanceof Error
+            ? error.message
+            : 'Network error',
     };
   }
 }
@@ -188,9 +216,15 @@ export async function login(
 
     return { user: null, error: 'Invalid response' };
   } catch (error) {
+    const url = `${API_BASE_URL}/auth/login`;
     return {
       user: null,
-      error: error instanceof Error ? error.message : 'Network error',
+      error:
+        __DEV__ && error instanceof Error
+          ? `${error.message} (url: ${url})`
+          : error instanceof Error
+            ? error.message
+            : 'Network error',
     };
   }
 }
