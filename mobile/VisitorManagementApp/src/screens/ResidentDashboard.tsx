@@ -11,9 +11,19 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import { AppIcon } from '../components/icons/AppIcon';
 import { Card, Screen, Text } from '../components/ui';
 import { apiClient } from '../config/api';
-import { User, getCachedUser, logout } from '../config/auth';
+import {
+  User,
+  canAccessCheckin,
+  canAccessGuardPage,
+  getCachedUser,
+  getCurrentUser,
+  getPrimaryRole,
+} from '../config/auth';
+import { API } from '../lib/api/endpoints';
+import { useNotificationRealtimeRefresh } from '../hooks/useNotificationRealtimeRefresh';
 import { theme, useTheme } from '../theme';
 
 interface ResidentDashboardProps {
@@ -48,8 +58,8 @@ export default function ResidentDashboard({
 
   const fetchData = useCallback(async () => {
     try {
-      const cachedUser = await getCachedUser();
-      setUser(cachedUser);
+      const freshUser = await getCurrentUser(true);
+      setUser(freshUser ?? (await getCachedUser()));
 
       const [statsRes, pendingRes] = await Promise.all([
         apiClient.get<Stats>('/dashboard/stats'),
@@ -68,9 +78,17 @@ export default function ResidentDashboard({
     }
   }, []);
 
+  const openServicesTab = () => {
+    navigation.getParent()?.navigate('ServicesTab' as never);
+  };
+
   useEffect(() => {
     fetchData();
   }, [fetchData]);
+
+  useNotificationRealtimeRefresh(() => {
+    void fetchData();
+  });
 
   const onRefresh = () => {
     setRefreshing(true);
@@ -80,7 +98,11 @@ export default function ResidentDashboard({
   const handleApprove = async (visitId: string) => {
     setApproving(visitId);
     try {
-      await apiClient.post(`/visitors/${visitId}/approve`);
+      const res = await apiClient.patch(API.visitors.approve(visitId));
+      if (res.error) {
+        Alert.alert('Error', res.error);
+        return;
+      }
       setPendingApprovals(prev => prev.filter(v => v.id !== visitId));
       if (stats) {
         setStats({ ...stats, pending_approvals: stats.pending_approvals - 1 });
@@ -95,7 +117,11 @@ export default function ResidentDashboard({
   const handleReject = async (visitId: string) => {
     setApproving(visitId);
     try {
-      await apiClient.post(`/visitors/${visitId}/reject`);
+      const res = await apiClient.patch(API.visitors.reject(visitId));
+      if (res.error) {
+        Alert.alert('Error', res.error);
+        return;
+      }
       setPendingApprovals(prev => prev.filter(v => v.id !== visitId));
       if (stats) {
         setStats({ ...stats, pending_approvals: stats.pending_approvals - 1 });
@@ -105,20 +131,6 @@ export default function ResidentDashboard({
     } finally {
       setApproving(null);
     }
-  };
-
-  const handleLogout = async () => {
-    Alert.alert('Logout', 'Are you sure you want to logout?', [
-      { text: 'Cancel', style: 'cancel' },
-      {
-        text: 'Logout',
-        style: 'destructive',
-        onPress: async () => {
-          await logout();
-          navigation.reset({ index: 0, routes: [{ name: 'Login' }] });
-        },
-      },
-    ]);
   };
 
   const getGreeting = () => {
@@ -141,9 +153,9 @@ export default function ResidentDashboard({
     () =>
       StyleSheet.create({
         contentContainer: {
-          paddingHorizontal: theme.spacing.lg,
-          paddingTop: theme.spacing.lg,
-          paddingBottom: theme.spacing.xxl,
+          paddingHorizontal: 20,
+          paddingTop: theme.spacing.md,
+          paddingBottom: 20,
         },
         loadingContainer: {
           flex: 1,
@@ -159,7 +171,7 @@ export default function ResidentDashboard({
           flexDirection: 'row',
           justifyContent: 'space-between',
           alignItems: 'center',
-          marginBottom: theme.spacing.xl,
+          marginBottom: theme.spacing.md,
         },
         headerLeft: {
           flex: 1,
@@ -172,14 +184,13 @@ export default function ResidentDashboard({
           gap: theme.spacing.sm,
           flexShrink: 0,
         },
-        settingsButton: {
-          paddingVertical: 8,
-          paddingHorizontal: 12,
-        },
-        settingsButtonText: {
-          fontSize: theme.fontSize.sm,
-          fontWeight: '600',
-          color: colors.primary,
+        iconButton: {
+          width: 40,
+          height: 40,
+          borderRadius: 20,
+          backgroundColor: colors.mutedBg,
+          justifyContent: 'center',
+          alignItems: 'center',
         },
         greeting: {
           fontSize: theme.fontSize.md,
@@ -206,13 +217,13 @@ export default function ResidentDashboard({
         quickActions: {
           flexDirection: 'row',
           gap: theme.spacing.md,
-          marginBottom: theme.spacing.xl,
+          marginBottom: theme.spacing.md,
         },
         actionCard: {
           flex: 1,
           backgroundColor: colors.card,
           borderRadius: theme.borderRadius.md,
-          padding: theme.spacing.lg,
+          padding: theme.spacing.md,
           alignItems: 'center',
           borderWidth: 1,
           borderColor: colors.border,
@@ -221,27 +232,49 @@ export default function ResidentDashboard({
           backgroundColor: colors.primary,
           borderColor: colors.primary,
         },
-        actionIcon: {
-          fontSize: 32,
-          marginBottom: theme.spacing.sm,
-        },
         actionLabel: {
           fontSize: theme.fontSize.sm,
           fontWeight: '600',
           color: '#FFFFFF',
         },
+        secondaryGrid: {
+          flexDirection: 'row',
+          flexWrap: 'wrap',
+          justifyContent: 'space-between',
+          rowGap: theme.spacing.md,
+          marginBottom: theme.spacing.md,
+        },
+        miniCard: {
+          width: '48%',
+          backgroundColor: colors.card,
+          borderRadius: theme.borderRadius.md,
+          padding: theme.spacing.md,
+          alignItems: 'center',
+          borderWidth: 1,
+          borderColor: colors.border,
+        },
+        miniIcon: {
+          fontSize: 26,
+          marginBottom: theme.spacing.xs,
+        },
+        miniLabel: {
+          fontSize: theme.fontSize.sm,
+          fontWeight: '600',
+          color: colors.text,
+          textAlign: 'center',
+        },
         section: {
           backgroundColor: colors.warning + '15',
           borderRadius: theme.borderRadius.md,
           padding: theme.spacing.md,
-          marginBottom: theme.spacing.xl,
+          marginBottom: theme.spacing.md,
           borderWidth: 1,
           borderColor: colors.warning + '30',
         },
         emptyState: {
           alignItems: 'center',
           justifyContent: 'center',
-          paddingVertical: theme.spacing.xl,
+          paddingVertical: theme.spacing.lg,
           paddingHorizontal: theme.spacing.lg,
           marginBottom: theme.spacing.lg,
           backgroundColor: colors.successLight + '40',
@@ -249,9 +282,15 @@ export default function ResidentDashboard({
           borderWidth: 1,
           borderColor: colors.success + '25',
         },
-        emptyStateIcon: {
-          fontSize: 36,
+        emptyStateIconBadge: {
+          width: 44,
+          height: 44,
+          borderRadius: 10,
+          backgroundColor: colors.success,
+          justifyContent: 'center',
+          alignItems: 'center',
           marginBottom: theme.spacing.sm,
+          elevation: 0,
         },
         emptyStateTitle: {
           fontSize: theme.fontSize.lg,
@@ -270,9 +309,6 @@ export default function ResidentDashboard({
           alignItems: 'center',
           gap: theme.spacing.sm,
           marginBottom: theme.spacing.xs,
-        },
-        alertIcon: {
-          fontSize: 20,
         },
         alertTitle: {
           fontSize: theme.fontSize.md,
@@ -363,7 +399,7 @@ export default function ResidentDashboard({
         statsGrid: {
           flexDirection: 'row',
           gap: theme.spacing.md,
-          marginBottom: theme.spacing.xl,
+          marginBottom: theme.spacing.md,
         },
         statCard: {
           flex: 1,
@@ -398,13 +434,36 @@ export default function ResidentDashboard({
           color: colors.textSecondary,
           lineHeight: 20,
         },
+        societyPill: {
+          alignSelf: 'flex-start',
+          marginTop: theme.spacing.xs,
+          paddingHorizontal: theme.spacing.sm,
+          paddingVertical: 4,
+          borderRadius: theme.borderRadius.full,
+          backgroundColor: colors.primaryMuted,
+          borderWidth: 1,
+          borderColor: colors.primary + '33',
+        },
+        societyPillText: {
+          fontSize: theme.fontSize.xs,
+          fontWeight: '700',
+          color: colors.primaryDark,
+        },
+        miniIconWrap: {
+          marginBottom: theme.spacing.xs,
+          alignItems: 'center',
+          justifyContent: 'center',
+        },
       }),
     [colors],
   );
 
   if (loading) {
     return (
-      <Screen>
+      <Screen
+        style={{ paddingHorizontal: 0, paddingBottom: 0 }}
+        edges={['top', 'left', 'right']}
+      >
         <View style={styles.loadingContainer}>
           <Text variant="body" muted>
             Loading...
@@ -415,7 +474,10 @@ export default function ResidentDashboard({
   }
 
   return (
-    <Screen>
+    <Screen
+      style={{ paddingHorizontal: 0, paddingBottom: 0 }}
+      edges={['top', 'left', 'right']}
+    >
       <ScrollView
         contentContainerStyle={styles.contentContainer}
         refreshControl={
@@ -427,7 +489,7 @@ export default function ResidentDashboard({
         <View style={styles.header}>
           <View style={styles.headerLeft}>
             <Text muted style={styles.greeting}>
-              {getGreeting()} 👋
+              {getGreeting()}
             </Text>
             <Text
               variant="title"
@@ -437,17 +499,34 @@ export default function ResidentDashboard({
             >
               {user?.username || 'Resident'}
             </Text>
+            {user?.society ? (
+              <View style={styles.societyPill}>
+                <Text style={styles.societyPillText}>
+                  {user.society.name || user.society.slug}
+                </Text>
+              </View>
+            ) : null}
           </View>
           <View style={styles.headerActions}>
             <TouchableOpacity
-              onPress={() => navigation.navigate('Settings')}
-              style={styles.settingsButton}
+              onPress={() => navigation.navigate('Notifications')}
+              style={styles.iconButton}
+              activeOpacity={0.7}
             >
-              <Text style={styles.settingsButtonText}>Settings</Text>
+              <AppIcon name="bell-outline" size={24} color={colors.foreground} />
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={() => navigation.navigate('Settings')}
+              style={styles.iconButton}
+              activeOpacity={0.7}
+            >
+              <AppIcon name="cog-outline" size={24} color={colors.foreground} />
             </TouchableOpacity>
             <TouchableOpacity
               style={styles.profileButton}
-              onPress={handleLogout}
+              onPress={() => navigation.navigate('Profile')}
+              accessibilityRole="button"
+              accessibilityLabel="Profile"
             >
               <Text style={styles.profileInitials}>
                 {getInitials(user?.username)}
@@ -463,18 +542,128 @@ export default function ResidentDashboard({
             onPress={() => navigation.navigate('VisitorInvite')}
             activeOpacity={0.8}
           >
-            <Text style={styles.actionIcon}>➕</Text>
-            <Text style={styles.actionLabel}>Invite Visitor</Text>
+            <View style={{ marginBottom: theme.spacing.sm }}>
+              <AppIcon name="account-plus-outline" size={28} color="#FFFFFF" />
+            </View>
+            <Text style={styles.actionLabel}>Pre-approve visitor</Text>
           </TouchableOpacity>
           <TouchableOpacity
             style={styles.actionCard}
             onPress={() => navigation.navigate('MyVisitors')}
             activeOpacity={0.8}
           >
-            <Text style={styles.actionIcon}>👥</Text>
+            <View style={[styles.miniIconWrap, { marginBottom: theme.spacing.sm , marginTop: 0 }]}>
+              <AppIcon name="account-multiple-outline" size={28} color={colors.primary} />
+            </View>
             <Text style={[styles.actionLabel, { color: colors.text }]}>
-              My Visitors
+              My visitors
             </Text>
+          </TouchableOpacity>
+        </View>
+
+        <Text variant="label" style={styles.sectionTitle}>
+          Society &amp; services
+        </Text>
+        <View style={styles.secondaryGrid}>
+          <TouchableOpacity
+            style={styles.miniCard}
+            onPress={() => navigation.navigate('ResidentComplaints')}
+            activeOpacity={0.85}
+          >
+            <View style={styles.miniIconWrap}>
+              <AppIcon name="clipboard-text-outline" size={24} color={colors.primary} />
+            </View>
+            <Text style={styles.miniLabel}>Complaints</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.miniCard}
+            onPress={() => navigation.navigate('MaintenanceBills')}
+            activeOpacity={0.85}
+          >
+            <View style={styles.miniIconWrap}>
+              <AppIcon name="receipt-text-outline" size={24} color={colors.primary} />
+            </View>
+            <Text style={styles.miniLabel}>Maintenance</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.miniCard}
+            onPress={() => navigation.navigate('SosAlert')}
+            activeOpacity={0.85}
+          >
+            <View style={styles.miniIconWrap}>
+              <AppIcon name="alert-octagon-outline" size={24} color={colors.error} />
+            </View>
+            <Text style={[styles.miniLabel, { color: colors.error }]}>SOS</Text>
+          </TouchableOpacity>
+          {user && canAccessCheckin(user) ? (
+            <TouchableOpacity
+              style={styles.miniCard}
+              onPress={() => navigation.navigate('CheckIn')}
+              activeOpacity={0.85}
+            >
+              <View style={styles.miniIconWrap}>
+                <AppIcon name="qrcode-scan" size={24} color={colors.primary} />
+              </View>
+              <Text style={styles.miniLabel}>Gate check-in</Text>
+            </TouchableOpacity>
+          ) : null}
+          {user && canAccessCheckin(user) ? (
+            <TouchableOpacity
+              style={styles.miniCard}
+              onPress={() => navigation.navigate('WalkIn')}
+              activeOpacity={0.85}
+            >
+              <View style={styles.miniIconWrap}>
+                <AppIcon name="walk" size={24} color={colors.primary} />
+              </View>
+              <Text style={styles.miniLabel}>Walk-in</Text>
+            </TouchableOpacity>
+          ) : null}
+          {user && canAccessGuardPage(user) ? (
+            <TouchableOpacity
+              style={styles.miniCard}
+              onPress={() => navigation.navigate('GuardBlacklist')}
+              activeOpacity={0.85}
+            >
+              <View style={styles.miniIconWrap}>
+                <AppIcon name="block-helper" size={24} color={colors.primary} />
+              </View>
+              <Text style={styles.miniLabel}>Blacklist</Text>
+            </TouchableOpacity>
+          ) : null}
+          {user &&
+          canAccessGuardPage(user) &&
+          getPrimaryRole(user) !== 'guard' ? (
+            <TouchableOpacity
+              style={styles.miniCard}
+              onPress={() => navigation.navigate('GuardOperations')}
+              activeOpacity={0.85}
+            >
+              <View style={styles.miniIconWrap}>
+                <AppIcon name="shield-account-outline" size={24} color={colors.primary} />
+              </View>
+              <Text style={styles.miniLabel}>Guard dashboard</Text>
+            </TouchableOpacity>
+          ) : null}
+          <TouchableOpacity
+            style={styles.miniCard}
+            onPress={() => navigation.navigate('NearbyPlaces')}
+            activeOpacity={0.85}
+          >
+            <View style={styles.miniIconWrap}>
+              <AppIcon name="map-marker-radius-outline" size={24} color={colors.primary} />
+            </View>
+            <Text style={styles.miniLabel}>Nearby</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.miniCard}
+            onPress={openServicesTab}
+            activeOpacity={0.85}
+          >
+            <View style={styles.miniIconWrap}>
+              <AppIcon name="apps" size={24} color={colors.primary} />
+            </View>
+            <Text style={styles.miniLabel}>All services</Text>
           </TouchableOpacity>
         </View>
 
@@ -482,7 +671,7 @@ export default function ResidentDashboard({
         {pendingApprovals.length > 0 ? (
           <View style={styles.section}>
             <View style={styles.alertHeader}>
-              <Text style={styles.alertIcon}>🔔</Text>
+              <AppIcon name="bell-ring-outline" size={20} color={colors.warning} />
               <Text style={styles.alertTitle}>
                 {pendingApprovals.length} Pending Approval
                 {pendingApprovals.length > 1 ? 's' : ''}
@@ -531,7 +720,9 @@ export default function ResidentDashboard({
           </View>
         ) : (
           <View style={styles.emptyState}>
-            <Text style={styles.emptyStateIcon}>✅</Text>
+            <View style={styles.emptyStateIconBadge}>
+              <AppIcon name="check" size={26} color="#FFFFFF" />
+            </View>
             <Text style={styles.emptyStateTitle}>All clear</Text>
             <Text style={styles.emptyStateText}>
               No pending approvals. When someone visits, they’ll show up here.

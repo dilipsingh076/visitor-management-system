@@ -2,6 +2,7 @@
  * API configuration for mobile app with secure token storage.
  */
 import { Platform } from 'react-native';
+import { normalizeApiPath } from '../lib/api/normalizePath';
 import { getSecureToken, getRefreshToken, setSecureToken, setRefreshToken, clearAllAuthData } from '../lib/secureStorage';
 
 function getDevServerHost(): string | null {
@@ -31,20 +32,21 @@ function getDevServerHost(): string | null {
 
 function getBaseUrl() {
   if (__DEV__) {
-    // Prefer localhost in Android dev with `adb reverse tcp:8003 tcp:8003`.
-    // This is more stable than emulator host aliases across environments.
-    if (Platform.OS === 'android') {
-      return 'http://localhost:8003/api/v1';
-    }
-    // iOS simulator & web can hit localhost directly.
-    // Prefer Metro host IP so it works on physical iPhones too.
-    const host = getDevServerHost() || '127.0.0.1';
-    return `http://${host}:8003/api/v1`;
+    // Prefer Metro’s host from scriptURL (same machine as Metro + often the API).
+    // Android emulator: `localhost` points at the emulator, not your PC — Metro
+    // usually reports `10.0.2.2`, which maps to the host’s loopback from the AVD.
+    // Physical Android: scriptURL is often your LAN IP; optional `adb reverse tcp:8000`
+    // if Metro used localhost (then host is 127.0.0.1 on device → forwarded).
+    const metroHost = getDevServerHost();
+    const host =
+      metroHost ||
+      (Platform.OS === 'android' ? '10.0.2.2' : '127.0.0.1');
+    return `http://${host}:8000/api/v1`;
   }
   return 'https://your-api-domain.com/api/v1';
 }
 
-const API_BASE_URL = getBaseUrl();
+export const API_BASE_URL = getBaseUrl();
 
 const REQUEST_TIMEOUT = 30000;
 
@@ -68,22 +70,22 @@ class ApiClient {
     endpoint: string,
     options: RequestInit = {},
   ): Promise<ApiResponse<T>> {
+    const path = normalizeApiPath(endpoint);
     const token = await getSecureToken();
 
-    const headers: HeadersInit = {
-      'Content-Type': 'application/json',
-      ...options.headers,
-    };
-
+    const headers = new Headers(options.headers);
+    if (!headers.has('Content-Type')) {
+      headers.set('Content-Type', 'application/json');
+    }
     if (token) {
-      headers['Authorization'] = `Bearer ${token}`;
+      headers.set('Authorization', `Bearer ${token}`);
     }
 
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), this.timeout);
 
     try {
-      let response = await fetch(`${this.baseURL}${endpoint}`, {
+      let response = await fetch(`${this.baseURL}${path}`, {
         ...options,
         headers,
         signal: controller.signal,
@@ -110,14 +112,14 @@ class ApiClient {
               const newRefresh = data.refresh_token as string | undefined;
               if (newAccess) {
                 await setSecureToken(newAccess);
-                headers['Authorization'] = `Bearer ${newAccess}`;
+                headers.set('Authorization', `Bearer ${newAccess}`);
               }
               if (newRefresh) {
                 await setRefreshToken(newRefresh);
               }
               refreshed = Boolean(newAccess);
               if (refreshed) {
-                response = await fetch(`${this.baseURL}${endpoint}`, {
+                response = await fetch(`${this.baseURL}${path}`, {
                   ...options,
                   headers,
                   signal: controller.signal,
@@ -169,7 +171,7 @@ class ApiClient {
           return { error: 'Request timeout. Please try again.' };
         }
         if (__DEV__) {
-          return { error: `${error.message} (url: ${this.baseURL}${endpoint})` };
+          return { error: `${error.message} (url: ${this.baseURL}${path})` };
         }
         return { error: error.message };
       }

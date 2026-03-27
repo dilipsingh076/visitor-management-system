@@ -134,7 +134,7 @@ export default function CheckInScreen({navigation}: {navigation: any}) {
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: colors.background },
   container: { flex: 1 },
-  scrollContent: { padding: spacing.lg, paddingBottom: spacing.xxl },
+  scrollContent: { padding: spacing.lg, paddingBottom: spacing.lg },
   section: { marginBottom: spacing.xl },
   sectionTitle: {
     fontSize: fontSize.lg,

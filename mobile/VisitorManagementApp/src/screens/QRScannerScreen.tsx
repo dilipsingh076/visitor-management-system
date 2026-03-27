@@ -269,7 +269,7 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     padding: theme.spacing.lg,
-    paddingBottom: theme.spacing.xxl,
+    paddingBottom: theme.spacing.lg,
   },
   manualButton: {
     backgroundColor: 'rgba(255,255,255,0.2)',

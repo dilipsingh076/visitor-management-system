@@ -45,6 +45,6 @@ export default function MeetingDetailScreen({route}: {route: any}) {
 }
 
 const styles = StyleSheet.create({
-  wrap: {paddingHorizontal: theme.spacing.lg, paddingBottom: theme.spacing.xxl},
+  wrap: {paddingHorizontal: theme.spacing.lg, paddingBottom: theme.spacing.lg},
   card: {backgroundColor: colors.card, borderColor: colors.border, borderWidth: 1, borderRadius: 12, padding: 12, gap: 10},
 });

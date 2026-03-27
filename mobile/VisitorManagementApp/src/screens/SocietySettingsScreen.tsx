@@ -39,7 +39,7 @@ export default function SocietySettingsScreen() {
 }
 
 const styles = StyleSheet.create({
-  wrap: {paddingHorizontal: theme.spacing.lg, paddingBottom: theme.spacing.xxl},
+  wrap: {paddingHorizontal: theme.spacing.lg, paddingBottom: theme.spacing.lg},
   card: {backgroundColor: colors.card, borderWidth: 1, borderColor: colors.border, borderRadius: 12, padding: 12, gap: 10},
   row: {flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center'},
 });

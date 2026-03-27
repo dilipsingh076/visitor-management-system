@@ -204,7 +204,7 @@ export default function VisitorInviteScreen() {
 
 const styles = StyleSheet.create({
   container: {flex: 1, backgroundColor: 'transparent'},
-  scrollContent: {padding: spacing.lg, paddingBottom: spacing.xxl},
+  scrollContent: {padding: spacing.lg, paddingBottom: spacing.lg},
   header: { marginBottom: spacing.xl },
   title: {
     fontSize: fontSize.xl,

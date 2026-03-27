@@ -60,7 +60,7 @@ export default function StaffDirectoryScreen() {
 }
 
 const styles = StyleSheet.create({
-  wrap: {paddingHorizontal: theme.spacing.lg, paddingBottom: theme.spacing.xxl, gap: 10},
+  wrap: {paddingHorizontal: theme.spacing.lg, paddingBottom: theme.spacing.lg, gap: 10},
   row: {flexDirection: 'row', gap: 8},
   input: {flex: 1, height: 44, borderWidth: 1, borderColor: colors.border, borderRadius: 10, backgroundColor: colors.card, color: colors.foreground, paddingHorizontal: 10},
 });

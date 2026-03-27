@@ -63,7 +63,7 @@ export default function AmenitiesScreen() {
 }
 
 const styles = StyleSheet.create({
-  wrap: {paddingHorizontal: theme.spacing.lg, paddingBottom: theme.spacing.xxl, gap: 10},
+  wrap: {paddingHorizontal: theme.spacing.lg, paddingBottom: theme.spacing.lg, gap: 10},
   row: {flexDirection: 'row', gap: 8},
   input: {flex: 1, height: 44, borderColor: colors.border, borderWidth: 1, borderRadius: 10, backgroundColor: colors.card, color: colors.foreground, paddingHorizontal: 10},
 });

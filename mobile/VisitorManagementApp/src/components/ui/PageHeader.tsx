@@ -1,7 +1,6 @@
-import React from 'react';
+import React, {useMemo} from 'react';
 import {StyleSheet, View} from 'react-native';
-import {theme} from '../../theme';
-import {colors} from '../../theme/colors';
+import {theme, useTheme} from '../../theme';
 import {Text} from './Text';
 
 interface PageHeaderProps {
@@ -10,6 +9,23 @@ interface PageHeaderProps {
 }
 
 export function PageHeader({title, subtitle}: PageHeaderProps) {
+  const {colors} = useTheme();
+  const styles = useMemo(
+    () =>
+      StyleSheet.create({
+        wrap: {
+          marginBottom: theme.spacing.xs,
+        },
+        title: {
+          color: colors.foreground,
+        },
+        subtitle: {
+          marginTop: 2,
+        },
+      }),
+    [colors],
+  );
+
   return (
     <View style={styles.wrap}>
       <Text variant="title" style={styles.title}>
@@ -23,15 +39,3 @@ export function PageHeader({title, subtitle}: PageHeaderProps) {
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  wrap: {
-    marginBottom: theme.spacing.sm,
-  },
-  title: {
-    color: colors.foreground,
-  },
-  subtitle: {
-    marginTop: 4,
-  },
-});

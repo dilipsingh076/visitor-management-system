@@ -7,12 +7,15 @@ import {theme} from '../theme';
 import {colors} from '../theme/colors';
 import type {Notification} from '../types';
 import {asArray} from '../lib/api/response';
+import {canAccessCommitteeFeatures, getCachedUser, User} from '../config/auth';
+import {useNotificationRealtimeRefresh} from '../hooks/useNotificationRealtimeRefresh';
 
 export default function NotificationsScreen({navigation}: {navigation: any}) {
   const [items, setItems] = useState<Notification[]>([]);
   const [tab, setTab] = useState<'all' | 'unread'>('unread');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [canCreateNotice, setCanCreateNotice] = useState(false);
 
   const load = useCallback(() => {
     const q = tab === 'unread' ? '?unread_only=true' : '';
@@ -26,6 +29,17 @@ export default function NotificationsScreen({navigation}: {navigation: any}) {
   }, [tab]);
   useEffect(() => { load(); }, [load]);
 
+  useNotificationRealtimeRefresh(load);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const u: User | null = await getCachedUser();
+      if (!cancelled) setCanCreateNotice(canAccessCommitteeFeatures(u));
+    })();
+    return () => { cancelled = true; };
+  }, []);
+
   const unread = useMemo(() => items.filter((n) => !n.read).length, [items]);
 
   return (
@@ -35,7 +49,9 @@ export default function NotificationsScreen({navigation}: {navigation: any}) {
         <View style={styles.row}>
           <Button title="Unread" onPress={() => setTab('unread')} variant={tab === 'unread' ? 'primary' : 'secondary'} />
           <Button title="All" onPress={() => setTab('all')} variant={tab === 'all' ? 'primary' : 'secondary'} />
-          <Button title="Create Notice" onPress={() => navigation.navigate('NoticeCreation')} variant="secondary" />
+          {canCreateNotice ? (
+            <Button title="Create Notice" onPress={() => navigation.navigate('NoticeCreation')} variant="secondary" />
+          ) : null}
         </View>
         {loading ? <StateMessage text="Loading notifications..." /> : null}
         {error ? <StateMessage kind="error" text={error} /> : null}
@@ -44,7 +60,7 @@ export default function NotificationsScreen({navigation}: {navigation: any}) {
             <Text style={styles.title}>{n.title}</Text>
             <Text muted>{n.body}</Text>
             <View style={styles.actions}>
-              {!n.read ? <TouchableOpacity onPress={async () => { await apiClient.post(API.notifications.markRead(n.id)); load(); }}><Text style={styles.link}>Mark Read</Text></TouchableOpacity> : null}
+              {!n.read ? <TouchableOpacity onPress={async () => { await apiClient.patch(API.notifications.markRead(n.id)); load(); }}><Text style={styles.link}>Mark Read</Text></TouchableOpacity> : null}
               {(n.type === 'walkin_pending' || n.type === 'visitor_arrived') ? (
                 <TouchableOpacity onPress={() => navigation.navigate('VisitorsList')}><Text style={styles.link}>Open Visitor</Text></TouchableOpacity>
               ) : null}
@@ -57,7 +73,7 @@ export default function NotificationsScreen({navigation}: {navigation: any}) {
 }
 
 const styles = StyleSheet.create({
-  wrap: {paddingHorizontal: theme.spacing.lg, paddingBottom: theme.spacing.xxl, gap: 10},
+  wrap: {paddingHorizontal: theme.spacing.lg, paddingBottom: theme.spacing.lg, gap: 10},
   row: {flexDirection: 'row', gap: 8, flexWrap: 'wrap'},
   card: {backgroundColor: colors.card, borderColor: colors.border, borderWidth: 1, borderRadius: 12, padding: 12, gap: 6},
   title: {fontWeight: '700', color: colors.foreground},

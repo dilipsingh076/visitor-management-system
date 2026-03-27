@@ -15,7 +15,7 @@ export function Card({children, style, ...props}: CardProps) {
         card: {
           backgroundColor: colors.card,
           borderRadius: theme.borderRadius.lg,
-          padding: theme.spacing.lg,
+          padding: theme.spacing.md,
           borderWidth: 1,
           borderColor: colors.border,
           ...theme.shadow.sm,

@@ -13,12 +13,12 @@ export function Input({label, error, style, ...props}: InputProps) {
   const styles = useMemo(
     () =>
       StyleSheet.create({
-        wrapper: {marginBottom: 16},
+        wrapper: {marginBottom: theme.spacing.md},
         label: {
           fontSize: 14,
           fontWeight: '600',
           color: colors.foreground,
-          marginBottom: 8,
+          marginBottom: theme.spacing.xs,
         },
         input: {
           backgroundColor: colors.card,

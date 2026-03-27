@@ -9,11 +9,11 @@ export const theme = {
   colors,
   spacing: {
     xs: 4,
-    sm: 8,
-    md: 16,
-    lg: 24,
-    xl: 32,
-    xxl: 40,
+    sm: 6,
+    md: 12,
+    lg: 16,
+    xl: 20,
+    xxl: 24,
   },
   // Match web: --radius-sm 0.5rem, md 0.75rem, lg 1rem, xl 1.5rem
   borderRadius: {
@@ -30,6 +30,12 @@ export const theme = {
     lg: 18,
     xl: 22,
     xxl: 28,
+  },
+  /** Hood-style hub layouts */
+  hub: {
+    sectionGap: 10,
+    tileGap: 8,
+    tileMinHeight: 72,
   },
   shadow: {
     sm: {

@@ -30,8 +30,8 @@ export function Button({
     () =>
       StyleSheet.create({
         base: {
-          paddingVertical: 14,
-          paddingHorizontal: 20,
+          paddingVertical: 11,
+          paddingHorizontal: 18,
           borderRadius: theme.borderRadius.xl,
           alignItems: 'center',
           justifyContent: 'center',

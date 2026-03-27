@@ -51,7 +51,7 @@ export default function VisitPassScreen({route}: {route: any}) {
 }
 
 const styles = StyleSheet.create({
-  wrap: {paddingHorizontal: theme.spacing.lg, paddingBottom: theme.spacing.xxl},
+  wrap: {paddingHorizontal: theme.spacing.lg, paddingBottom: theme.spacing.lg},
   card: {backgroundColor: colors.card, borderWidth: 1, borderColor: colors.border, borderRadius: 12, padding: 16, gap: 8},
   name: {fontSize: theme.fontSize.lg, color: colors.foreground, fontWeight: '800'},
   otp: {fontSize: theme.fontSize.xl, color: colors.primary, fontWeight: '800'},

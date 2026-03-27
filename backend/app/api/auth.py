@@ -3,6 +3,7 @@ Authentication endpoints: login, signup, register-society, me, logout.
 """
 import hashlib
 import structlog
+from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, status, Request
 from fastapi.responses import JSONResponse
 from sqlalchemy import select
@@ -10,7 +11,14 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.dependencies import get_current_user, get_db
 from app.models.society import Society
-from app.schemas.auth import LoginRequest, SignupRequest, RegisterSocietyRequest, RefreshTokenRequest
+from app.models.user import User
+from app.schemas.auth import (
+    LoginRequest,
+    SignupRequest,
+    RegisterSocietyRequest,
+    RefreshTokenRequest,
+    UpdateProfileRequest,
+)
 from app.services.auth_service import (
     login as auth_login,
     signup as auth_signup,
@@ -33,6 +41,48 @@ def _primary_role(roles: list) -> str:
     if "admin" in roles:
         return "chairman"  # backward compat: old admin → chairman for display
     return roles[0] if roles else "resident"
+
+
+async def _me_payload(db: AsyncSession, current_user: dict) -> dict:
+    """Build JSON body for GET/PATCH /me (DB user row wins for email/name when present)."""
+    roles = current_user.get("realm_access", {}).get("roles", [])
+    user_id = current_user.get("sub") or current_user.get("user_id")
+    society_id = current_user.get("society_id")
+    payload = {
+        "user_id": user_id,
+        "id": user_id,
+        "email": current_user.get("email"),
+        "roles": roles,
+        "role": _primary_role(roles),
+        "username": current_user.get("preferred_username"),
+        "society_id": society_id,
+        "building_id": current_user.get("building_id"),
+    }
+    if user_id:
+        try:
+            result = await db.execute(select(User).where(User.id == UUID(user_id)))
+            user = result.scalar_one_or_none()
+            if user:
+                from app.api.users import _user_roles
+
+                roles = _user_roles(user)
+                payload["roles"] = roles
+                payload["role"] = "chairman" if user.role == "admin" else (roles[0] if roles else user.role)
+                payload["username"] = user.full_name
+                payload["email"] = user.email
+                payload["society_id"] = str(user.society_id) if user.society_id else None
+                payload["building_id"] = str(user.building_id) if user.building_id else None
+                payload["flat_id"] = str(user.flat_id) if user.flat_id else None
+                payload["flat_number"] = user.flat_number
+                payload["phone"] = user.phone
+                if user.society_id:
+                    result = await db.execute(select(Society).where(Society.id == user.society_id))
+                    society = result.scalar_one_or_none()
+                    if society:
+                        payload["society"] = {"id": str(society.id), "slug": society.slug, "name": society.name}
+        except (ValueError, TypeError):
+            pass
+    return payload
 
 
 @router.post("/login")
@@ -182,43 +232,63 @@ async def get_current_user_info(current_user: dict = Depends(get_current_user), 
     Loads user from DB when user_id is present so roles (including platform_admin) are correct
     even when society_id is null. Includes society when user belongs to a society.
     """
-    roles = current_user.get("realm_access", {}).get("roles", [])
+    payload = await _me_payload(db, current_user)
+    return JSONResponse(content=payload)
+
+
+@router.patch("/me")
+async def update_current_user_profile(
+    body: UpdateProfileRequest,
+    current_user: dict = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Update display name and/or email for the authenticated user."""
+    if body.full_name is None and body.email is None:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Provide at least one of: full_name, email",
+        )
+
     user_id = current_user.get("sub") or current_user.get("user_id")
-    society_id = current_user.get("society_id")
-    payload = {
-        "user_id": user_id,
-        "id": user_id,
-        "email": current_user.get("email"),
-        "roles": roles,
-        "role": _primary_role(roles),
-        "username": current_user.get("preferred_username"),
-        "society_id": society_id,
-        "building_id": current_user.get("building_id"),
-    }
-    # Load user from DB whenever we have user_id (so platform_admin and others get correct roles)
-    if user_id:
-        from uuid import UUID
-        try:
-            result = await db.execute(select(User).where(User.id == UUID(user_id)))
-            user = result.scalar_one_or_none()
-            if user:
-                from app.api.users import _user_roles
-                roles = _user_roles(user)
-                payload["roles"] = roles
-                payload["role"] = "chairman" if user.role == "admin" else (roles[0] if roles else user.role)
-                payload["username"] = user.full_name
-                payload["society_id"] = str(user.society_id) if user.society_id else None
-                payload["building_id"] = str(user.building_id) if user.building_id else None
-                payload["flat_id"] = str(user.flat_id) if user.flat_id else None
-                payload["flat_number"] = user.flat_number
-                payload["phone"] = user.phone
-                if user.society_id:
-                    result = await db.execute(select(Society).where(Society.id == user.society_id))
-                    society = result.scalar_one_or_none()
-                    if society:
-                        payload["society"] = {"id": str(society.id), "slug": society.slug, "name": society.name}
-        except (ValueError, TypeError):
-            pass
+    if not user_id:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Not authenticated")
+
+    try:
+        uid = UUID(user_id)
+    except (ValueError, TypeError):
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid user id")
+
+    result = await db.execute(select(User).where(User.id == uid))
+    user = result.scalar_one_or_none()
+    if not user:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+
+    if body.full_name is not None:
+        user.full_name = body.full_name
+
+    if body.email is not None:
+        new_email = body.email
+        if new_email != user.email:
+            dup = await db.execute(select(User).where(User.email == new_email, User.id != uid))
+            if dup.scalar_one_or_none():
+                raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Email already in use")
+            user.email = new_email
+
+    await db.commit()
+    await db.refresh(user)
+
+    access = create_access_token(
+        user_id=str(user.id),
+        email=user.email,
+        roles=_user_to_response(user).get("roles", []),
+        society_id=str(user.society_id) if user.society_id else None,
+        building_id=str(user.building_id) if user.building_id else None,
+        full_name=user.full_name,
+    )
+
+    payload = await _me_payload(db, current_user)
+    payload["access_token"] = access
+    payload["token_type"] = "bearer"
     return JSONResponse(content=payload)
 
 
@@ -230,7 +300,6 @@ async def logout(current_user: dict = Depends(get_current_user), db: AsyncSessio
     # Revoke all refresh tokens for this user (local-auth only).
     user_id = current_user.get("sub") or current_user.get("user_id")
     if user_id:
-        from uuid import UUID
         try:
             result = await db.execute(select(User).where(User.id == UUID(user_id)))
             user = result.scalar_one_or_none()

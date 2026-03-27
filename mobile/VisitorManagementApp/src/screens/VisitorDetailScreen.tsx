@@ -65,7 +65,7 @@ export default function VisitorDetailScreen({route, navigation}: {route: any; na
 }
 
 const styles = StyleSheet.create({
-  wrap: {paddingHorizontal: theme.spacing.lg, paddingBottom: theme.spacing.xxl},
+  wrap: {paddingHorizontal: theme.spacing.lg, paddingBottom: theme.spacing.lg},
   card: {backgroundColor: colors.card, borderColor: colors.border, borderWidth: 1, borderRadius: 12, padding: 16, gap: 8},
   btnRow: {flexDirection: 'row', gap: 10, marginTop: 10},
   link: {color: colors.primary, marginTop: 10, fontWeight: '700'},

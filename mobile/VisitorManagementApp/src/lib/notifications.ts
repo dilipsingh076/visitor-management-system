@@ -52,8 +52,8 @@ export async function registerForPushNotifications(): Promise<string | null> {
       await AsyncStorage.setItem(FCM_TOKEN_KEY, token);
       console.log('FCM Token:', token);
       
-      // TODO: Send token to backend
-      // await apiClient.post('/notifications/register-device', { token, platform: Platform.OS });
+      // Backend has no device-token endpoint yet; register when API exists, e.g.
+      // await apiClient.post('/notifications/device', { token, platform: Platform.OS });
     }
 
     return token;
@@ -130,7 +130,7 @@ export function setupNotificationListeners() {
   messaging().onTokenRefresh(async (token: string) => {
     console.log('FCM Token refreshed:', token);
     await AsyncStorage.setItem(FCM_TOKEN_KEY, token);
-    // TODO: Update token on backend
+    // Re-register with backend when a device-token API is added.
   });
 }
 

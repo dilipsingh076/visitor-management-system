@@ -154,9 +154,23 @@ export default function GuardDashboard({navigation}: GuardDashboardProps) {
               Security Desk
             </Text>
           </View>
-          <TouchableOpacity style={styles.profileButton} onPress={handleLogout}>
-            <Text style={styles.profileInitials}>{getInitials(user?.username)}</Text>
-          </TouchableOpacity>
+          <View style={styles.headerActions}>
+            <TouchableOpacity
+              onPress={() => navigation.navigate('Settings')}
+              style={styles.headerLink}
+              activeOpacity={0.8}>
+              <Text style={styles.headerLinkText}>Settings</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={() => navigation.getParent()?.navigate('GateTab' as never)}
+              style={styles.headerLink}
+              activeOpacity={0.8}>
+              <Text style={styles.headerLinkText}>Gate tools</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.profileButton} onPress={handleLogout}>
+              <Text style={styles.profileInitials}>{getInitials(user?.username)}</Text>
+            </TouchableOpacity>
+          </View>
         </View>
 
         {/* Search Bar */}
@@ -326,8 +340,8 @@ export default function GuardDashboard({navigation}: GuardDashboardProps) {
 const styles = StyleSheet.create({
   contentContainer: {
     paddingHorizontal: theme.spacing.lg,
-    paddingTop: theme.spacing.lg,
-    paddingBottom: theme.spacing.xxl,
+    paddingTop: theme.spacing.md,
+    paddingBottom: theme.spacing.lg,
   },
   loadingContainer: {
     flex: 1,
@@ -343,7 +357,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: theme.spacing.lg,
+    marginBottom: theme.spacing.md,
   },
   headerLeft: {
     flexDirection: 'row',
@@ -375,6 +389,21 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: colors.text,
   },
+  headerActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: theme.spacing.sm,
+    flexShrink: 0,
+  },
+  headerLink: {
+    paddingVertical: 8,
+    paddingHorizontal: 8,
+  },
+  headerLinkText: {
+    fontSize: theme.fontSize.sm,
+    fontWeight: '600',
+    color: colors.primary,
+  },
   profileButton: {
     width: 48,
     height: 48,
@@ -394,7 +423,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.card,
     borderRadius: theme.borderRadius.md,
     paddingHorizontal: theme.spacing.md,
-    marginBottom: theme.spacing.lg,
+    marginBottom: theme.spacing.md,
     borderWidth: 1,
     borderColor: colors.border,
   },
@@ -411,7 +440,7 @@ const styles = StyleSheet.create({
   quickActions: {
     flexDirection: 'row',
     gap: theme.spacing.md,
-    marginBottom: theme.spacing.lg,
+    marginBottom: theme.spacing.md,
   },
   actionCard: {
     flex: 1,
@@ -443,7 +472,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.card,
     borderRadius: theme.borderRadius.md,
     padding: theme.spacing.md,
-    marginBottom: theme.spacing.lg,
+    marginBottom: theme.spacing.md,
     borderWidth: 1,
     borderColor: colors.border,
   },
@@ -467,10 +496,10 @@ const styles = StyleSheet.create({
     marginVertical: theme.spacing.xs,
   },
   section: {
-    marginBottom: theme.spacing.lg,
+    marginBottom: theme.spacing.md,
   },
   sectionHeader: {
-    marginBottom: theme.spacing.md,
+    marginBottom: theme.spacing.sm,
   },
   sectionTitleRow: {
     flexDirection: 'row',
@@ -547,7 +576,7 @@ const styles = StyleSheet.create({
   },
   emptyState: {
     alignItems: 'center',
-    paddingVertical: theme.spacing.xl,
+    paddingVertical: theme.spacing.lg,
   },
   emptyIcon: {
     fontSize: 32,

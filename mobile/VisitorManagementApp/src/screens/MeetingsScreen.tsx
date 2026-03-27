@@ -67,7 +67,7 @@ export default function MeetingsScreen({navigation}: {navigation: any}) {
 }
 
 const styles = StyleSheet.create({
-  wrap: {paddingHorizontal: theme.spacing.lg, paddingBottom: theme.spacing.xxl, gap: 10},
+  wrap: {paddingHorizontal: theme.spacing.lg, paddingBottom: theme.spacing.lg, gap: 10},
   card: {backgroundColor: colors.card, borderColor: colors.border, borderWidth: 1, borderRadius: 12, padding: 12, gap: 8},
   input: {height: 44, borderWidth: 1, borderColor: colors.border, borderRadius: 10, backgroundColor: colors.background, color: colors.foreground, paddingHorizontal: 10},
   area: {height: 90, textAlignVertical: 'top', paddingTop: 10},

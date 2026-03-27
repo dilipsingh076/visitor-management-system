@@ -4,6 +4,7 @@
  */
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api/v1";
 import { refreshAccessToken, ensureValidAccessToken } from "@/lib/auth";
+import { normalizeApiPath } from "@/lib/normalizeApiPath";
 
 export interface ApiResponse<T> {
   data?: T;
@@ -36,6 +37,8 @@ class ApiClient {
         : this.defaultTimeout;
     const { timeout: _timeoutIgnored, retries: _retriesIgnored, ...fetchInit } = opts;
 
+    const path = normalizeApiPath(endpoint);
+
     const headers: Record<string, string> = {
       "Content-Type": "application/json",
       ...(typeof fetchInit.headers === "object" && !(fetchInit.headers instanceof Headers)
@@ -61,7 +64,7 @@ class ApiClient {
     const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
 
     try {
-      let response = await fetch(`${this.baseURL}${endpoint}`, {
+      let response = await fetch(`${this.baseURL}${path}`, {
         ...fetchInit,
         headers,
         credentials: "include",
@@ -85,7 +88,7 @@ class ApiClient {
           const retryController = new AbortController();
           const retryTimeoutId = setTimeout(() => retryController.abort(), timeoutMs);
           try {
-            response = await fetch(`${this.baseURL}${endpoint}`, {
+            response = await fetch(`${this.baseURL}${path}`, {
               ...fetchInit,
               headers,
               credentials: "include",
@@ -190,7 +193,7 @@ export async function downloadBlob(
   try {
     const token =
       typeof window !== "undefined" ? localStorage.getItem("access_token") : null;
-    const res = await fetch(`${API_BASE_URL}${path}`, {
+    const res = await fetch(`${API_BASE_URL}${normalizeApiPath(path)}`, {
       credentials: "include",
       headers: token ? { Authorization: `Bearer ${token}` } : {},
     });

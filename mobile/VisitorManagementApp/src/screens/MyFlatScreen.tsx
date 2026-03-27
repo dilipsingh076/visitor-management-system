@@ -56,7 +56,7 @@ export default function MyFlatScreen() {
 }
 
 const styles = StyleSheet.create({
-  wrap: {paddingHorizontal: theme.spacing.lg, paddingBottom: theme.spacing.xxl, gap: 10},
+  wrap: {paddingHorizontal: theme.spacing.lg, paddingBottom: theme.spacing.lg, gap: 10},
   tabs: {flexDirection: 'row', gap: 8, flexWrap: 'wrap'},
   section: {gap: 8},
   input: {height: 46, borderColor: colors.border, borderWidth: 1, borderRadius: 10, backgroundColor: colors.card, color: colors.foreground, paddingHorizontal: 12},

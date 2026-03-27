@@ -1,14 +1,20 @@
 /**
  * Navigation setup with authentication flow.
  */
-import { NavigationContainer } from '@react-navigation/native';
+import {
+  NavigationContainer,
+  useFocusEffect,
+} from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
 import {
   User,
+  canAccessCheckin,
   canAccessCommitteeFeatures,
+  canAccessGuardPage,
+  canAccessPlatform,
   getCachedUser,
   getPrimaryRole,
   isAuthenticated,
@@ -24,29 +30,44 @@ import DashboardScreen from '../screens/DashboardScreen';
 import ForgotPasswordScreen from '../screens/ForgotPasswordScreen';
 import FrequentVisitorsScreen from '../screens/FrequentVisitorsScreen';
 import GuardBlacklistScreen from '../screens/GuardBlacklistScreen';
-import GuardDashboard from '../screens/GuardDashboard';
+import GuardOperationsScreen from '../screens/GuardOperationsScreen';
 import LoginScreen from '../screens/LoginScreen';
 import MeetingDetailScreen from '../screens/MeetingDetailScreen';
 import MeetingsScreen from '../screens/MeetingsScreen';
 import MoreScreen from '../screens/MoreScreen';
 import MyFlatScreen from '../screens/MyFlatScreen';
 import NearbyPlacesScreen from '../screens/NearbyPlacesScreen';
+import MaintenanceBillsScreen from '../screens/MaintenanceBillsScreen';
 import NoticeCreationScreen from '../screens/NoticeCreationScreen';
 import NotificationsScreen from '../screens/NotificationsScreen';
+import PlatformAuditLogsScreen from '../screens/PlatformAuditLogsScreen';
+import PlatformHomeScreen from '../screens/PlatformHomeScreen';
+import PlatformSocietiesScreen from '../screens/PlatformSocietiesScreen';
+import PlatformSocietyDetailScreen from '../screens/PlatformSocietyDetailScreen';
 import ProfileScreen from '../screens/ProfileScreen';
 import QRScannerScreen from '../screens/QRScannerScreen';
-import ResidentDashboard from '../screens/ResidentDashboard';
+import ResidentComplaintsScreen from '../screens/ResidentComplaintsScreen';
 import ScanDetailsScreen from '../screens/ScanDetailsScreen';
 import ScanHistoryScreen from '../screens/ScanHistoryScreen';
+import SosAlertScreen from '../screens/SosAlertScreen';
 import SettingsScreen from '../screens/SettingsScreen';
 import SocietySettingsScreen from '../screens/SocietySettingsScreen';
+import SocietyUsersScreen from '../screens/SocietyUsersScreen';
 import StaffDirectoryScreen from '../screens/StaffDirectoryScreen';
 import VisitPassScreen from '../screens/VisitPassScreen';
 import VisitorDetailScreen from '../screens/VisitorDetailScreen';
 import VisitorInviteScreen from '../screens/VisitorInviteScreen';
 import VisitorsListScreen from '../screens/VisitorsListScreen';
 import WalkInScreen from '../screens/WalkInScreen';
+import { useNotificationsStream } from '../hooks/useNotificationsStream';
+import GuardTabNavigator from './GuardTabNavigator';
+import ResidentTabNavigator from './ResidentTabNavigator';
+import { stackScreenOptions } from './stackScreenOptions';
 
+/**
+ * Main stack wraps bottom tabs (`MainTabs`); detail routes are siblings so
+ * `navigation.navigate('VisitorInvite')` bubbles from tab stacks to this parent.
+ */
 const Stack = createNativeStackNavigator();
 
 function LoadingScreen() {
@@ -78,26 +99,30 @@ function MainNavigator() {
   const { colors } = useTheme();
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const firstFocusRef = useRef(true);
 
-  const screenOptions = useMemo(
-    () => ({
-      headerStyle: { backgroundColor: colors.primary },
-      headerTintColor: '#ffffff',
-      headerTitleStyle: { fontWeight: '700' as const, fontSize: 18 },
-      headerShadowVisible: false,
-      contentStyle: { backgroundColor: colors.background },
-    }),
-    [colors],
+  const screenOptions = useMemo(() => stackScreenOptions(colors), [colors]);
+
+  useFocusEffect(
+    useCallback(() => {
+      let cancelled = false;
+      const refresh = async () => {
+        const cachedUser = await getCachedUser();
+        if (cancelled) return;
+        setUser(cachedUser);
+        if (firstFocusRef.current) {
+          firstFocusRef.current = false;
+          setLoading(false);
+        }
+      };
+      refresh();
+      return () => {
+        cancelled = true;
+      };
+    }, []),
   );
 
-  useEffect(() => {
-    const loadUser = async () => {
-      const cachedUser = await getCachedUser();
-      setUser(cachedUser);
-      setLoading(false);
-    };
-    loadUser();
-  }, []);
+  useNotificationsStream(!loading && Boolean(user));
 
   if (loading) {
     return <LoadingScreen />;
@@ -105,24 +130,35 @@ function MainNavigator() {
 
   const role = getPrimaryRole(user);
   const isGuard = role === 'guard';
+  const isPlatformAdmin = canAccessPlatform(user);
   // If role is missing/unknown, default to resident flow (matches home screen).
-  const isResident = role === 'resident' || (!role && !isGuard);
-  const isResident = role === 'resident';
+  const isResident =
+    role === 'resident' || (!role && !isGuard && !isPlatformAdmin);
+  const isCommittee = canAccessCommitteeFeatures(user);
+  const showSocietyCommitteeScreens = isCommittee && !isPlatformAdmin;
+  const canUseGateVisitorTools = user ? canAccessCheckin(user) : false;
+  const showGuardOperations =
+    Boolean(user && canAccessGuardPage(user) && !isGuard);
 
   return (
     <Stack.Navigator screenOptions={screenOptions}>
-      {/* Role-based home screen */}
-      {isGuard ? (
+      {isPlatformAdmin ? (
         <Stack.Screen
-          name="GuardDashboard"
-          component={GuardDashboard}
-          options={{ title: 'Security Desk', headerShown: false }}
+          name="PlatformHome"
+          component={PlatformHomeScreen}
+          options={{ title: 'Platform', headerShown: false }}
+        />
+      ) : isGuard ? (
+        <Stack.Screen
+          name="MainTabs"
+          component={GuardTabNavigator}
+          options={{ headerShown: false, title: 'Home' }}
         />
       ) : (
         <Stack.Screen
-          name="ResidentDashboard"
-          component={ResidentDashboard}
-          options={{ title: 'Dashboard', headerShown: false }}
+          name="MainTabs"
+          component={ResidentTabNavigator}
+          options={{ headerShown: false, title: 'Home' }}
         />
       )}
 
@@ -139,6 +175,22 @@ function MainNavigator() {
             }}
           />
           <Stack.Screen
+            name="ScanHistory"
+            component={ScanHistoryScreen}
+            options={{ title: 'Scan history' }}
+          />
+          <Stack.Screen
+            name="ScanDetails"
+            component={ScanDetailsScreen}
+            options={{ title: 'Scan details' }}
+          />
+        </>
+      )}
+
+      {/* Walk-in + blacklist: web allows society committee, not only guards. */}
+      {canUseGateVisitorTools && (
+        <>
+          <Stack.Screen
             name="WalkIn"
             component={WalkInScreen}
             options={{ title: 'Walk-in Registration' }}
@@ -148,15 +200,35 @@ function MainNavigator() {
             component={GuardBlacklistScreen}
             options={{ title: 'Blacklist' }}
           />
+        </>
+      )}
+
+      {showGuardOperations && (
+        <Stack.Screen
+          name="GuardOperations"
+          component={GuardOperationsScreen}
+          options={{ title: 'Guard dashboard' }}
+        />
+      )}
+
+      {isPlatformAdmin && (
+        <>
           <Stack.Screen
-            name="ScanHistory"
-            component={ScanHistoryScreen}
-            options={{ title: 'Scan history' }}
+            name="PlatformSocieties"
+            component={PlatformSocietiesScreen}
+            options={{ title: 'Societies' }}
           />
           <Stack.Screen
-            name="ScanDetails"
-            component={ScanDetailsScreen}
-            options={{ title: 'Scan details' }}
+            name="PlatformSocietyDetail"
+            component={
+              PlatformSocietyDetailScreen as React.ComponentType<Record<string, unknown>>
+            }
+            options={{ title: 'Society' }}
+          />
+          <Stack.Screen
+            name="PlatformAuditLogs"
+            component={PlatformAuditLogsScreen}
+            options={{ title: 'Audit log' }}
           />
         </>
       )}
@@ -174,7 +246,31 @@ function MainNavigator() {
             component={DashboardScreen}
             options={{ title: 'My Visitors' }}
           />
+          <Stack.Screen
+            name="ResidentComplaints"
+            component={ResidentComplaintsScreen}
+            options={{ title: 'My Complaints' }}
+          />
+          <Stack.Screen
+            name="MaintenanceBills"
+            component={MaintenanceBillsScreen}
+            options={{ title: 'Maintenance' }}
+          />
+          <Stack.Screen
+            name="SosAlert"
+            component={SosAlertScreen}
+            options={{ title: 'Emergency SOS' }}
+          />
         </>
+      )}
+
+      {/* Nearby — residents & committee (not guard / platform operator). */}
+      {!isGuard && !isPlatformAdmin && (
+        <Stack.Screen
+          name="NearbyPlaces"
+          component={NearbyPlacesScreen}
+          options={{ title: 'Nearby Places' }}
+        />
       )}
 
       {/* Common screens */}
@@ -228,8 +324,13 @@ function MainNavigator() {
         component={ProfileScreen}
         options={{ title: 'Profile' }}
       />
-      {isCommittee && (
+      {showSocietyCommitteeScreens && (
         <>
+          <Stack.Screen
+            name="SocietyUsers"
+            component={SocietyUsersScreen}
+            options={{ title: 'Users' }}
+          />
           <Stack.Screen
             name="Amenities"
             component={AmenitiesScreen}
@@ -249,11 +350,6 @@ function MainNavigator() {
             name="Buildings"
             component={BuildingsScreen}
             options={{ title: 'Buildings' }}
-          />
-          <Stack.Screen
-            name="NearbyPlaces"
-            component={NearbyPlacesScreen}
-            options={{ title: 'Nearby Places' }}
           />
           <Stack.Screen
             name="Meetings"

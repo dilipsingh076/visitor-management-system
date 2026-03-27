@@ -1,7 +1,7 @@
 /**
  * Dashboard - activity overview with stat cards
  */
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -12,6 +12,7 @@ import {
 } from 'react-native';
 import { apiClient } from '../config/api';
 import { API } from '../lib/api/endpoints';
+import { useNotificationRealtimeRefresh } from '../hooks/useNotificationRealtimeRefresh';
 import type { DashboardStats } from '../types';
 import { theme } from '../theme';
 
@@ -45,7 +46,7 @@ export default function DashboardScreen() {
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
+  const fetchStats = useCallback(() => {
     apiClient
       .get<DashboardStats>(API.dashboard.stats)
       .then((res) => {
@@ -54,6 +55,12 @@ export default function DashboardScreen() {
       .catch(() => {})
       .finally(() => setLoading(false));
   }, []);
+
+  useEffect(() => {
+    fetchStats();
+  }, [fetchStats]);
+
+  useNotificationRealtimeRefresh(fetchStats);
 
   if (loading) {
     return (
@@ -104,7 +111,7 @@ export default function DashboardScreen() {
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: colors.background },
   scroll: { flex: 1 },
-  content: { padding: spacing.lg, paddingBottom: spacing.xxl },
+  content: { padding: spacing.lg, paddingBottom: spacing.lg },
   loadingWrap: {
     flex: 1,
     alignItems: 'center',

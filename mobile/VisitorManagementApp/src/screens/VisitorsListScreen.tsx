@@ -1,5 +1,6 @@
 import React, {useCallback, useEffect, useMemo, useState} from 'react';
 import {RefreshControl, ScrollView, StyleSheet, TouchableOpacity, View} from 'react-native';
+import {useNotificationRealtimeRefresh} from '../hooks/useNotificationRealtimeRefresh';
 import {PageHeader, Screen, StateMessage, Text} from '../components/ui';
 import {theme} from '../theme';
 import {colors} from '../theme/colors';
@@ -31,6 +32,10 @@ export default function VisitorsListScreen({navigation}: {navigation: any}) {
     setLoading(true);
     fetchItems();
   }, [fetchItems]);
+
+  useNotificationRealtimeRefresh(() => {
+    void fetchItems();
+  });
 
   const title = useMemo(() => `Visitors (${items.length})`, [items.length]);
 
@@ -68,7 +73,7 @@ export default function VisitorsListScreen({navigation}: {navigation: any}) {
 }
 
 const styles = StyleSheet.create({
-  wrap: {paddingHorizontal: theme.spacing.lg, paddingBottom: theme.spacing.xxl, gap: theme.spacing.md},
+  wrap: {paddingHorizontal: theme.spacing.lg, paddingBottom: theme.spacing.lg, gap: theme.spacing.md},
   filterRow: {flexDirection: 'row', flexWrap: 'wrap', gap: 8},
   pill: {paddingVertical: 8, paddingHorizontal: 12, borderRadius: 20, backgroundColor: colors.card, borderWidth: 1, borderColor: colors.border},
   pillActive: {backgroundColor: colors.primary, borderColor: colors.primary},

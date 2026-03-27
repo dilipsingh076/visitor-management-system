@@ -97,3 +97,25 @@ class RegisterSocietyRequest(BaseModel):
 
 class RefreshTokenRequest(BaseModel):
     refresh_token: str
+
+
+class UpdateProfileRequest(BaseModel):
+    """Self-service profile update (authenticated user only)."""
+
+    full_name: str | None = None
+    email: str | None = None
+
+    @field_validator("full_name", mode="before")
+    @classmethod
+    def full_name_optional(cls, v):
+        if v is None:
+            return None
+        s = str(v).strip()
+        return s if s else None
+
+    @field_validator("email", mode="before")
+    @classmethod
+    def email_optional(cls, v):
+        if v is None:
+            return None
+        return _validate_email_relaxed(v)
