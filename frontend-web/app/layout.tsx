@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
+import { getFlashPreventionScript } from "@/lib/themes";
 
 const plusJakarta = Plus_Jakarta_Sans({
   subsets: ["latin"],
@@ -46,6 +47,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning className={plusJakarta.variable}>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: getFlashPreventionScript() }} />
+      </head>
       <body
         suppressHydrationWarning
         className="font-sans antialiased min-h-screen bg-background overflow-x-hidden"

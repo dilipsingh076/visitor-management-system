@@ -2,7 +2,9 @@
 
 import type { ReactNode } from "react";
 import type { Visit } from "@/types";
-import { Button } from "@/components/ui";
+import { Button, EmptyState } from "@/components/ui";
+import { ClipboardList } from "lucide-react";
+import { theme } from "@/lib/theme";
 
 interface Column {
   key: keyof Visit | "actions";
@@ -38,9 +40,11 @@ export function GuardVisitsTable({
 }: GuardVisitsTableProps) {
   if (visits.length === 0) {
     return (
-      <p className="px-3 py-4 text-center text-muted-foreground text-xs">
-        {emptyMessage}
-      </p>
+      <EmptyState
+        icon={<ClipboardList className="w-6 h-6" />}
+        title={emptyMessage}
+        className="py-8"
+      />
     );
   }
 
@@ -79,23 +83,20 @@ export function GuardVisitsTable({
 
   return (
     <table className="min-w-full">
-      <thead>
+      <thead className={theme.table.thead}>
         <tr>
           {columns.map((col) => (
-            <th
-              key={col.key}
-              className="px-3 py-2 text-left text-xs font-medium text-muted-foreground"
-            >
+            <th key={col.key} className={theme.table.th}>
               {col.label}
             </th>
           ))}
         </tr>
       </thead>
-      <tbody className="divide-y divide-border">
+      <tbody className={theme.table.tbody}>
         {visits.map((visit) => (
-          <tr key={visit.id} className="hover:bg-black/5">
+          <tr key={visit.id} className={theme.table.rowHover}>
             {columns.map((col) => (
-              <td key={col.key} className="px-3 py-2 text-sm">
+              <td key={col.key} className={theme.table.td}>
                 {getCellValue(visit, col.key)}
               </td>
             ))}

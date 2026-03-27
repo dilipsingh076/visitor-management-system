@@ -108,7 +108,6 @@ function MainNavigator() {
   // If role is missing/unknown, default to resident flow (matches home screen).
   const isResident = role === 'resident' || (!role && !isGuard);
   const isResident = role === 'resident';
-  const isCommittee = canAccessCommitteeFeatures(user);
 
   return (
     <Stack.Navigator screenOptions={screenOptions}>

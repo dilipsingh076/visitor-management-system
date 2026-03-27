@@ -13,6 +13,8 @@ function normalizeVisit(raw: Record<string, unknown>): Visit {
     purpose: raw.purpose != null ? String(raw.purpose) : undefined,
     visitor_name: String(raw.visitor_name ?? ""),
     visitor_phone: String(raw.visitor_phone ?? ""),
+    building_name: raw.building_name != null ? String(raw.building_name) : null,
+    host_flat_number: raw.host_flat_number != null ? String(raw.host_flat_number) : null,
     consent_given: Boolean(raw.consent_given),
     is_walkin: Boolean((raw.extra_data as Record<string, unknown>)?.walkin ?? raw.is_walkin),
     created_at: String(raw.created_at ?? ""),

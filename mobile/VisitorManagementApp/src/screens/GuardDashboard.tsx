@@ -193,15 +193,6 @@ export default function GuardDashboard({navigation}: GuardDashboardProps) {
           </TouchableOpacity>
           <TouchableOpacity
             style={styles.actionCard}
-            onPress={() => navigation.navigate('More')}
-            activeOpacity={0.8}>
-            <View style={[styles.actionIconBg, {backgroundColor: colors.accent}]}>
-              <Text style={styles.actionIcon}>☰</Text>
-            </View>
-            <Text style={styles.actionLabel}>All Features</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={styles.actionCard}
             onPress={() => navigation.navigate('GuardBlacklist')}
             activeOpacity={0.8}>
             <View style={[styles.actionIconBg, {backgroundColor: colors.error}]}>

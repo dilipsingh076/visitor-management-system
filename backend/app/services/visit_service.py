@@ -189,7 +189,12 @@ async def create_walkin_visit(
         qr_code=None,  # No QR/OTP for walk-in; guard will check-in by visit_id after approval
         otp=None,
         otp_expires_at=None,
-        extra_data={"walkin": True, "guard_id": str(guard_id) if guard_id else None},
+        extra_data={
+            "walkin": True,
+            "guard_id": str(guard_id) if guard_id else None,
+            "building_name": building_name,
+            "flat_number": flat_number,
+        },
     )
     db.add(visit)
     await db.flush()
@@ -250,7 +255,7 @@ async def get_visit_by_id(db: AsyncSession, visit_id: UUID) -> Optional[Visit]:
     """Get visit by ID. Eager-loads visitor and host."""
     result = await db.execute(
         select(Visit)
-        .options(selectinload(Visit.visitor), selectinload(Visit.host))
+        .options(selectinload(Visit.visitor), selectinload(Visit.host).selectinload(User.building))
         .where(Visit.id == visit_id)
     )
     return result.scalar_one_or_none()
@@ -466,7 +471,7 @@ async def list_visits(
     """List visits with optional status, host_id, and society_id filter. Eager-loads visitor and host."""
     q = (
         select(Visit)
-        .options(selectinload(Visit.visitor), selectinload(Visit.host))
+        .options(selectinload(Visit.visitor), selectinload(Visit.host).selectinload(User.building))
         .order_by(Visit.created_at.desc())
         .limit(limit)
         .offset(offset)

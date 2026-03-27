@@ -131,7 +131,7 @@ export function GuardDashboard({ user }: GuardDashboardProps) {
           </Card>
 
           <Card variant="outlined" className="overflow-hidden">
-            <CardHeader className="border-b border-border border-success/20 bg-success/5 py-3">
+            <CardHeader className="border-b border-border bg-success-light py-3">
               <span className={theme.sectionTitle}>Inside ({checkedInVisitors.length})</span>
             </CardHeader>
             <CardContent className="p-0">

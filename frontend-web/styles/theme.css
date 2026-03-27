@@ -1,13 +1,17 @@
 /**
- * VMS design tokens - self-contained in frontend-web for independent deployment
+ * VMS design tokens
+ * Colors in :root so they can be overridden at runtime by ThemeProvider.
+ * Non-color tokens in @theme inline for Tailwind utility generation.
  */
 
-@theme inline {
-  /* Colors - primary palette */
+:root {
+  /* Primary palette (Emerald) */
   --color-primary: #059669;
   --color-primary-hover: #047857;
   --color-primary-light: #d1fae5;
   --color-primary-muted: #ecfdf5;
+  --color-primary-dark: #065f46;
+  --color-primary-50: #ecfdf5;
 
   /* Neutrals */
   --color-background: #f8fafc;
@@ -16,7 +20,10 @@
   --color-muted-foreground: #94a3b8;
   --color-muted-bg: #f1f5f9;
   --color-border: #e2e8f0;
+  --color-border-subtle: #f1f5f9;
   --color-card: #ffffff;
+  --color-surface-raised: #ffffff;
+  --color-surface-sunken: #f8fafc;
 
   /* Semantic */
   --color-success: #059669;
@@ -30,30 +37,45 @@
   --color-info: #0284c7;
   --color-info-light: #e0f2fe;
 
+  /* Shadows */
+  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.04);
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.07), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -4px rgba(0, 0, 0, 0.05);
+  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.08), 0 8px 10px -6px rgba(0, 0, 0, 0.04);
+  --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.04), 0 1px 2px -1px rgba(0, 0, 0, 0.03);
+  --shadow-card-hover: 0 10px 15px -3px rgba(0, 0, 0, 0.06), 0 4px 6px -4px rgba(0, 0, 0, 0.04);
+  --shadow-header: 0 1px 0 rgba(0, 0, 0, 0.04), 0 2px 8px rgba(0, 0, 0, 0.03);
+  --shadow-sidebar: 2px 0 8px rgba(0, 0, 0, 0.04);
+  --shadow-button: 0 1px 3px rgba(5, 150, 105, 0.2), 0 1px 2px rgba(5, 150, 105, 0.12);
+  --shadow-button-hover: 0 4px 12px rgba(5, 150, 105, 0.25), 0 2px 4px rgba(5, 150, 105, 0.15);
+  --shadow-input-focus: 0 0 0 3px rgba(5, 150, 105, 0.12);
+  --shadow-dropdown: 0 10px 40px rgba(0, 0, 0, 0.08), 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+@theme inline {
   /* Radius */
   --radius-sm: 0.5rem;
   --radius-md: 0.75rem;
   --radius-lg: 1rem;
-  --radius-xl: 1.5rem;
-
-  /* Shadows */
-  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.05), 0 2px 6px rgba(0, 0, 0, 0.04);
-  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.06), 0 2px 4px rgba(0, 0, 0, 0.04);
-  --shadow-lg: 0 12px 32px rgba(0, 0, 0, 0.08), 0 4px 8px rgba(0, 0, 0, 0.04);
-  --shadow-card-hover: 0 20px 40px rgba(0, 0, 0, 0.08), 0 8px 16px rgba(0, 0, 0, 0.04);
-  --shadow-header: 0 1px 0 rgba(0, 0, 0, 0.05), 0 4px 12px rgba(0, 0, 0, 0.04);
-  --shadow-button: 0 2px 8px rgba(5, 150, 105, 0.25);
-  --shadow-button-hover: 0 4px 14px rgba(5, 150, 105, 0.3);
+  --radius-xl: 1.25rem;
+  --radius-2xl: 1.5rem;
 
   /* Transitions */
   --transition-fast: 150ms ease;
   --transition-base: 200ms ease;
   --transition-smooth: 250ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-spring: 300ms cubic-bezier(0.34, 1.56, 0.64, 1);
+  --transition-sidebar: 200ms cubic-bezier(0.4, 0, 0.2, 1);
 
-  /* Focus ring (accessibility) */
+  /* Focus ring */
   --focus-ring: 0 0 0 2px var(--color-background), 0 0 0 4px var(--color-primary);
 
-  /* Spacing (for consistency) */
+  /* Sidebar */
+  --sidebar-width: 15rem;
+  --sidebar-collapsed-width: 4rem;
+
+  /* Spacing */
   --section-padding-y: 4rem;
   --section-padding-x: 1.5rem;
   --content-max-width: 72rem;

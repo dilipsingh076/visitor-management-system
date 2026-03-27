@@ -18,6 +18,8 @@ export interface Visit {
   purpose?: string;
   visitor_name: string;
   visitor_phone: string;
+  building_name?: string | null;
+  host_flat_number?: string | null;
   expected_arrival?: string | null;
   actual_arrival?: string | null;
   actual_departure?: string | null;

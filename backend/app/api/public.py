@@ -47,10 +47,13 @@ async def get_visit_pass(
 
     host_name = visit.host.full_name if visit.host else None
     visitor_name = visit.visitor_name or None
+    # Public link: include visitor phone (unmasked as requested).
+    visitor_phone = (visit.visitor_phone or "").strip() or None
 
     return VisitPassResponse(
         visit_id=visit.id,
         visitor_name=visitor_name,
+        visitor_phone=visitor_phone,
         qr_code=visit.qr_code,
         status=visit_status,
         purpose=visit.purpose,

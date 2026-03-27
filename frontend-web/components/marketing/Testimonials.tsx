@@ -39,33 +39,33 @@ export function Testimonials() {
   const [activeIndex, setActiveIndex] = useState(0);
 
   return (
-    <section className="py-20 sm:py-28 bg-gradient-to-b from-white to-slate-50">
+    <section className="py-20 sm:py-28 bg-gradient-to-b from-card to-muted-bg">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-        <Text variant="eyebrow" className="text-center text-emerald-600 block mb-4">
+        <Text variant="eyebrow" className="text-center text-primary block mb-4">
           Testimonials
         </Text>
-        <Text variant="h1" as="h2" className="text-3xl sm:text-4xl text-slate-900 text-center mb-4">
+        <Text variant="h1" as="h2" className="text-3xl sm:text-4xl text-foreground text-center mb-4">
           Trusted by societies and offices across India
         </Text>
-        <Text variant="body" className="text-center text-slate-600 mx-auto mb-14 lg:w-2/3">
+        <Text variant="body" className="text-center text-muted mx-auto mb-14 lg:w-2/3">
           See what our customers say about their experience with VMS
         </Text>
 
         {/* Featured testimonial */}
         <div className="max-w-4xl mx-auto mb-12">
-          <div className="bg-white rounded-3xl shadow-xl p-8 sm:p-12 border border-slate-100 relative">
-            <Quote className="absolute top-8 left-8 w-12 h-12 text-emerald-100" />
-            <blockquote className="text-xl sm:text-2xl text-slate-700 leading-relaxed mb-8 pl-8">
+          <div className="bg-white rounded-3xl shadow-xl p-8 sm:p-12 border border-border relative">
+            <Quote className="absolute top-8 left-8 w-12 h-12 text-primary-light" />
+            <blockquote className="text-xl sm:text-2xl text-foreground leading-relaxed mb-8 pl-8">
               "{testimonials[activeIndex].quote}"
             </blockquote>
             <div className="flex items-center gap-4">
-              <div className="w-14 h-14 rounded-full bg-emerald-500 flex items-center justify-center text-white font-bold text-lg">
+              <div className="w-14 h-14 rounded-full bg-primary flex items-center justify-center text-white font-bold text-lg">
                 {testimonials[activeIndex].avatar}
               </div>
               <div>
-                <Text variant="label" className="font-semibold text-slate-900 mb-0">{testimonials[activeIndex].author}</Text>
-                <Text variant="caption" className="text-slate-500">{testimonials[activeIndex].role}</Text>
-                <Text variant="caption" className="text-emerald-600">{testimonials[activeIndex].location}</Text>
+                <Text variant="label" className="font-semibold text-foreground mb-0">{testimonials[activeIndex].author}</Text>
+                <Text variant="caption" className="text-muted">{testimonials[activeIndex].role}</Text>
+                <Text variant="caption" className="text-primary">{testimonials[activeIndex].location}</Text>
               </div>
             </div>
           </div>
@@ -79,8 +79,8 @@ export function Testimonials() {
               onClick={() => setActiveIndex(index)}
               className={`w-3 h-3 rounded-full transition-all ${
                 activeIndex === index
-                  ? "bg-emerald-500 w-8"
-                  : "bg-slate-300 hover:bg-slate-400"
+                  ? "bg-primary w-8"
+                  : "bg-border hover:bg-muted"
               }`}
               aria-label={`View testimonial ${index + 1}`}
             />
@@ -95,23 +95,23 @@ export function Testimonials() {
               onClick={() => setActiveIndex(index)}
               className={`p-4 rounded-xl text-left transition-all ${
                 activeIndex === index
-                  ? "bg-emerald-50 border-2 border-emerald-500"
-                  : "bg-white border border-slate-200 hover:border-emerald-200"
+                  ? "bg-primary-muted border-2 border-primary"
+                  : "bg-card border border-border hover:border-primary/30"
               }`}
             >
               <div className="flex items-center gap-3 mb-2">
                 <div
                   className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold ${
                     activeIndex === index
-                      ? "bg-emerald-500 text-white"
-                      : "bg-slate-200 text-slate-600"
+                      ? "bg-primary text-white"
+                      : "bg-muted-bg text-muted"
                   }`}
                 >
                   {t.avatar}
                 </div>
                 <div>
-                  <Text variant="label" className="font-medium text-slate-900 text-sm mb-0">{t.author}</Text>
-                  <Text variant="caption" className="text-slate-500">{t.location}</Text>
+                  <Text variant="label" className="font-medium text-foreground text-sm mb-0">{t.author}</Text>
+                  <Text variant="caption" className="text-muted">{t.location}</Text>
                 </div>
               </div>
             </button>

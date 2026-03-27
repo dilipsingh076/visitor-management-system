@@ -2,23 +2,11 @@
 @config "../tailwind.config.ts";
 @import "../styles/theme.css";
 
-:root {
-  --background: #f8fafc;
-  --foreground: #0f172a;
-}
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-}
-
 html {
   scroll-behavior: smooth;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   line-height: 1.6;
@@ -27,22 +15,73 @@ body {
 
 /* Subtle page background for app views */
 .app-page {
-  background: linear-gradient(180deg, #f1f5f9 0%, #f8fafc 12%, #f8fafc 100%);
+  background: var(--color-background);
+  color: var(--color-foreground);
   min-height: 100vh;
+}
+
+/* Sidebar layout background */
+.app-sidebar-layout {
+  background: var(--color-surface-sunken);
+  color: var(--color-foreground);
+}
+
+/* Page content entry animation */
+.page-enter {
+  animation: pageEnter 0.3s ease-out;
+}
+
+@keyframes pageEnter {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Card hover lift */
+.card-interactive {
+  transition: box-shadow 0.2s ease, transform 0.2s ease;
+}
+.card-interactive:hover {
+  transform: translateY(-1px);
+}
+
+/* Button press micro-interaction */
+button:active:not(:disabled) {
+  transform: scale(0.98);
+}
+
+/* Dropdown appearance */
+.dropdown-enter {
+  animation: dropdownEnter 0.15s ease-out;
+}
+
+@keyframes dropdownEnter {
+  from {
+    opacity: 0;
+    transform: translateY(-4px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }
 
 /* Refined scrollbar (webkit) */
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 6px;
+  height: 6px;
 }
 ::-webkit-scrollbar-track {
-  background: var(--color-muted-bg, #f1f5f9);
-  border-radius: 4px;
+  background: transparent;
 }
 ::-webkit-scrollbar-thumb {
   background: var(--color-border, #e2e8f0);
-  border-radius: 4px;
+  border-radius: 3px;
 }
 ::-webkit-scrollbar-thumb:hover {
   background: var(--color-muted, #64748b);

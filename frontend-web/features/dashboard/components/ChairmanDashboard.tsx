@@ -134,7 +134,7 @@ export function ChairmanDashboard({ user }: ChairmanDashboardProps) {
 
       {/* Visitor Alerts */}
       {notifications.length > 0 && (
-        <Card variant="outlined" className="overflow-hidden border-primary/30 bg-primary/5">
+        <Card variant="outlined" className="overflow-hidden border-primary/30 bg-primary-muted/30">
           <CardHeader className={`${theme.surface.cardHeader} py-2.5 flex flex-row items-center justify-between`}>
             <span className={theme.sectionTitle}>Visitor alerts</span>
             <Badge variant="warning">{notifications.length} new</Badge>

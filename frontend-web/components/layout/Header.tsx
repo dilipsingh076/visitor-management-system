@@ -69,12 +69,15 @@ function getNavItemsForUser(user: Parameters<typeof getPrimaryRole>[0] | null): 
     items.push({ href: "/visitors", label: "Visitors" });
   }
 
-  if (canAccessGuardPage(user)) {
+  // Keep /guard link for committee/admin; guards use /dashboard as their dashboard.
+  if (primaryRole !== "guard" && canAccessGuardPage(user)) {
     items.push({ href: "/guard", label: "Guard" });
   }
 
-  items.push({ href: "/flat", label: "My Flat" });
-  items.push({ href: "/notifications", label: "Notifications" });
+  if (primaryRole !== "guard") {
+    items.push({ href: "/flat", label: "My Flat" });
+    items.push({ href: "/notifications", label: "Notifications" });
+  }
 
   // Society group for committee members
   if (canAccessSocietyManagement(user)) {
@@ -92,10 +95,12 @@ function getNavItemsForUser(user: Parameters<typeof getPrimaryRole>[0] | null): 
   }
 
   if (canAccessMeetingsAI(user)) {
-    items.push({ href: "/admin/meetings", label: "Meetings AI" });
+    items.push({ href: "/admin/meetings", label: "Meeting Details" });
   }
 
-  items.push({ href: "/admin/nearby-places", label: "Nearby" });
+  if (primaryRole !== "guard") {
+    items.push({ href: "/admin/nearby-places", label: "Nearby" });
+  }
 
   if (canAccessPlatform(user)) {
     items.push({ href: "/platform", label: "Platform Admin" });
@@ -132,7 +137,7 @@ export default function Header() {
   return (
     <header className="sticky top-0 z-50 bg-card/95 border-b border-border backdrop-blur-md shadow-[var(--shadow-header)]">
       <Container>
-        <div className="flex items-center justify-between h-14 sm:h-16">
+        <div className="flex items-center justify-between py-3 sm:py-4">
           <div className="flex items-center gap-3 sm:gap-6">
             <Link href={authenticated && user ? getLandingPage(user) : "/"} className="flex items-center gap-2.5 transition-opacity hover:opacity-90">
               <span className="w-9 h-9 rounded-xl bg-primary flex items-center justify-center shadow-sm">
@@ -142,7 +147,7 @@ export default function Header() {
             </Link>
 
             {/* Desktop nav */}
-            <nav className="hidden md:flex flex-wrap items-center gap-0.5">
+            <nav className="hidden md:flex flex-wrap items-center gap-x-0.5 gap-y-1">
               {navItems.map((item) =>
                 isDropdown(item) ? (
                   <NavDropdown key={item.label} label={item.label} children={item.children} />

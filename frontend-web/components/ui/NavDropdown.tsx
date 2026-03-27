@@ -53,7 +53,7 @@ export function NavDropdown({ label, children }: NavDropdownProps) {
       </button>
 
       {open && (
-        <div className="absolute top-full left-0 mt-1 min-w-[10rem] bg-card border border-border rounded-lg shadow-lg py-1 z-50">
+        <div className="absolute top-full left-0 mt-1 min-w-[10rem] bg-card border border-border/60 rounded-lg shadow-dropdown py-1 z-50 dropdown-enter">
           {children.map((child) => {
             const active =
               pathname === child.href ||

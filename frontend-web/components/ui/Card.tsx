@@ -12,9 +12,9 @@ export interface CardProps extends HTMLAttributes<HTMLDivElement> {
 }
 
 const variantClass: Record<CardVariant, string> = {
-  default: "bg-card rounded-xl border border-border shadow-[var(--shadow-sm)] transition-shadow duration-200 hover:shadow-[var(--shadow-md)]",
-  elevated: "bg-card rounded-xl border border-border shadow-[var(--shadow-md)]",
-  outlined: "bg-card rounded-xl border border-border",
+  default: "bg-card rounded-xl border border-border/60 shadow-[var(--shadow-card)] card-interactive hover:shadow-[var(--shadow-card-hover)]",
+  elevated: "bg-card rounded-xl border border-border/60 shadow-[var(--shadow-md)]",
+  outlined: "bg-card rounded-xl border border-border/60",
 };
 
 export function Card({ variant = "default", children, className = "", ...props }: CardProps) {

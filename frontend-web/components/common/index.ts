@@ -10,3 +10,4 @@ export { NotificationBanner } from "./NotificationBanner";
 export type { NotificationBannerProps, NotificationBannerItem } from "./NotificationBanner";
 export { StatusBadge } from "./StatusBadge";
 export type { StatusBadgeProps } from "./StatusBadge";
+export { VisitTimeline } from "./VisitTimeline";

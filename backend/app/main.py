@@ -13,7 +13,7 @@ import structlog
 
 from app.core.config import settings
 from app.api import auth, visitors, checkin, health, dashboard, residents, blacklist, notifications, societies, buildings, users, public
-from app.api import admin, admin_subscriptions, admin_complaints, admin_support, admin_settings, society_complaints, society_amenities, society_staff, meetings, nearby_places, flats, maintenance, resident_complaints
+from app.api import admin, admin_subscriptions, admin_complaints, admin_support, admin_settings, society_complaints, society_amenities, society_staff, meetings, nearby_places, flats, maintenance, resident_complaints, sos
 
 # Configure structured logging
 logger = structlog.get_logger()
@@ -210,6 +210,7 @@ app.include_router(flats.router, prefix="/api/v1/flats", tags=["flats"])
 app.include_router(maintenance.router, prefix="/api/v1/maintenance", tags=["maintenance"])
 app.include_router(resident_complaints.router, prefix="/api/v1/complaints", tags=["resident-complaints"])
 app.include_router(public.router, prefix="/api/v1/public", tags=["public"])
+app.include_router(sos.router, prefix="/api/v1/sos", tags=["sos"])
 
 
 @app.get("/")

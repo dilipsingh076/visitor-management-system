@@ -131,6 +131,16 @@ def _migrate_users_columns_sync(connection):
 BLACKLIST_EXTRA_COLUMNS = [("society_id", "VARCHAR(36)")]  # SQLite
 BLACKLIST_EXTRA_PG = [("society_id", "UUID")]
 
+# SOS events: acknowledgement fields (added later)
+SOS_EVENTS_EXTRA_COLUMNS = [
+    ("acknowledged_by_user_id", "VARCHAR(36)"),
+    ("acknowledged_at", "DATETIME"),
+]  # SQLite
+SOS_EVENTS_EXTRA_PG = [
+    ("acknowledged_by_user_id", "UUID"),
+    ("acknowledged_at", "TIMESTAMP"),
+]
+
 
 def _migrate_blacklist_columns_sync(connection):
     """Add society_id to blacklist table (SQLite). Idempotent."""
@@ -144,6 +154,19 @@ def _migrate_blacklist_columns_sync(connection):
         if col_name.lower() not in existing:
             connection.execute(text(f"ALTER TABLE blacklist ADD COLUMN {col_name} {col_type}"))
             logger.debug("Added column to blacklist", column=col_name)
+
+def _migrate_sos_events_columns_sync(connection):
+    """Add missing columns to sos_events table (SQLite). Idempotent."""
+    try:
+        result = connection.execute(text("PRAGMA table_info(sos_events)"))
+        rows = result.fetchall()
+    except Exception:
+        return
+    existing = {str(row[1]).lower() for row in rows}
+    for col_name, col_type in SOS_EVENTS_EXTRA_COLUMNS:
+        if col_name.lower() not in existing:
+            connection.execute(text(f"ALTER TABLE sos_events ADD COLUMN {col_name} {col_type}"))
+            logger.debug("Added column to sos_events", column=col_name)
 
 
 def _migrate_postgres_columns_sync(connection):
@@ -180,6 +203,14 @@ def _migrate_postgres_columns_sync(connection):
             logger.debug("Added column to blacklist (pg)", column=col_name)
         except Exception as e:
             logger.debug("blacklist column may exist", column=col_name, error=str(e))
+    for col_name, col_type in SOS_EVENTS_EXTRA_PG:
+        try:
+            connection.execute(text(
+                f"ALTER TABLE sos_events ADD COLUMN IF NOT EXISTS {col_name} {col_type}"
+            ))
+            logger.debug("Added column to sos_events (pg)", column=col_name)
+        except Exception as e:
+            logger.debug("sos_events column may exist", column=col_name, error=str(e))
     # Transcripts: add audio columns if missing
     for col_name, col_type in [
         ("audio_file_key", "VARCHAR NULL"),
@@ -213,6 +244,7 @@ async def init_db():
             await conn.run_sync(_migrate_societies_columns_sync)
             await conn.run_sync(_migrate_users_columns_sync)
             await conn.run_sync(_migrate_blacklist_columns_sync)
+            await conn.run_sync(_migrate_sos_events_columns_sync)
         else:
             await conn.run_sync(_migrate_postgres_columns_sync)
 

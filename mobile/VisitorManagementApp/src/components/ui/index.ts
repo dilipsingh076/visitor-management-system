@@ -3,5 +3,3 @@ export { Input } from './Input';
 export { Card } from './Card';
 export { Screen } from './Screen';
 export { Text } from './Text';
-export { PageHeader } from './PageHeader';
-export { StateMessage } from './StateMessage';

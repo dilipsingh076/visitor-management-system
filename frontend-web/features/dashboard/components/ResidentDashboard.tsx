@@ -77,7 +77,7 @@ export function ResidentDashboard({ user }: ResidentDashboardProps) {
 
       {notifications.length > 0 && (
         <section>
-          <Card variant="outlined" className="overflow-hidden border-primary/30 bg-primary/5">
+          <Card variant="outlined" className="overflow-hidden border-primary/30 bg-primary-muted/30">
             <CardHeader className={`${theme.surface.cardHeader} py-2.5 flex flex-row items-center justify-between`}>
               <span className={theme.sectionTitle}>Visitor alerts</span>
             </CardHeader>

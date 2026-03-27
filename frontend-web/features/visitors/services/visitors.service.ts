@@ -17,6 +17,8 @@ function normalizeVisit(raw: Record<string, unknown>): Visit {
     purpose: raw.purpose != null ? String(raw.purpose) : undefined,
     visitor_name: String(raw.visitor_name ?? ""),
     visitor_phone: String(raw.visitor_phone ?? ""),
+    building_name: raw.building_name != null ? String(raw.building_name) : null,
+    host_flat_number: raw.host_flat_number != null ? String(raw.host_flat_number) : null,
     expected_arrival: raw.expected_arrival != null ? String(raw.expected_arrival) : null,
     actual_arrival: raw.actual_arrival != null ? String(raw.actual_arrival) : null,
     actual_departure: raw.actual_departure != null ? String(raw.actual_departure) : null,

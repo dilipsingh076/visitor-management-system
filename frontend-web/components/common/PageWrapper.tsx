@@ -1,9 +1,8 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { theme } from "@/lib/theme";
 
-export type PageWidth = "narrower" | "narrow" | "wide" | "wide-xl";
+export type PageWidth = "narrower" | "narrow" | "wide" | "wide-xl" | "full";
 
 export interface PageWrapperProps {
   children: ReactNode;
@@ -12,15 +11,16 @@ export interface PageWrapperProps {
 }
 
 const widthClass: Record<PageWidth, string> = {
-  narrower: theme.container.narrower,
-  narrow: theme.container.narrow,
-  wide: theme.container.wide,
-  "wide-xl": theme.container["wide-xl"],
+  narrower: "max-w-lg mx-auto px-4 sm:px-6 py-6",
+  narrow: "max-w-4xl mx-auto px-4 sm:px-6 py-6",
+  wide: "max-w-6xl mx-auto px-4 sm:px-6 py-6",
+  "wide-xl": "max-w-[90rem] mx-auto px-4 sm:px-6",
+  full: "w-full py-6",
 };
 
-export function PageWrapper({ children, width = "narrow", className = "" }: PageWrapperProps) {
+export function PageWrapper({ children, width = "wide", className = "" }: PageWrapperProps) {
   return (
-    <div className={`${widthClass[width]} ${className}`.trim()}>
+    <div className={`${widthClass[width]} page-enter ${className}`.trim()}>
       {children}
     </div>
   );

@@ -6,6 +6,7 @@ import { getNotifications, getUnreadNotifications, markNotificationRead, createS
 import { notificationsKeys } from "./keys";
 import { useEffect } from "react";
 import { ensureValidAccessToken } from "@/lib/auth";
+import { sosKeys } from "@/features/sos";
 
 export function useUnreadNotifications(enabled: boolean) {
   return useQuery({
@@ -61,6 +62,7 @@ export function useNotificationsStream(enabled: boolean) {
         reconnectDelay = 1000;
         // On (re)connect, refresh all data to catch anything missed while disconnected
         queryClient.invalidateQueries({ queryKey: notificationsKeys.all });
+        queryClient.invalidateQueries({ queryKey: sosKeys.active() });
         queryClient.invalidateQueries({ queryKey: ["visitors"] });
         queryClient.invalidateQueries({ queryKey: ["guard"] });
         queryClient.invalidateQueries({ queryKey: ["dashboard"] });
@@ -72,6 +74,7 @@ export function useNotificationsStream(enabled: boolean) {
           if (data?.event === "notification" || data?.payload?.event === "notification") {
             // Notifications update instantly
             queryClient.invalidateQueries({ queryKey: notificationsKeys.all });
+            queryClient.invalidateQueries({ queryKey: sosKeys.active() });
             // Slight delay for data queries so the DB transaction commits first
             setTimeout(() => {
               queryClient.invalidateQueries({ queryKey: ["visitors"] });

@@ -22,9 +22,10 @@ class CheckOutRequest(BaseModel):
 
 
 class VisitPassResponse(BaseModel):
-    """Public pass data returned for QR-only visit flow (no OTP, no phone numbers)."""
+    """Public pass data returned for QR-only visit flow (no OTP)."""
     visit_id: UUID
     visitor_name: Optional[str] = None
+    visitor_phone: Optional[str] = None
     qr_code: Optional[str] = None
     status: str
     purpose: Optional[str] = None

@@ -3,7 +3,7 @@
 import type { ReactNode } from "react";
 import { ROLE_LABELS } from "@/lib/auth";
 
-export type BadgeVariant = "default" | "primary" | "success" | "warning" | "error" | "info" | "outline";
+export type BadgeVariant = "default" | "primary" | "secondary" | "success" | "warning" | "error" | "info" | "outline";
 export type BadgeSize = "sm" | "md";
 
 export interface BadgeProps {
@@ -16,6 +16,7 @@ export interface BadgeProps {
 
 const variantStyles: Record<BadgeVariant, string> = {
   default: "bg-muted-bg text-foreground",
+  secondary: "bg-muted-bg text-muted-foreground",
   primary: "bg-primary-light text-primary",
   success: "bg-success-light text-success",
   warning: "bg-warning-light text-warning",

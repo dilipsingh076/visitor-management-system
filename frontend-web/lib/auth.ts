@@ -375,12 +375,20 @@ export async function registerSociety(data: {
  */
 export async function login(email: string, password: string): Promise<{ user: User | null; error?: string }> {
   try {
-    const response = await fetch(`${API_BASE_URL}/auth/login`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      credentials: "include",
-      body: JSON.stringify({ email, password }),
-    });
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 15000);
+    let response: Response;
+    try {
+      response = await fetch(`${API_BASE_URL}/auth/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ email, password }),
+        signal: controller.signal,
+      });
+    } finally {
+      clearTimeout(timeoutId);
+    }
 
     if (!response.ok) {
       const err = await response.json().catch(() => ({}));
@@ -409,6 +417,9 @@ export async function login(email: string, password: string): Promise<{ user: Us
 
     return { user };
   } catch (error) {
+    if (error instanceof Error && error.name === "AbortError") {
+      return { user: null, error: "Login timed out. Please check backend/database and try again." };
+    }
     return { user: null, error: error instanceof Error ? error.message : "Network error" };
   }
 }

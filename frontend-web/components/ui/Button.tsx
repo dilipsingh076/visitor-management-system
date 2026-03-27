@@ -1,74 +1,102 @@
 "use client";
 
-import type { ReactNode, ButtonHTMLAttributes } from "react";
+import { forwardRef, type ButtonHTMLAttributes, type ReactNode } from "react";
 import { theme } from "@/lib/theme";
 
-export type ButtonVariant = "primary" | "secondary" | "outline" | "ghost" | "danger" | "destructive" | "link";
+export type ButtonVariant =
+  | "primary"
+  | "secondary"
+  | "ghost"
+  | "danger"
+  | "link"
+  | "outline"
+  | "destructive";
+
 export type ButtonSize = "xs" | "sm" | "md" | "lg" | "icon";
 
 export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
-  children?: ReactNode;
   variant?: ButtonVariant;
   size?: ButtonSize;
-  fullWidth?: boolean;
-  /** Loading state (spinner / disabled). Alias: isLoading for platform compatibility. */
   loading?: boolean;
   isLoading?: boolean;
   leftIcon?: ReactNode;
   rightIcon?: ReactNode;
+  fullWidth?: boolean;
 }
 
-const variants: Record<ButtonVariant, string> = {
+const variantClasses: Record<ButtonVariant, string> = {
   primary: theme.button.primary,
   secondary: theme.button.secondary,
-  outline: "border border-border bg-transparent text-foreground hover:bg-muted-bg hover:border-primary",
   ghost: theme.button.ghost,
   danger: theme.button.danger,
+  link: "bg-transparent text-primary hover:underline p-0",
+  outline:
+    "bg-transparent border border-border text-foreground hover:bg-muted-bg hover:border-primary/50",
   destructive: theme.button.danger,
-  link: theme.button.link,
 };
 
-const sizes: Record<ButtonSize, string> = {
-  xs: "px-2.5 py-1 text-xs rounded-md gap-1",
-  sm: "px-3 py-1.5 text-sm rounded-lg gap-1.5",
-  md: "px-4 py-2 text-sm rounded-lg gap-2",
-  lg: "px-6 py-3 text-base rounded-xl gap-2",
-  icon: "h-9 w-9 p-0 rounded-lg shrink-0",
+const sizeClasses: Record<ButtonSize, string> = {
+  xs: "px-2 py-1 text-xs rounded-md",
+  sm: "px-3 py-1.5 text-sm rounded-lg",
+  md: "px-4 py-2 text-sm rounded-lg",
+  lg: "px-6 py-3 text-base rounded-xl",
+  icon: "p-2 rounded-lg",
 };
 
-export function Button({
-  children,
-  variant = "primary",
-  size = "md",
-  fullWidth,
-  loading,
-  isLoading,
-  leftIcon,
-  rightIcon,
-  className = "",
-  disabled,
-  ...props
-}: ButtonProps) {
-  const isPending = loading ?? isLoading ?? false;
-  const isLink = variant === "link";
-  const base = isLink ? "underline-offset-2 hover:underline" : theme.button.base;
-  const isIconOnly = size === "icon" && !children;
-  return (
-    <button
-      type={isLink ? "button" : undefined}
-      className={`inline-flex items-center justify-center ${base} ${variants[variant]} ${sizes[size]} ${fullWidth ? "w-full" : ""} ${className}`.trim()}
-      disabled={disabled ?? isPending}
-      {...props}
-    >
-      {isPending ? (
-        <span className={isIconOnly ? "inline-block w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" : "animate-pulse"}>{" "}</span>
-      ) : (
-        <>
-          {leftIcon && <span className="shrink-0 [&>svg]:w-4 [&>svg]:h-4">{leftIcon}</span>}
-          {children}
-          {rightIcon && <span className="shrink-0 [&>svg]:w-4 [&>svg]:h-4">{rightIcon}</span>}
-        </>
-      )}
-    </button>
-  );
-}
+export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
+  (
+    {
+      variant = "primary",
+      size = "md",
+      loading,
+      isLoading,
+      leftIcon,
+      rightIcon,
+      fullWidth,
+      children,
+      className = "",
+      disabled,
+      ...props
+    },
+    ref
+  ) => {
+    const busy = loading || isLoading;
+    return (
+      <button
+        ref={ref}
+        disabled={disabled || busy}
+        className={`${theme.button.base} inline-flex items-center justify-center gap-2 ${variantClasses[variant]} ${sizeClasses[size]} ${fullWidth ? "w-full" : ""} ${className}`.trim()}
+        {...props}
+      >
+        {busy ? (
+          <svg
+            className="animate-spin h-4 w-4"
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+          >
+            <circle
+              className="opacity-25"
+              cx="12"
+              cy="12"
+              r="10"
+              stroke="currentColor"
+              strokeWidth="4"
+            />
+            <path
+              className="opacity-75"
+              fill="currentColor"
+              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+            />
+          </svg>
+        ) : (
+          leftIcon
+        )}
+        {children}
+        {rightIcon}
+      </button>
+    );
+  }
+);
+
+Button.displayName = "Button";

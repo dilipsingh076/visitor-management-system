@@ -70,13 +70,13 @@ function AnimatedNumber({ value, suffix }: { value: number; suffix: string }) {
 
 export function Stats() {
   return (
-    <section className="py-20 sm:py-24 bg-gradient-to-r from-emerald-600 to-emerald-500">
+    <section className="py-20 sm:py-24 bg-gradient-to-r from-primary to-primary-hover">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-12">
           <Text variant="h1" as="h2" className="text-3xl sm:text-4xl text-white mb-4">
             Numbers that speak
           </Text>
-          <Text variant="body" className="text-emerald-100 text-lg">
+          <Text variant="body" className="text-white/70 text-lg">
             Join thousands of societies and offices already using VMS
           </Text>
         </div>
@@ -88,7 +88,7 @@ export function Stats() {
             >
               <AnimatedNumber value={stat.value} suffix={stat.suffix} />
               <Text variant="label" className="text-xl text-white mt-2 mb-0">{stat.label}</Text>
-              <Text variant="caption" className="text-emerald-100 mt-1">{stat.description}</Text>
+              <Text variant="caption" className="text-white/70 mt-1">{stat.description}</Text>
             </div>
           ))}
         </div>

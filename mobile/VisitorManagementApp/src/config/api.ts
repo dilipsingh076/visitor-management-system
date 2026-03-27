@@ -55,8 +55,6 @@ export interface ApiResponse<T> {
   status?: number;
 }
 
-type JsonObject = Record<string, unknown>;
-
 class ApiClient {
   private baseURL: string;
   private timeout: number;
@@ -69,35 +67,29 @@ class ApiClient {
   private async request<T>(
     endpoint: string,
     options: RequestInit = {},
-    timeoutOverrideMs?: number,
   ): Promise<ApiResponse<T>> {
-    const effectiveTimeout =
-      typeof timeoutOverrideMs === 'number' && timeoutOverrideMs > 0
-        ? timeoutOverrideMs
-        : this.timeout;
     const token = await getSecureToken();
 
-    const headers: Record<string, string> = {
+    const headers: HeadersInit = {
       'Content-Type': 'application/json',
+      ...options.headers,
     };
-    if (options.headers && typeof options.headers === 'object') {
-      Object.assign(headers, options.headers as Record<string, string>);
-    }
 
     if (token) {
-      headers.Authorization = `Bearer ${token}`;
+      headers['Authorization'] = `Bearer ${token}`;
     }
 
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), this.timeout);
+
     try {
-      let response = await Promise.race<Response>([
-        fetch(`${this.baseURL}${endpoint}`, {
-          ...options,
-          headers,
-        }),
-        new Promise<Response>((_, reject) => {
-          setTimeout(() => reject(new Error('Request timeout. Please try again.')), effectiveTimeout);
-        }),
-      ]);
+      let response = await fetch(`${this.baseURL}${endpoint}`, {
+        ...options,
+        headers,
+        signal: controller.signal,
+      });
+
+      clearTimeout(timeoutId);
 
       if (response.status === 401) {
         // Try refresh token once
@@ -113,27 +105,23 @@ class ApiClient {
               body: JSON.stringify({ refresh_token: refreshToken }),
             });
             if (refreshRes.ok) {
-              const data = (await refreshRes.json().catch(() => ({}))) as JsonObject;
-              const newAccess = typeof data.access_token === 'string' ? data.access_token : undefined;
-              const newRefresh = typeof data.refresh_token === 'string' ? data.refresh_token : undefined;
+              const data = await refreshRes.json().catch(() => ({}));
+              const newAccess = data.access_token as string | undefined;
+              const newRefresh = data.refresh_token as string | undefined;
               if (newAccess) {
                 await setSecureToken(newAccess);
-                headers.Authorization = `Bearer ${newAccess}`;
+                headers['Authorization'] = `Bearer ${newAccess}`;
               }
               if (newRefresh) {
                 await setRefreshToken(newRefresh);
               }
               refreshed = Boolean(newAccess);
               if (refreshed) {
-                response = await Promise.race<Response>([
-                  fetch(`${this.baseURL}${endpoint}`, {
-                    ...options,
-                    headers,
-                  }),
-                  new Promise<Response>((_, reject) => {
-                    setTimeout(() => reject(new Error('Request timeout. Please try again.')), effectiveTimeout);
-                  }),
-                ]);
+                response = await fetch(`${this.baseURL}${endpoint}`, {
+                  ...options,
+                  headers,
+                  signal: controller.signal,
+                });
               }
             }
           } catch {
@@ -158,13 +146,11 @@ class ApiClient {
       }
 
       if (!response.ok) {
-        const errorData = (await response.json().catch(() => ({
+        const errorData = await response.json().catch(() => ({
           message: 'Request failed',
-        }))) as JsonObject;
-        const detail = typeof errorData.detail === 'string' ? errorData.detail : undefined;
-        const message = typeof errorData.message === 'string' ? errorData.message : undefined;
+        }));
         return {
-          error: detail || message || `HTTP ${response.status}`,
+          error: errorData.detail || errorData.message || `HTTP ${response.status}`,
           status: response.status,
         };
       }
@@ -173,11 +159,13 @@ class ApiClient {
         return { data: undefined as T, status: 204 };
       }
 
-      const data = (await response.json()) as T;
+      const data = await response.json();
       return { data, status: response.status };
     } catch (error) {
+      clearTimeout(timeoutId);
+
       if (error instanceof Error) {
-        if (error.name === 'AbortError' || error.message.toLowerCase().includes('timeout')) {
+        if (error.name === 'AbortError') {
           return { error: 'Request timeout. Please try again.' };
         }
         if (__DEV__) {
@@ -193,19 +181,11 @@ class ApiClient {
     return this.request<T>(endpoint, { method: 'GET' });
   }
 
-  async post<T>(
-    endpoint: string,
-    body?: unknown,
-    timeoutOverrideMs?: number,
-  ): Promise<ApiResponse<T>> {
-    return this.request<T>(
-      endpoint,
-      {
-        method: 'POST',
-        body: body !== undefined ? JSON.stringify(body) : undefined,
-      },
-      timeoutOverrideMs,
-    );
+  async post<T>(endpoint: string, body?: unknown): Promise<ApiResponse<T>> {
+    return this.request<T>(endpoint, {
+      method: 'POST',
+      body: body !== undefined ? JSON.stringify(body) : undefined,
+    });
   }
 
   async put<T>(endpoint: string, body?: unknown): Promise<ApiResponse<T>> {

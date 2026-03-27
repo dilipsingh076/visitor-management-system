@@ -13,6 +13,7 @@ from app.models.support import SupportTicket, TicketMessage
 from app.models.platform import PlatformAnnouncement, SystemSetting, ActivityLog
 from app.models.meeting import Meeting, Transcript
 from app.models.maintenance import MaintenanceBill
+from app.models.sos import SosEvent
 
 __all__ = [
     "Society",
@@ -49,4 +50,6 @@ __all__ = [
     "Transcript",
     # Maintenance
     "MaintenanceBill",
+    # SOS
+    "SosEvent",
 ]

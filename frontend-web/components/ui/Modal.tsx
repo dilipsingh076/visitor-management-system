@@ -12,6 +12,10 @@ export interface ModalProps {
   children: React.ReactNode;
   size?: "sm" | "md" | "lg" | "xl";
   showCloseButton?: boolean;
+  /** Optional classes for the outer positioning container (e.g. items-start, pt-16). */
+  containerClassName?: string;
+  /** Optional classes for the modal panel. */
+  panelClassName?: string;
 }
 
 const sizeClasses = {
@@ -22,7 +26,19 @@ const sizeClasses = {
 };
 
 export const Modal = forwardRef<HTMLDivElement, ModalProps>(
-  ({ isOpen, onClose, title, children, size = "md", showCloseButton = true }, ref) => {
+  (
+    {
+      isOpen,
+      onClose,
+      title,
+      children,
+      size = "md",
+      showCloseButton = true,
+      containerClassName = "",
+      panelClassName = "",
+    },
+    ref
+  ) => {
     useEffect(() => {
       const handleEscape = (e: KeyboardEvent) => {
         if (e.key === "Escape") onClose();
@@ -42,15 +58,15 @@ export const Modal = forwardRef<HTMLDivElement, ModalProps>(
     if (!isOpen) return null;
 
     return (
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <div className={`fixed inset-0 z-50 flex items-center justify-center p-4 ${containerClassName}`.trim()}>
         <div
-          className="fixed inset-0 bg-black/50 backdrop-blur-sm"
+          className="fixed inset-0 bg-black/40 backdrop-blur-md"
           onClick={onClose}
           aria-hidden="true"
         />
         <div
           ref={ref}
-          className={`relative bg-card rounded-xl shadow-xl border border-border w-full ${sizeClasses[size]} max-h-[90vh] overflow-auto animate-in fade-in zoom-in-95 duration-200`}
+          className={`relative bg-card rounded-xl shadow-xl border border-border/60 w-full ${sizeClasses[size]} max-h-[90vh] overflow-auto dropdown-enter ${panelClassName}`.trim()}
           role="dialog"
           aria-modal="true"
           aria-labelledby={title ? "modal-title" : undefined}

@@ -12,7 +12,7 @@ export interface ApiResponse<T> {
   status?: number;
 }
 
-export interface RequestOptions extends Omit<RequestInit, 'body'> {
+export interface RequestOptions extends RequestInit {
   timeout?: number;
   retries?: number;
 }

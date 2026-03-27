@@ -36,6 +36,13 @@ def _visit_to_response(v: Visit) -> dict:
     """Convert Visit model to response dict."""
     host_name = v.host.full_name if v.host else ""
     is_walkin = (v.extra_data or {}).get("walkin", False)
+    extra = v.extra_data or {}
+    building_name = extra.get("building_name")
+    host_flat_number = extra.get("flat_number")
+    if not host_flat_number and v.host:
+        host_flat_number = v.host.flat_number
+    if not building_name and v.host and getattr(v.host, "building", None):
+        building_name = v.host.building.name
     # Use visit-level snapshot if available, fall back to visitor record
     visitor_name = v.visitor_name or (v.visitor.full_name if v.visitor else "")
     visitor_phone = v.visitor_phone or (v.visitor.phone if v.visitor else "")
@@ -49,6 +56,8 @@ def _visit_to_response(v: Visit) -> dict:
         "purpose": v.purpose,
         "visitor_name": visitor_name,
         "visitor_phone": visitor_phone,
+        "building_name": building_name,
+        "host_flat_number": host_flat_number,
         "expected_arrival": v.expected_arrival.isoformat() if v.expected_arrival else None,
         "actual_arrival": v.actual_arrival.isoformat() if v.actual_arrival else None,
         "actual_departure": v.actual_departure.isoformat() if v.actual_departure else None,

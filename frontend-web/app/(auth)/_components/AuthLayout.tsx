@@ -23,10 +23,10 @@ export function AuthLayout({
 }: Props) {
   return (
     <div className={`${theme.layout.flexRow} ${theme.auth.screen}`}>
-      {/* Left: branding — softer gradient and clearer hierarchy */}
+      {/* Left: branding */}
       <div className={`${theme.auth.panel} bg-gradient-to-br from-primary via-primary to-primary-hover`}>
         <div className="max-w-sm">
-          <div className="w-14 h-14 rounded-2xl bg-white/20 backdrop-blur-sm flex items-center justify-center mb-6 shadow-lg">
+          <div className={theme.auth.panelIcon}>
             <WelcomeIllustration className="w-8 h-8 text-white" />
           </div>
           <h2 className="text-2xl font-bold text-white tracking-tight">
@@ -35,18 +35,18 @@ export function AuthLayout({
           <p className="text-sm text-white/90 mt-3 leading-relaxed">
             Contactless check-in, pre-approvals, and DPDP-compliant tracking for housing societies and apartments.
           </p>
-          <ul className="mt-8 space-y-4 text-sm text-white/95">
+          <ul className={theme.auth.panelList}>
             <li className="flex items-center gap-3">
-              <span className="w-8 h-8 rounded-lg bg-white/25 flex items-center justify-center text-sm font-semibold shrink-0">1</span>
-              <span>QR & OTP check-in</span>
+              <span className={theme.auth.panelBadge}>1</span>
+              <span className="text-white/95">QR & OTP check-in</span>
             </li>
             <li className="flex items-center gap-3">
-              <span className="w-8 h-8 rounded-lg bg-white/25 flex items-center justify-center text-sm font-semibold shrink-0">2</span>
-              <span>Resident approvals & muster</span>
+              <span className={theme.auth.panelBadge}>2</span>
+              <span className="text-white/95">Resident approvals & muster</span>
             </li>
             <li className="flex items-center gap-3">
-              <span className="w-8 h-8 rounded-lg bg-white/25 flex items-center justify-center text-sm font-semibold shrink-0">3</span>
-              <span>India & DPDP ready</span>
+              <span className={theme.auth.panelBadge}>3</span>
+              <span className="text-white/95">India & DPDP ready</span>
             </li>
           </ul>
         </div>
@@ -55,22 +55,22 @@ export function AuthLayout({
       {/* Right: form area */}
       <div className={`${theme.layout.flex1} ${theme.layout.scrollArea} ${theme.layout.containerPadding} ${theme.surface.page}`}>
         <div className={`w-full flex-shrink-0 ${theme.layout.maxWidth[maxWidth]}`}>
-          <div className="bg-white rounded-2xl shadow-lg border border-slate-200/90 overflow-hidden">
-            <div className="px-6 sm:px-8 lg:px-10 pt-8 pb-5 border-b border-slate-100">
-              <div className="md:hidden w-12 h-12 rounded-xl bg-primary flex items-center justify-center mb-4">
+          <div className={theme.auth.formCard}>
+            <div className={theme.auth.formCardHeader}>
+              <div className={theme.auth.panelIconMobile}>
                 <WelcomeIllustration className="w-7 h-7 text-white" />
               </div>
-              <h1 className="text-xl font-bold text-slate-900">{title}</h1>
-              <p className="text-slate-500 text-sm mt-1">{subtitle}</p>
+              <h1 className={theme.text.heading1}>{title}</h1>
+              <p className={theme.text.subtitle}>{subtitle}</p>
             </div>
-            <div className="px-6 sm:px-8 lg:px-10 py-6 sm:py-8">{children}</div>
-            <div className="px-6 sm:px-8 lg:px-10 py-5 pt-4 border-t border-slate-100 flex flex-col items-center gap-2 text-center">
+            <div className={`${theme.layout.contentPadding} ${theme.auth.formCardBody}`}>{children}</div>
+            <div className={theme.auth.formCardFooter}>
               {links.map((l) => (
-                <Link key={l.href} href={l.href} className="text-sm font-medium text-slate-500 hover:text-primary transition">
+                <Link key={l.href} href={l.href} className={theme.auth.link}>
                   {l.label}
                 </Link>
               ))}
-              <Link href="/" className="text-sm text-slate-400 hover:text-primary transition">
+              <Link href="/" className={theme.auth.linkMuted}>
                 Back to home
               </Link>
             </div>

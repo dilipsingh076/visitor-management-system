@@ -48,7 +48,7 @@ export const TabsList = forwardRef<HTMLDivElement, TabsListProps>(
     return (
       <div
         ref={ref}
-        className={`flex gap-1 p-1 bg-muted-bg rounded-lg ${className}`}
+        className={`flex gap-1 p-1 bg-muted-bg/60 rounded-xl border border-border/40 ${className}`}
         role="tablist"
         {...props}
       >
@@ -78,10 +78,10 @@ export const TabsTrigger = forwardRef<HTMLButtonElement, TabsTriggerProps>(
         role="tab"
         aria-selected={isActive}
         onClick={() => context.setActiveTab(value)}
-        className={`px-4 py-2 text-sm font-medium rounded-md transition ${
+        className={`px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200 ${
           isActive
-            ? "bg-card text-foreground shadow-sm"
-            : "text-muted-foreground hover:text-foreground"
+            ? "bg-card text-foreground shadow-sm border border-border/40"
+            : "text-muted-foreground hover:text-foreground border border-transparent"
         } ${className}`}
         {...props}
       >

@@ -8,6 +8,46 @@ import type { User } from "@/lib/auth";
 import { useUnreadNotifications, useMarkNotificationRead, useNotificationsStream, useApproveVisit, useRejectVisit } from "@/features/visitors";
 import { Button } from "@/components/ui";
 
+type SosSeverity = "critical" | "high" | "medium" | "low";
+
+function parseExtra(extra: string | null | undefined): Record<string, unknown> | null {
+  if (!extra) return null;
+  try {
+    return JSON.parse(extra) as Record<string, unknown>;
+  } catch {
+    return null;
+  }
+}
+
+function getSosSeverity(sosType: string | null): SosSeverity {
+  switch (sosType) {
+    case "fire":
+      return "critical";
+    case "theft":
+    case "medical":
+      return "high";
+    case "lift":
+      return "medium";
+    case "other":
+    default:
+      return "low";
+  }
+}
+
+function sosItemClasses(sev: SosSeverity): { li: string; tag: string; label: string } {
+  switch (sev) {
+    case "critical":
+      return { li: "border-l-4 border-red-600 bg-red-600/5", tag: "bg-red-600/10 text-red-700 border border-red-600/20", label: "CRITICAL" };
+    case "high":
+      return { li: "border-l-4 border-orange-600 bg-orange-600/5", tag: "bg-orange-600/10 text-orange-700 border border-orange-600/20", label: "HIGH" };
+    case "medium":
+      return { li: "border-l-4 border-amber-600 bg-amber-600/5", tag: "bg-amber-600/10 text-amber-700 border border-amber-600/20", label: "MEDIUM" };
+    case "low":
+    default:
+      return { li: "border-l-4 border-yellow-600 bg-yellow-600/5", tag: "bg-yellow-600/10 text-yellow-700 border border-yellow-600/20", label: "LOW" };
+  }
+}
+
 function canReceiveNotifications(user: User | null): boolean {
   if (!user) return false;
   const role = getPrimaryRole(user);
@@ -95,11 +135,22 @@ export function NotificationBell({ user }: { user: User | null }) {
             {notifications.map((n) => {
               const visitId = getVisitId(n.extra_data);
               const canAction = n.type === "walkin_pending" && visitId && !actionedIds.has(n.id);
+              const isSos = n.type === "sos_alert";
+              const sosType = isSos ? String(parseExtra(n.extra_data)?.type ?? "").toLowerCase() : null;
+              const sev = isSos ? getSosSeverity(sosType) : null;
+              const hl = sev ? sosItemClasses(sev) : null;
               return (
-                <li key={n.id} className="px-3 py-2.5">
+                <li key={n.id} className={`px-3 py-2.5 ${hl?.li ?? ""}`.trim()}>
                   <div className="flex items-start justify-between gap-2">
                     <div className="min-w-0">
-                      <p className="text-sm font-medium text-foreground truncate">{n.title}</p>
+                      <div className="flex items-center gap-2 min-w-0">
+                        <p className="text-sm font-medium text-foreground truncate">{n.title}</p>
+                        {isSos && hl && (
+                          <span className={`shrink-0 text-[10px] font-semibold px-2 py-0.5 rounded-full ${hl.tag}`.trim()}>
+                            SOS · {hl.label}
+                          </span>
+                        )}
+                      </div>
                       <p className="text-xs text-muted-foreground line-clamp-2">{n.body}</p>
                     </div>
                     <Button
