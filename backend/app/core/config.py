@@ -31,6 +31,9 @@ class Settings(BaseSettings):
     DB_ECHO: bool = False
     DB_POOL_SIZE: int = 5
     DB_MAX_OVERFLOW: int = 10
+    # Remote Postgres (Supabase) closes idle connections; recycle and pre-ping avoid stale pool errors
+    DB_POOL_PRE_PING: bool = True
+    DB_POOL_RECYCLE: int = 300  # seconds; set <= server idle timeout (often 300–600 on managed DBs)
     DB_USE_SSL: bool = False  # Set True if Supabase requires SSL (e.g. pooler)
 
     # Keycloak

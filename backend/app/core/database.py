@@ -62,6 +62,9 @@ if _is_sqlite:
 else:
     _engine_kw["pool_size"] = settings.DB_POOL_SIZE
     _engine_kw["max_overflow"] = settings.DB_MAX_OVERFLOW
+    _engine_kw["pool_pre_ping"] = settings.DB_POOL_PRE_PING
+    if settings.DB_POOL_RECYCLE > 0:
+        _engine_kw["pool_recycle"] = settings.DB_POOL_RECYCLE
     if settings.DB_USE_SSL:
         import ssl
         _ctx = ssl.create_default_context()

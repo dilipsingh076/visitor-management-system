@@ -1,0 +1,18 @@
+{
+  "name": "VMS - Visitor Management System",
+  "short_name": "VMS",
+  "description": "India-optimized visitor management for gated societies, offices, and factories. Pre-approval, QR/OTP check-in, DPDP compliant.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#10b981",
+  "icons": [
+    {
+      "src": "/favicon.ico",
+      "sizes": "48x48",
+      "type": "image/x-icon",
+      "purpose": "any"
+    }
+  ]
+}

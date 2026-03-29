@@ -35,4 +35,4 @@ See **`docs/CONTENT-AND-IMAGES-PROMPT.md`** if present for AI-image prompts and 
 node scripts/download-images.js
 ```
 
-Replace with your own or AI-generated images when ready; keep the same filenames or update paths in `app/(public)/**` components.
+Replace with your own or AI-generated images when ready; keep the same filenames or update paths in `app/(marketing)/**` components.
